@@ -21,7 +21,7 @@ export interface EmailData {
 export const sendEmail = async (emailData: EmailData) => {
   try {
     const mailOptions = {
-      from: process.env.SMTP_FROM || 'noreply@globalbank.com',
+      from: process.env.SMTP_FROM || 'noreply@globaldotbank.org',
       to: emailData.to,
       subject: emailData.subject,
       html: emailData.html,
