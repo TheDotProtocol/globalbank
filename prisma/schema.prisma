@@ -1,0 +1,248 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  kycStatus KycStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 2FA fields
+  twoFactorSecret     String?
+  twoFactorEnabled    Boolean @default(false)
+  twoFactorVerifiedAt DateTime?
+
+  // Relations
+  accounts     Account[]
+  cards        Card[]
+  fixedDeposits FixedDeposit[]
+  kycDocuments KycDocument[]
+  aiInteractions AiInteraction[]
+  transactions Transaction[]
+  eChecks      ECheck[]
+
+  @@map("users")
+}
+
+model Account {
+  id            String      @id @default(cuid())
+  userId        String
+  accountNumber String      @unique
+  accountType   AccountType
+  balance       Decimal     @default(0)
+  currency      String      @default("USD")
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  eChecks      ECheck[]
+
+  @@map("accounts")
+}
+
+model Transaction {
+  id          String        @id @default(cuid())
+  accountId   String
+  type        TransactionType
+  amount      Decimal
+  description String
+  reference   String?       @unique
+  status      TransactionStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Dispute fields
+  isDisputed  Boolean       @default(false)
+  disputeReason String?
+  disputeStatus DisputeStatus @default(NONE)
+  disputeCreatedAt DateTime?
+  disputeResolvedAt DateTime?
+  disputeResolution String?
+
+  // Relations
+  account     Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+
+  @@map("transactions")
+}
+
+model Card {
+  id            String    @id @default(cuid())
+  userId        String
+  cardNumber    String    @unique
+  cardType      CardType
+  expiryDate    DateTime
+  cvv           String
+  isActive      Boolean   @default(true)
+  dailyLimit    Decimal   @default(1000)
+  monthlyLimit  Decimal   @default(5000)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("cards")
+}
+
+model FixedDeposit {
+  id            String    @id @default(cuid())
+  userId        String
+  accountId     String
+  amount        Decimal
+  interestRate  Decimal
+  duration      Int       // in months
+  maturityDate  DateTime
+  status        DepositStatus @default(ACTIVE)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fixed_deposits")
+}
+
+model KycDocument {
+  id          String    @id @default(cuid())
+  userId      String
+  documentType DocumentType
+  fileUrl     String
+  status      DocumentStatus @default(PENDING)
+  uploadedAt  DateTime  @default(now())
+  verifiedAt  DateTime?
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("kyc_documents")
+}
+
+model AiInteraction {
+  id        String      @id @default(cuid())
+  userId    String
+  message   String
+  response  String
+  category  AiCategory
+  createdAt DateTime    @default(now())
+
+  // Relations
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_interactions")
+}
+
+model ECheck {
+  id            String        @id @default(cuid())
+  userId        String
+  accountId     String
+  checkNumber   String        @unique
+  payeeName     String
+  amount        Decimal
+  memo          String?
+  status        CheckStatus   @default(PENDING)
+  clearedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account       Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("e_checks")
+}
+
+// Enums
+enum AccountType {
+  SAVINGS
+  CHECKING
+  FIXED_DEPOSIT
+  BUSINESS
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  TRANSFER
+  WITHDRAWAL
+  DEPOSIT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum DisputeStatus {
+  NONE
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum CardType {
+  DEBIT
+  CREDIT
+  VIRTUAL
+}
+
+enum DepositStatus {
+  ACTIVE
+  MATURED
+  WITHDRAWN
+  CANCELLED
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum DocumentType {
+  ID_PROOF
+  ADDRESS_PROOF
+  INCOME_PROOF
+  BANK_STATEMENT
+}
+
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum AiCategory {
+  FINANCIAL_LITERACY
+  INVESTMENT_GUIDANCE
+  SECURITY_EDUCATION
+  AUTOMATION_ASSISTANCE
+  GENERAL_QUERY
+}
+
+enum CheckStatus {
+  PENDING
+  CLEARED
+  REJECTED
+}
