@@ -11,6 +11,16 @@ class RateLimiter {
 
   constructor(private config: RateLimitConfig) {}
 
+  get message() {
+    return this.config.message;
+  }
+  get max() {
+    return this.config.max;
+  }
+  get windowMs() {
+    return this.config.windowMs;
+  }
+
   isRateLimited(identifier: string): boolean {
     const now = Date.now();
     const record = this.requests.get(identifier);
@@ -74,13 +84,13 @@ export function withRateLimit(
       if (limiter.isRateLimited(identifier)) {
         return NextResponse.json(
           {
-            error: limiter.config.message || 'Rate limit exceeded',
+            error: limiter.message || 'Rate limit exceeded',
             retryAfter: Math.ceil((limiter.getResetTime(identifier) - Date.now()) / 1000)
           },
           {
             status: 429,
             headers: {
-              'X-RateLimit-Limit': limiter.config.max.toString(),
+              'X-RateLimit-Limit': limiter.max.toString(),
               'X-RateLimit-Remaining': limiter.getRemaining(identifier).toString(),
               'X-RateLimit-Reset': limiter.getResetTime(identifier).toString(),
               'Retry-After': Math.ceil((limiter.getResetTime(identifier) - Date.now()) / 1000).toString()

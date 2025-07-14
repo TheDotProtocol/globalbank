@@ -6,7 +6,7 @@ import crypto from 'crypto';
 const prisma = new PrismaClient();
 
 // Configure email transporter (you'll need to set up your email service)
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   service: 'gmail', // or your email service
   auth: {
     user: process.env.EMAIL_USER,

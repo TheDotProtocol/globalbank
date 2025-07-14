@@ -104,7 +104,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     }
 
     // Generate unique card number
-    let cardNumber: string;
+    let cardNumber: string = "";
     let isUnique = false;
     
     // Ensure card number is unique

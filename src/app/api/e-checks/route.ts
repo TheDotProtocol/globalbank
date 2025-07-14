@@ -120,7 +120,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     }
 
     // Generate unique check number
-    let checkNumber: string;
+    let checkNumber: string = "";
     let isUnique = false;
     
     while (!isUnique) {

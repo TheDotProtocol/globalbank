@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Hardcoded admin credentials - NEVER CHANGE
 const ADMIN_CREDENTIALS = {

@@ -77,13 +77,13 @@ export default function DocumentGeneration() {
     }, 2000);
   };
 
-  const downloadDocument = (document: Document) => {
+  const downloadDocument = (doc: Document) => {
     // In a real app, this would trigger the actual download
-    console.log('Downloading:', document.title);
+    console.log('Downloading:', doc.title);
     // For now, we'll simulate the download
     const link = document.createElement('a');
-    link.href = document.downloadUrl || '#';
-    link.download = `${document.title}.pdf`;
+    link.href = doc.downloadUrl || '#';
+    link.download = `${doc.title}.pdf`;
     link.click();
   };
 

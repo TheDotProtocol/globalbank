@@ -60,7 +60,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     const existingDocument = await prisma.kycDocument.findFirst({
       where: {
         userId: user.id,
-        documentType
+        documentType: documentType as any
       }
     });
 
@@ -89,7 +89,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
       const newDocument = await prisma.kycDocument.create({
         data: {
           userId: user.id,
-          documentType,
+          documentType: documentType as any,
           fileUrl,
           status: 'PENDING'
         }

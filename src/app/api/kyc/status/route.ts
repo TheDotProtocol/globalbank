@@ -49,7 +49,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
     if (user.kycStatus !== overallStatus) {
       await prisma.user.update({
         where: { id: user.id },
-        data: { kycStatus: overallStatus }
+        data: { kycStatus: overallStatus as any }
       });
     }
 

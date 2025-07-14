@@ -4,9 +4,7 @@ import { requireAuth } from '@/lib/auth';
 import Stripe from 'stripe';
 
 const prisma = new PrismaClient();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia'
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 // Create payment intent for deposit
 export const POST = requireAuth(async (request: NextRequest) => {
