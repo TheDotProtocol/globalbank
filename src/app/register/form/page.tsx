@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
   ArrowLeft, 
@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import Logo from '@/components/Logo';
 
-export default function RegistrationForm() {
+function RegistrationFormContent() {
   const searchParams = useSearchParams();
   const accountType = searchParams.get('type');
   const [showPassword, setShowPassword] = useState(false);
@@ -199,12 +199,11 @@ export default function RegistrationForm() {
                       required
                       value={formData.firstName}
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="John"
                     />
                   </div>
                 </div>
-
                 <div>
                   <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
                     Last Name *
@@ -220,7 +219,7 @@ export default function RegistrationForm() {
                       required
                       value={formData.lastName}
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Doe"
                     />
                   </div>
@@ -242,7 +241,7 @@ export default function RegistrationForm() {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="john.doe@example.com"
                   />
                 </div>
@@ -262,7 +261,7 @@ export default function RegistrationForm() {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
@@ -283,13 +282,13 @@ export default function RegistrationForm() {
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Create a strong password"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5 text-gray-400" />
@@ -298,8 +297,8 @@ export default function RegistrationForm() {
                     )}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Must contain at least 8 characters, including uppercase, lowercase, number, and special character
+                <p className="mt-1 text-sm text-gray-500">
+                  Must be at least 8 characters with uppercase, lowercase, number, and special character
                 </p>
               </div>
 
@@ -318,13 +317,13 @@ export default function RegistrationForm() {
                     required
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Confirm your password"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-5 w-5 text-gray-400" />
@@ -338,111 +337,112 @@ export default function RegistrationForm() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group relative w-full flex justify-center py-4 px-6 border border-transparent text-lg font-semibold rounded-xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                    Creating your account...
-                  </div>
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Creating Account...</span>
+                  </>
                 ) : (
-                  <div className="flex items-center">
-                    Create Account
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </div>
+                  <>
+                    <span>Create Account</span>
+                    <ArrowRight className="h-5 w-5" />
+                  </>
                 )}
               </button>
             </form>
 
             <div className="mt-8 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-gray-600">
                 Already have an account?{' '}
-                <button 
-                  onClick={() => window.location.href = '/login'}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
-                >
+                <a href="/login" className="text-blue-600 hover:text-blue-700 font-medium">
                   Sign in here
-                </button>
+                </a>
               </p>
             </div>
           </div>
 
           {/* Benefits Section */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Why Choose GlobalBank?
               </h2>
-              
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Shield className="h-5 w-5 text-green-600" />
-                    </div>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Shield className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Bank-Grade Security</h3>
-                    <p className="text-gray-600 text-sm">
-                      Military-grade encryption and real-time fraud detection protect your funds
-                    </p>
+                    <h3 className="font-semibold text-gray-900">Bank-Grade Security</h3>
+                    <p className="text-sm text-gray-600">256-bit encryption and multi-factor authentication</p>
                   </div>
                 </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Globe className="h-5 w-5 text-blue-600" />
-                    </div>
+                <div className="flex items-start space-x-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Globe className="h-5 w-5 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Global Banking</h3>
-                    <p className="text-gray-600 text-sm">
-                      Send money worldwide with competitive exchange rates and instant transfers
-                    </p>
+                    <h3 className="font-semibold text-gray-900">Global Access</h3>
+                    <p className="text-sm text-gray-600">Access your account from anywhere in the world</p>
                   </div>
                 </div>
-
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <CheckCircle className="h-5 w-5 text-purple-600" />
-                    </div>
+                <div className="flex items-start space-x-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Regulated & Licensed</h3>
-                    <p className="text-gray-600 text-sm">
-                      Fully compliant with international banking regulations and standards
-                    </p>
+                    <h3 className="font-semibold text-gray-900">24/7 Support</h3>
+                    <p className="text-sm text-gray-600">Round-the-clock customer support and AI assistance</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
-              <h3 className="text-xl font-bold mb-4">Get Started in Minutes</h3>
-              <ul className="space-y-3">
-                <li className="flex items-center space-x-3">
+              <h3 className="text-xl font-bold mb-4">Ready to Get Started?</h3>
+              <p className="text-blue-100 mb-6">
+                Join thousands of customers who trust GlobalBank for their financial needs.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
                   <CheckCircle className="h-5 w-5 text-green-300" />
-                  <span>Instant account creation</span>
-                </li>
-                <li className="flex items-center space-x-3">
+                  <span className="text-sm">No monthly fees</span>
+                </div>
+                <div className="flex items-center space-x-2">
                   <CheckCircle className="h-5 w-5 text-green-300" />
-                  <span>Virtual card generation</span>
-                </li>
-                <li className="flex items-center space-x-3">
+                  <span className="text-sm">Instant account setup</span>
+                </div>
+                <div className="flex items-center space-x-2">
                   <CheckCircle className="h-5 w-5 text-green-300" />
-                  <span>Start banking immediately</span>
-                </li>
-                <li className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-300" />
-                  <span>24/7 customer support</span>
-                </li>
-              </ul>
+                  <span className="text-sm">Competitive interest rates</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function RegistrationFormLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading registration form...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function RegistrationForm() {
+  return (
+    <Suspense fallback={<RegistrationFormLoading />}>
+      <RegistrationFormContent />
+    </Suspense>
   );
 } 
