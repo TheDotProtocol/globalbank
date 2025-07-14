@@ -4,11 +4,25 @@ import { requireAuth } from '@/lib/auth';
 import Stripe from 'stripe';
 
 const prisma = new PrismaClient();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+// Initialize Stripe with proper error handling
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey) {
+  console.warn('STRIPE_SECRET_KEY is not set. Stripe payments will not work.');
+}
+
+const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 
 // Create payment intent for deposit
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Stripe is not configured' },
+        { status: 500 }
+      );
+    }
+
     const user = (request as any).user;
     const { amount, currency = 'usd', type = 'deposit', accountId } = await request.json();
 
@@ -63,6 +77,13 @@ export const POST = requireAuth(async (request: NextRequest) => {
 // Handle webhook events
 export const PUT = async (request: NextRequest) => {
   try {
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Stripe is not configured' },
+        { status: 500 }
+      );
+    }
+
     const body = await request.text();
     const signature = request.headers.get('stripe-signature')!;
 
