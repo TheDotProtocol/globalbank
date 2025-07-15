@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { sendWelcomeEmail } from '@/lib/email';
-
-const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   try {
+    // Test database connection
+    try {
+      await prisma.$connect();
+      console.log('Database connection successful');
+    } catch (dbError) {
+      console.error('Database connection failed:', dbError);
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
     const { email, password, firstName, lastName, phone } = await request.json();
 
     // Validate input
@@ -56,9 +66,15 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Send welcome email with account details
+    // Send welcome email with account details (optional - don't fail registration if email fails)
     try {
-      await sendWelcomeEmail(email, `${firstName} ${lastName}`, account.accountNumber);
+      // Check if email service is configured
+      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+        await sendWelcomeEmail(email, `${firstName} ${lastName}`, account.accountNumber);
+        console.log('Welcome email sent successfully to:', email);
+      } else {
+        console.log('Email service not configured, skipping welcome email');
+      }
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
       // Don't fail registration if email fails
@@ -82,9 +98,19 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // Log more detailed error information
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
+  } finally {
+    // Always disconnect from database
+    await prisma.$disconnect();
   }
 } 
