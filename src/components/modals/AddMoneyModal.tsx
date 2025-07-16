@@ -68,10 +68,10 @@ function PaymentForm({ amount, setAmount, selectedAccount, setSelectedAccount, o
         throw new Error(error.error || 'Failed to create payment intent');
       }
 
-      const { clientSecret } = await response.json();
+      const { clientSecret, paymentIntentId } = await response.json();
 
       // Confirm card payment
-      const { error: confirmError } = await stripe.confirmCardPayment(clientSecret, {
+      const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: elements.getElement(CardElement)!,
         }
@@ -79,6 +79,27 @@ function PaymentForm({ amount, setAmount, selectedAccount, setSelectedAccount, o
 
       if (confirmError) {
         throw new Error(confirmError.message || 'Payment failed');
+      }
+
+      // If payment succeeded, immediately update account balance
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Call backend to update account balance immediately
+        const updateResponse = await fetch('/api/payments/confirm', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            paymentIntentId: paymentIntent.id,
+            amount: numAmount,
+            accountId: selectedAccount
+          })
+        });
+
+        if (!updateResponse.ok) {
+          console.warn('Failed to update account balance immediately, but payment was successful');
+        }
       }
 
       showToast('Payment successful! Money added to your account.', 'success');
