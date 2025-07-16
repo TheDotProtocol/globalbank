@@ -314,6 +314,118 @@ Thank you for your patience during the verification process.
 Best regards,
 The GlobalBank Team
     `
+  }),
+
+  passwordReset: (resetUrl: string) => ({
+    subject: 'Password Reset Request',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 40px; text-align: center; color: white;">
+          <h1 style="margin: 0; font-size: 28px;">Password Reset</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Reset your password</p>
+        </div>
+        
+        <div style="padding: 40px; background: white;">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello!</h2>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            We received a request to reset your password for your GlobalBank account.
+            To proceed with the password reset, please click the button below.
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" 
+               style="background: #4facfe; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Reset Password
+            </a>
+          </div>
+          
+          <p style="color: #666; line-height: 1.6;">
+            If you did not request this password reset, please ignore this email.
+          </p>
+          
+          <p style="color: #666; line-height: 1.6;">
+            Best regards,<br>
+            The GlobalBank Team
+          </p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>© 2024 GlobalBank. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+    text: `
+Password Reset Request
+
+Hello!
+
+We received a request to reset your password for your GlobalBank account.
+To proceed with the password reset, please click the button below.
+
+${resetUrl}
+
+If you did not request this password reset, please ignore this email.
+
+Best regards,
+The GlobalBank Team
+    `
+  }),
+
+  emailVerification: (verificationUrl: string) => ({
+    subject: 'Email Verification Required',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #6c5ce7 0%, #7d5fff 100%); padding: 40px; text-align: center; color: white;">
+          <h1 style="margin: 0; font-size: 28px;">Email Verification</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Verify your email address</p>
+        </div>
+        
+        <div style="padding: 40px; background: white;">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello!</h2>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            Thank you for registering with GlobalBank! To complete your registration,
+            please click the button below to verify your email address.
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" 
+               style="background: #6c5ce7; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Verify Email Address
+            </a>
+          </div>
+          
+          <p style="color: #666; line-height: 1.6;">
+            If you did not create an account with GlobalBank, please disregard this email.
+          </p>
+          
+          <p style="color: #666; line-height: 1.6;">
+            Best regards,<br>
+            The GlobalBank Team
+          </p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>© 2024 GlobalBank. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+    text: `
+Email Verification Required
+
+Hello!
+
+Thank you for registering with GlobalBank! To complete your registration,
+please click the button below to verify your email address.
+
+${verificationUrl}
+
+If you did not create an account with GlobalBank, please disregard this email.
+
+Best regards,
+The GlobalBank Team
+    `
   })
 };
 
@@ -352,8 +464,22 @@ export const sendKYCStatusEmail = async (userEmail: string, userName: string, st
   const template = emailTemplates.kycStatus(userName, status);
   return await sendEmail({
     to: userEmail,
-    subject: template.subject,
-    html: template.html,
-    text: template.text
+    ...template
+  });
+};
+
+export const sendPasswordResetEmail = async (userEmail: string, resetUrl: string) => {
+  const template = emailTemplates.passwordReset(resetUrl);
+  return await sendEmail({
+    to: userEmail,
+    ...template
+  });
+};
+
+export const sendVerificationEmail = async (userEmail: string, verificationUrl: string) => {
+  const template = emailTemplates.emailVerification(verificationUrl);
+  return await sendEmail({
+    to: userEmail,
+    ...template
   });
 }; 
