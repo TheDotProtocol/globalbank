@@ -13,7 +13,8 @@ import {
   X,
   Download,
   Upload,
-  Plus
+  Plus,
+  Eye
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/useToast';
@@ -59,6 +60,23 @@ interface FixedDeposit {
   status: string;
 }
 
+interface AccountDetails {
+  id: string;
+  accountNumber: string;
+  accountType: string;
+  balance: number;
+  currency: string;
+  isActive: boolean;
+  createdAt: string;
+  statistics: {
+    totalTransactions: number;
+    totalCredits: number;
+    totalDebits: number;
+    averageTransactionAmount: number;
+  };
+  transactions: Transaction[];
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -72,6 +90,8 @@ export default function Dashboard() {
   const [addMoneyModalOpen, setAddMoneyModalOpen] = useState(false);
   const [newCardModalOpen, setNewCardModalOpen] = useState(false);
   const [fixedDepositModalOpen, setFixedDepositModalOpen] = useState(false);
+  const [accountDetailsModalOpen, setAccountDetailsModalOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<AccountDetails | null>(null);
   
   const router = useRouter();
   const { showToast } = useToast();
@@ -168,6 +188,34 @@ export default function Dashboard() {
         break;
       default:
         break;
+    }
+  };
+
+  const handleAccountClick = async (accountId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch(`/api/user/accounts/${accountId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedAccount(data.account);
+        setAccountDetailsModalOpen(true);
+      } else {
+        showToast('Failed to load account details', 'error');
+      }
+    } catch (error) {
+      console.error('Error fetching account details:', error);
+      showToast('Error loading account details', 'error');
     }
   };
 
@@ -439,7 +487,7 @@ export default function Dashboard() {
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Accounts</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {accounts.map((account) => (
-                      <div key={account.id} className="border border-gray-200 rounded-lg p-4">
+                      <div key={account.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-medium text-gray-900">{account.accountType}</h3>
                           <span className="text-sm text-gray-500">{account.currency}</span>
@@ -450,6 +498,13 @@ export default function Dashboard() {
                         <p className="text-sm text-gray-500 mt-1">
                           Account: {account.accountNumber}
                         </p>
+                        <button
+                          onClick={() => handleAccountClick(account.id)}
+                          className="mt-3 w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span>View Details</span>
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -712,6 +767,95 @@ export default function Dashboard() {
         userId={user?.id || ''}
         onSuccess={fetchDashboardData}
       />
+
+      {/* Account Details Modal */}
+      {accountDetailsModalOpen && selectedAccount && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {selectedAccount.accountType} Account Details
+              </h2>
+              <button
+                onClick={() => setAccountDetailsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Account Information */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-blue-600">Account Number</p>
+                <p className="text-lg font-bold text-blue-900">{selectedAccount.accountNumber}</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-green-600">Current Balance</p>
+                <p className="text-lg font-bold text-green-900">${selectedAccount.balance.toLocaleString()}</p>
+              </div>
+              <div className="bg-purple-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-purple-600">Currency</p>
+                <p className="text-lg font-bold text-purple-900">{selectedAccount.currency}</p>
+              </div>
+            </div>
+
+            {/* Account Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-600">Total Transactions</p>
+                <p className="text-lg font-bold text-gray-900">{selectedAccount.statistics.totalTransactions}</p>
+              </div>
+              <div className="bg-green-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-green-600">Total Credits</p>
+                <p className="text-lg font-bold text-green-900">${selectedAccount.statistics.totalCredits.toLocaleString()}</p>
+              </div>
+              <div className="bg-red-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-red-600">Total Debits</p>
+                <p className="text-lg font-bold text-red-900">${selectedAccount.statistics.totalDebits.toLocaleString()}</p>
+              </div>
+              <div className="bg-blue-50 rounded-lg p-4">
+                <p className="text-sm font-medium text-blue-600">Avg Transaction</p>
+                <p className="text-lg font-bold text-blue-900">${selectedAccount.statistics.averageTransactionAmount.toLocaleString()}</p>
+              </div>
+            </div>
+
+            {/* Transaction History */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Transaction History</h3>
+              <div className="space-y-3">
+                {selectedAccount.transactions.length > 0 ? (
+                  selectedAccount.transactions.map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <p className="font-medium text-gray-900">{transaction.description}</p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(transaction.createdAt).toLocaleDateString()} at {new Date(transaction.createdAt).toLocaleTimeString()}
+                        </p>
+                        {transaction.reference && (
+                          <p className="text-xs text-gray-400">Ref: {transaction.reference}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold ${
+                          transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {transaction.type === 'CREDIT' ? '+' : '-'}${transaction.amount}
+                        </p>
+                        <p className="text-xs text-gray-500">{transaction.status}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>No transactions found for this account.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
