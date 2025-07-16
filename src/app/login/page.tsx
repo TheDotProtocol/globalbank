@@ -5,6 +5,9 @@ import { Eye, EyeOff, Lock, Mail, ArrowRight, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = 'force-dynamic';
+
 function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({

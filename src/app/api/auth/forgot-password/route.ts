@@ -34,25 +34,7 @@ export async function POST(request: NextRequest) {
     // For now, we'll just send the email
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
 
-    // Send email
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'GlobalBank - Password Reset',
-      html: `
-        <h2>Password Reset Request</h2>
-        <p>Hello ${user.firstName},</p>
-        <p>You requested a password reset for your GlobalBank account.</p>
-        <p>Click the link below to reset your password:</p>
-        <a href="${resetUrl}" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
-          Reset Password
-        </a>
-        <p>This link will expire in 1 hour.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-        <p>Best regards,<br>GlobalBank Team</p>
-      `
-    };
-
+    // Send email using the email library
     await sendPasswordResetEmail(email, resetUrl);
 
     return NextResponse.json({
