@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import crypto from 'crypto';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
-
-const prisma = new PrismaClient();
 
 // Setup 2FA for user
 export const POST = requireAuth(async (request: NextRequest) => {

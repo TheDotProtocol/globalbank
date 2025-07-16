@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { requireAuth } from '@/lib/auth';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 // List all disputes (admin only)
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = requireAdminAuth(async (request: NextRequest) => {
   try {
     const user = (request as any).user;
     const { searchParams } = new URL(request.url);
@@ -94,7 +92,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
 });
 
 // Resolve dispute (admin only)
-export const PUT = requireAuth(async (request: NextRequest) => {
+export const PUT = requireAdminAuth(async (request: NextRequest) => {
   try {
     const user = (request as any).user;
     const { transactionId, status, resolution } = await request.json();

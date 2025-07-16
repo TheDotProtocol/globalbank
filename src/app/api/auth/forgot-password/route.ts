@@ -1,18 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import nodemailer from 'nodemailer';
+import { prisma } from '@/lib/prisma';
+import { sendPasswordResetEmail } from '@/lib/email';
 import crypto from 'crypto';
-
-const prisma = new PrismaClient();
-
-// Configure email transporter (you'll need to set up your email service)
-const transporter = nodemailer.createTransport({
-  service: 'gmail', // or your email service
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +53,7 @@ export async function POST(request: NextRequest) {
       `
     };
 
-    await transporter.sendMail(mailOptions);
+    await sendPasswordResetEmail(email, resetUrl);
 
     return NextResponse.json({
       message: 'If an account with this email exists, a password reset link has been sent.'

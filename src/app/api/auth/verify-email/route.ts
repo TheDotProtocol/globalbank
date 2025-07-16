@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { sendVerificationEmail } from '@/lib/email';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
-
-const prisma = new PrismaClient();
 
 // Configure email transporter
 const transporter = nodemailer.createTransport({

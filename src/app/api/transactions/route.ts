@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import crypto from 'crypto';
-
-const prisma = new PrismaClient();
 
 export const GET = requireAuth(async (request: NextRequest) => {
   try {

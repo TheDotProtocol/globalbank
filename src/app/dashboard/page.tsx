@@ -75,8 +75,20 @@ export default function Dashboard() {
     try {
       setLoading(true);
       
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      
       // Fetch user data
-      const userResponse = await fetch('/api/user/profile');
+      const userResponse = await fetch('/api/user/profile', { headers });
       if (!userResponse.ok) {
         router.push('/login');
         return;
@@ -85,17 +97,17 @@ export default function Dashboard() {
       setUser(userData.user);
 
       // Fetch accounts
-      const accountsResponse = await fetch('/api/user/accounts');
+      const accountsResponse = await fetch('/api/user/accounts', { headers });
       const accountsData = await accountsResponse.json();
       setAccounts(accountsData.accounts);
 
       // Fetch recent transactions
-      const transactionsResponse = await fetch('/api/transactions?limit=5');
+      const transactionsResponse = await fetch('/api/transactions?limit=5', { headers });
       const transactionsData = await transactionsResponse.json();
       setTransactions(transactionsData.transactions);
 
       // Fetch fixed deposits
-      const depositsResponse = await fetch('/api/fixed-deposits');
+      const depositsResponse = await fetch('/api/fixed-deposits', { headers });
       const depositsData = await depositsResponse.json();
       setFixedDeposits(depositsData.fixedDeposits);
 
