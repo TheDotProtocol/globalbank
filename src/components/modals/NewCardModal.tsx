@@ -8,13 +8,12 @@ interface NewCardModalProps {
   isOpen: boolean;
   onClose: () => void;
   accounts: any[];
-  userId: string;
   onSuccess: () => void;
 }
 
-export default function NewCardModal({ isOpen, onClose, accounts, userId, onSuccess }: NewCardModalProps) {
+export default function NewCardModal({ isOpen, onClose, accounts, onSuccess }: NewCardModalProps) {
   const [selectedAccount, setSelectedAccount] = useState('');
-  const [cardType, setCardType] = useState<'VIRTUAL' | 'PHYSICAL'>('VIRTUAL');
+  const [cardType, setCardType] = useState<'VIRTUAL' | 'DEBIT' | 'CREDIT'>('VIRTUAL');
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
 
@@ -29,13 +28,20 @@ export default function NewCardModal({ isOpen, onClose, accounts, userId, onSucc
     setLoading(true);
 
     try {
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        showToast('Please log in to continue', 'error');
+        return;
+      }
+
       const response = await fetch('/api/cards/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          userId,
           cardType,
           accountId: selectedAccount
         })
@@ -43,7 +49,7 @@ export default function NewCardModal({ isOpen, onClose, accounts, userId, onSucc
 
       if (response.ok) {
         const data = await response.json();
-        showToast(`${cardType === 'VIRTUAL' ? 'Virtual' : 'Physical'} card created successfully!`, 'success');
+        showToast(`${cardType === 'VIRTUAL' ? 'Virtual' : cardType} card created successfully!`, 'success');
         onSuccess();
         onClose();
         setSelectedAccount('');
@@ -99,7 +105,7 @@ export default function NewCardModal({ isOpen, onClose, accounts, userId, onSucc
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Card Type
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <button
                 type="button"
                 onClick={() => setCardType('VIRTUAL')}
@@ -112,7 +118,7 @@ export default function NewCardModal({ isOpen, onClose, accounts, userId, onSucc
                 <div className="flex items-center space-x-2">
                   <Smartphone className="w-5 h-5" />
                   <div>
-                    <div className="font-medium">Virtual Card</div>
+                    <div className="font-medium">Virtual</div>
                     <div className="text-sm opacity-75">Instant access</div>
                   </div>
                 </div>
@@ -120,9 +126,9 @@ export default function NewCardModal({ isOpen, onClose, accounts, userId, onSucc
               
               <button
                 type="button"
-                onClick={() => setCardType('PHYSICAL')}
+                onClick={() => setCardType('DEBIT')}
                 className={`p-4 border rounded-lg text-left transition-colors ${
-                  cardType === 'PHYSICAL'
+                  cardType === 'DEBIT'
                     ? 'border-blue-500 bg-blue-50 text-blue-700'
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
@@ -130,8 +136,26 @@ export default function NewCardModal({ isOpen, onClose, accounts, userId, onSucc
                 <div className="flex items-center space-x-2">
                   <CreditCard className="w-5 h-5" />
                   <div>
-                    <div className="font-medium">Physical Card</div>
-                    <div className="text-sm opacity-75">5-7 business days</div>
+                    <div className="font-medium">Debit</div>
+                    <div className="text-sm opacity-75">Direct from account</div>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCardType('CREDIT')}
+                className={`p-4 border rounded-lg text-left transition-colors ${
+                  cardType === 'CREDIT'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <CreditCard className="w-5 h-5" />
+                  <div>
+                    <div className="font-medium">Credit</div>
+                    <div className="text-sm opacity-75">Credit line</div>
                   </div>
                 </div>
               </button>

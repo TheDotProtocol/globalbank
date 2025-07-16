@@ -702,7 +702,6 @@ export default function Dashboard() {
         isOpen={newCardModalOpen}
         onClose={() => setNewCardModalOpen(false)}
         accounts={accounts}
-        userId={user?.id || ''}
         onSuccess={fetchDashboardData}
       />
 

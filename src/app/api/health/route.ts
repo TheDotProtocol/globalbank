@@ -8,10 +8,7 @@ export async function GET(request: NextRequest) {
     const maskedUrl = dbUrl ? `${dbUrl.split('@')[0]}@***` : 'NOT_SET';
     console.log('DATABASE_URL:', maskedUrl);
     
-    // Test database connection
-    await prisma.$connect();
-    
-    // Test a simple query
+    // Test database connection with a simple query
     const userCount = await prisma.user.count();
     
     // Check environment variables
@@ -49,7 +46,5 @@ export async function GET(request: NextRequest) {
       dbUrlMasked: maskedUrl,
       timestamp: new Date().toISOString()
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 } 

@@ -43,11 +43,19 @@ function PaymentForm({ amount, setAmount, selectedAccount, setSelectedAccount, o
     setLoading(true);
 
     try {
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        showToast('Please log in to continue', 'error');
+        return;
+      }
+
       // Create payment intent
       const response = await fetch('/api/payments/stripe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           amount: numAmount,
