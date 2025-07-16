@@ -3,6 +3,11 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
+    // Debug: Log the DATABASE_URL (masked for security)
+    const dbUrl = process.env.DATABASE_URL;
+    const maskedUrl = dbUrl ? `${dbUrl.split('@')[0]}@***` : 'NOT_SET';
+    console.log('DATABASE_URL:', maskedUrl);
+    
     // Test database connection
     await prisma.$connect();
     
@@ -30,13 +35,18 @@ export async function GET(request: NextRequest) {
       database: 'connected',
       userCount,
       environment: envCheck,
+      dbUrlMasked: maskedUrl,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error('Health check failed:', error);
+    const dbUrl = process.env.DATABASE_URL;
+    const maskedUrl = dbUrl ? `${dbUrl.split('@')[0]}@***` : 'NOT_SET';
+    
     return NextResponse.json({
       status: 'unhealthy',
       error: error instanceof Error ? error.message : 'Unknown error',
+      dbUrlMasked: maskedUrl,
       timestamp: new Date().toISOString()
     }, { status: 500 });
   } finally {
