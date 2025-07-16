@@ -19,14 +19,32 @@ export const POST = requireAuth(async (request: NextRequest) => {
       );
     }
 
-    // Verify account belongs to user
-    const account = await prisma.account.findFirst({
-      where: {
-        id: accountId,
-        userId: user.id,
-        isActive: true
+    // Retry logic for database operations
+    let account = null;
+    let retries = 3;
+    
+    while (retries > 0) {
+      try {
+        // Verify account belongs to user
+        account = await prisma.account.findFirst({
+          where: {
+            id: accountId,
+            userId: user.id,
+            isActive: true
+          }
+        });
+        break;
+      } catch (error: any) {
+        retries--;
+        console.log(`Account verification attempt failed, retries left: ${retries}`);
+        
+        if (error?.message?.includes('prepared statement') && retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        throw error;
       }
-    });
+    }
 
     if (!account) {
       return NextResponse.json(
@@ -36,9 +54,24 @@ export const POST = requireAuth(async (request: NextRequest) => {
     }
 
     // Check if transaction already exists (prevent double processing)
-    const existingTransaction = await prisma.transaction.findUnique({
-      where: { reference: paymentIntentId }
-    });
+    let existingTransaction = null;
+    retries = 3;
+    
+    while (retries > 0) {
+      try {
+        existingTransaction = await prisma.transaction.findUnique({
+          where: { reference: paymentIntentId }
+        });
+        break;
+      } catch (error: any) {
+        retries--;
+        if (error?.message?.includes('prepared statement') && retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        throw error;
+      }
+    }
 
     if (existingTransaction) {
       return NextResponse.json({
@@ -64,35 +97,68 @@ export const POST = requireAuth(async (request: NextRequest) => {
       // This ensures the account gets updated if the payment was actually successful
     }
 
-    // Update account balance
-    const updatedAccount = await prisma.account.update({
-      where: { id: accountId },
-      data: {
-        balance: {
-          increment: amount
+    // Update account balance with retry logic
+    let updatedAccount = null;
+    retries = 3;
+    
+    while (retries > 0) {
+      try {
+        updatedAccount = await prisma.account.update({
+          where: { id: accountId },
+          data: {
+            balance: {
+              increment: amount
+            }
+          }
+        });
+        break;
+      } catch (error: any) {
+        retries--;
+        console.log(`Account balance update attempt failed, retries left: ${retries}`);
+        
+        if (error?.message?.includes('prepared statement') && retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
         }
+        throw error;
       }
-    });
+    }
 
-    // Create transaction record
-    await prisma.transaction.create({
-      data: {
-        userId: user.id,
-        accountId,
-        type: 'CREDIT',
-        amount,
-        description: 'Account Deposit via Stripe',
-        status: 'COMPLETED',
-        reference: paymentIntentId
+    // Create transaction record with retry logic
+    retries = 3;
+    
+    while (retries > 0) {
+      try {
+        await prisma.transaction.create({
+          data: {
+            userId: user.id,
+            accountId,
+            type: 'CREDIT',
+            amount,
+            description: 'Account Deposit via Stripe',
+            status: 'COMPLETED',
+            reference: paymentIntentId
+          }
+        });
+        break;
+      } catch (error: any) {
+        retries--;
+        console.log(`Transaction creation attempt failed, retries left: ${retries}`);
+        
+        if (error?.message?.includes('prepared statement') && retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        throw error;
       }
-    });
+    }
 
-    console.log(`Payment confirmed: ${paymentIntentId} for $${amount}, new balance: $${updatedAccount.balance}`);
+    console.log(`Payment confirmed: ${paymentIntentId} for $${amount}, new balance: $${updatedAccount?.balance}`);
 
     return NextResponse.json({
       success: true,
       message: 'Account balance updated successfully',
-      newBalance: updatedAccount.balance,
+      newBalance: updatedAccount?.balance || account.balance + amount,
       transactionId: paymentIntentId
     });
 

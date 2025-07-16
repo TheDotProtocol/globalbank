@@ -8,8 +8,28 @@ export async function GET(request: NextRequest) {
     const maskedUrl = dbUrl ? `${dbUrl.split('@')[0]}@***` : 'NOT_SET';
     console.log('DATABASE_URL:', maskedUrl);
     
-    // Test database connection with a simple query
-    const userCount = await prisma.user.count();
+    // Test database connection with retry logic for prepared statement errors
+    let userCount = 0;
+    let retries = 3;
+    
+    while (retries > 0) {
+      try {
+        userCount = await prisma.user.count();
+        break; // Success, exit retry loop
+      } catch (error: any) {
+        retries--;
+        console.log(`Database query attempt failed, retries left: ${retries}`);
+        
+        if (error?.message?.includes('prepared statement') && retries > 0) {
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        
+        // If it's not a prepared statement error or no retries left, throw
+        throw error;
+      }
+    }
     
     // Check environment variables
     const envCheck = {

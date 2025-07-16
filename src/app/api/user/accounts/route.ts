@@ -6,20 +6,41 @@ export const GET = requireAuth(async (request: NextRequest) => {
   try {
     const user = (request as any).user;
 
-    // Get all user accounts with recent transactions
-    const accounts = await prisma.account.findMany({
-      where: { 
-        userId: user.id,
-        isActive: true
-      },
-      include: {
-        transactions: {
-          orderBy: { createdAt: 'desc' },
-          take: 10
+    // Retry logic for prepared statement errors
+    let accounts = [];
+    let retries = 3;
+    
+    while (retries > 0) {
+      try {
+        // Get all user accounts with recent transactions
+        accounts = await prisma.account.findMany({
+          where: { 
+            userId: user.id,
+            isActive: true
+          },
+          include: {
+            transactions: {
+              orderBy: { createdAt: 'desc' },
+              take: 10
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+        break; // Success, exit retry loop
+      } catch (error: any) {
+        retries--;
+        console.log(`User accounts query attempt failed, retries left: ${retries}`);
+        
+        if (error?.message?.includes('prepared statement') && retries > 0) {
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
         }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+        
+        // If it's not a prepared statement error or no retries left, throw
+        throw error;
+      }
+    }
 
     // Calculate total balance
     const totalBalance = accounts.reduce((sum, account) => {

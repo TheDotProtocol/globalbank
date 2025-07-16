@@ -211,6 +211,8 @@ export default function Dashboard() {
         setSelectedAccount(data.account);
         setAccountDetailsModalOpen(true);
       } else {
+        const errorData = await response.json();
+        console.error('Account details error:', errorData);
         showToast('Failed to load account details', 'error');
       }
     } catch (error) {
