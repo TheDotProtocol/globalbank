@@ -53,6 +53,7 @@ model Account {
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
   eChecks      ECheck[]
+  cards        Card[]
 
   @@map("accounts")
 }
@@ -87,10 +88,13 @@ model Transaction {
 model Card {
   id            String    @id @default(cuid())
   userId        String
+  accountId     String
   cardNumber    String    @unique
   cardType      CardType
+  status        CardStatus @default(ACTIVE)
   expiryDate    DateTime
   cvv           String
+  isVirtual     Boolean   @default(false)
   isActive      Boolean   @default(true)
   dailyLimit    Decimal   @default(1000)
   monthlyLimit  Decimal   @default(5000)
@@ -99,6 +103,7 @@ model Card {
 
   // Relations
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account       Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@map("cards")
 }
@@ -205,6 +210,13 @@ enum CardType {
   DEBIT
   CREDIT
   VIRTUAL
+}
+
+enum CardStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  BLOCKED
 }
 
 enum DepositStatus {

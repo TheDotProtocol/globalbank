@@ -20,6 +20,9 @@ import { useToast } from '@/hooks/useToast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Skeleton from '@/components/ui/Skeleton';
 import NotificationCenter from '@/components/NotificationCenter';
+import AddMoneyModal from '@/components/modals/AddMoneyModal';
+import NewCardModal from '@/components/modals/NewCardModal';
+import FixedDepositModal from '@/components/modals/FixedDepositModal';
 import { exportTransactions, exportFixedDeposits } from '@/lib/export';
 
 interface User {
@@ -64,6 +67,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Modal states
+  const [addMoneyModalOpen, setAddMoneyModalOpen] = useState(false);
+  const [newCardModalOpen, setNewCardModalOpen] = useState(false);
+  const [fixedDepositModalOpen, setFixedDepositModalOpen] = useState(false);
+  
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -140,6 +149,25 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Export error:', error);
       showToast('Export failed', 'error');
+    }
+  };
+
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'add-money':
+        setAddMoneyModalOpen(true);
+        break;
+      case 'send-money':
+        showToast('Send money feature coming soon!', 'info');
+        break;
+      case 'new-card':
+        setNewCardModalOpen(true);
+        break;
+      case 'fixed-deposit':
+        setFixedDepositModalOpen(true);
+        break;
+      default:
+        break;
     }
   };
 
@@ -331,19 +359,31 @@ export default function Dashboard() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                    <button 
+                      onClick={() => handleQuickAction('add-money')}
+                      className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    >
                       <Upload className="w-5 h-5 text-blue-600" />
                       <span className="text-sm font-medium">Add Money</span>
                     </button>
-                    <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                    <button 
+                      onClick={() => handleQuickAction('send-money')}
+                      className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    >
                       <Download className="w-5 h-5 text-green-600" />
                       <span className="text-sm font-medium">Send Money</span>
                     </button>
-                    <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                    <button 
+                      onClick={() => handleQuickAction('new-card')}
+                      className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    >
                       <Plus className="w-5 h-5 text-purple-600" />
                       <span className="text-sm font-medium">New Card</span>
                     </button>
-                    <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                    <button 
+                      onClick={() => handleQuickAction('fixed-deposit')}
+                      className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    >
                       <TrendingUp className="w-5 h-5 text-orange-600" />
                       <span className="text-sm font-medium">Fixed Deposit</span>
                     </button>
@@ -520,8 +560,84 @@ export default function Dashboard() {
             {activeTab === 'profile' && (
               <div className="space-y-6">
                 <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Profile</h2>
-                  <p className="text-gray-600">Profile management features will be implemented here.</p>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Profile Management</h2>
+                  <div className="space-y-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h3 className="font-medium text-gray-900 mb-2">Personal Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">First Name</label>
+                          <input
+                            type="text"
+                            defaultValue={user?.firstName}
+                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Last Name</label>
+                          <input
+                            type="text"
+                            defaultValue={user?.lastName}
+                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Email</label>
+                          <input
+                            type="email"
+                            defaultValue={user?.email}
+                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Phone</label>
+                          <input
+                            type="tel"
+                            placeholder="+1 (555) 123-4567"
+                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                      <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                        Update Profile
+                      </button>
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h3 className="font-medium text-gray-900 mb-2">Security Settings</h3>
+                      <div className="space-y-3">
+                        <button className="w-full text-left px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                          Change Password
+                        </button>
+                        <button className="w-full text-left px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                          Enable Two-Factor Authentication
+                        </button>
+                        <button className="w-full text-left px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                          Manage Login Sessions
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h3 className="font-medium text-gray-900 mb-2">KYC Status</h3>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          user?.kycStatus === 'APPROVED' 
+                            ? 'bg-green-100 text-green-800'
+                            : user?.kycStatus === 'PENDING'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {user?.kycStatus}
+                        </span>
+                        {user?.kycStatus !== 'APPROVED' && (
+                          <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            Complete KYC
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -530,13 +646,73 @@ export default function Dashboard() {
               <div className="space-y-6">
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Settings</h2>
-                  <p className="text-gray-600">Settings and preferences will be implemented here.</p>
+                  <div className="space-y-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h3 className="font-medium text-gray-900 mb-2">Notifications</h3>
+                      <div className="space-y-3">
+                        <label className="flex items-center">
+                          <input type="checkbox" defaultChecked className="mr-2" />
+                          <span>Email notifications</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input type="checkbox" defaultChecked className="mr-2" />
+                          <span>SMS notifications</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input type="checkbox" className="mr-2" />
+                          <span>Push notifications</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h3 className="font-medium text-gray-900 mb-2">Privacy</h3>
+                      <div className="space-y-3">
+                        <label className="flex items-center">
+                          <input type="checkbox" defaultChecked className="mr-2" />
+                          <span>Share data for analytics</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input type="checkbox" className="mr-2" />
+                          <span>Marketing communications</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                      Save Settings
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <AddMoneyModal
+        isOpen={addMoneyModalOpen}
+        onClose={() => setAddMoneyModalOpen(false)}
+        accounts={accounts}
+        onSuccess={fetchDashboardData}
+      />
+
+      <NewCardModal
+        isOpen={newCardModalOpen}
+        onClose={() => setNewCardModalOpen(false)}
+        accounts={accounts}
+        userId={user?.id || ''}
+        onSuccess={fetchDashboardData}
+      />
+
+      <FixedDepositModal
+        isOpen={fixedDepositModalOpen}
+        onClose={() => setFixedDepositModalOpen(false)}
+        accounts={accounts}
+        userId={user?.id || ''}
+        onSuccess={fetchDashboardData}
+      />
     </div>
   );
 } 
