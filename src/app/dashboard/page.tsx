@@ -840,19 +840,19 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-sm font-medium text-gray-600">Total Transactions</p>
-                <p className="text-lg font-bold text-gray-900">{selectedAccount.statistics.totalTransactions}</p>
+                <p className="text-lg font-bold text-gray-900">{selectedAccount.statistics?.totalTransactions || 0}</p>
               </div>
               <div className="bg-green-50 rounded-lg p-4">
                 <p className="text-sm font-medium text-green-600">Total Credits</p>
-                <p className="text-lg font-bold text-green-900">${selectedAccount.statistics.totalCredits.toLocaleString()}</p>
+                <p className="text-lg font-bold text-green-900">${(selectedAccount.statistics?.totalCredits || 0).toLocaleString()}</p>
               </div>
               <div className="bg-red-50 rounded-lg p-4">
                 <p className="text-sm font-medium text-red-600">Total Debits</p>
-                <p className="text-lg font-bold text-red-900">${selectedAccount.statistics.totalDebits.toLocaleString()}</p>
+                <p className="text-lg font-bold text-red-900">${(selectedAccount.statistics?.totalDebits || 0).toLocaleString()}</p>
               </div>
               <div className="bg-blue-50 rounded-lg p-4">
                 <p className="text-sm font-medium text-blue-600">Avg Transaction</p>
-                <p className="text-lg font-bold text-blue-900">${selectedAccount.statistics.averageTransactionAmount.toLocaleString()}</p>
+                <p className="text-lg font-bold text-blue-900">${(selectedAccount.statistics?.averageTransactionAmount || 0).toLocaleString()}</p>
               </div>
             </div>
 
