@@ -40,8 +40,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if email is verified
-    if (!user.emailVerified) {
+    // Check if email verification is supported and if email is verified
+    let emailVerified = true; // Default to true for backward compatibility
+    
+    try {
+      // Try to access emailVerified field
+      if ('emailVerified' in user) {
+        emailVerified = user.emailVerified;
+      }
+    } catch (error) {
+      console.log('Email verification not supported, proceeding with login');
+    }
+
+    // Only check email verification if the field exists and is false
+    if (emailVerified === false) {
       return NextResponse.json(
         { 
           error: 'Email not verified',
@@ -69,7 +81,7 @@ export async function POST(request: NextRequest) {
         firstName: user.firstName,
         lastName: user.lastName,
         kycStatus: user.kycStatus,
-        emailVerified: user.emailVerified,
+        emailVerified: emailVerified,
         accounts: user.accounts.map(account => ({
           id: account.id,
           accountNumber: account.accountNumber,
