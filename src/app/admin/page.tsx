@@ -60,14 +60,18 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [kycFilter, setKycFilter] = useState('all');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   
   const router = useRouter();
 
   useEffect(() => {
+    setIsClient(true);
     checkAuthentication();
   }, []);
 
   const checkAuthentication = () => {
+    if (typeof window === 'undefined') return;
+    
     const token = localStorage.getItem('token') || localStorage.getItem('adminSessionToken');
     if (!token) {
       // No token found, redirect to login
@@ -80,6 +84,8 @@ export default function AdminDashboard() {
   };
 
   const getAuthHeaders = () => {
+    if (typeof window === 'undefined') return {};
+    
     const token = localStorage.getItem('token') || localStorage.getItem('adminSessionToken');
     return {
       'Content-Type': 'application/json',
@@ -103,8 +109,10 @@ export default function AdminDashboard() {
         setStats(statsData.statistics);
       } else if (statsResponse.status === 401) {
         // Unauthorized, redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('adminSessionToken');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('adminSessionToken');
+        }
         router.push('/admin/login');
         return;
       }
@@ -116,8 +124,10 @@ export default function AdminDashboard() {
         setUsers(usersData.users || []);
       } else if (usersResponse.status === 401) {
         // Unauthorized, redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('adminSessionToken');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('adminSessionToken');
+        }
         router.push('/admin/login');
         return;
       }
@@ -129,8 +139,10 @@ export default function AdminDashboard() {
         setKycDocuments(kycData.documents || []);
       } else if (kycResponse.status === 401) {
         // Unauthorized, redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('adminSessionToken');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('adminSessionToken');
+        }
         router.push('/admin/login');
         return;
       }
@@ -159,8 +171,10 @@ export default function AdminDashboard() {
         fetchAdminData(); // Refresh data
       } else if (response.status === 401) {
         // Unauthorized, redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('adminSessionToken');
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('adminSessionToken');
+        }
         router.push('/admin/login');
       }
     } catch (error) {
@@ -169,8 +183,10 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('adminSessionToken');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('adminSessionToken');
+    }
     router.push('/admin/login');
   };
 
@@ -185,8 +201,8 @@ export default function AdminDashboard() {
     return doc.status.toLowerCase() === kycFilter.toLowerCase();
   });
 
-  // Show loading while checking authentication
-  if (!isAuthenticated) {
+  // Show loading while checking authentication or during SSR
+  if (!isClient || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <LoadingSpinner />
