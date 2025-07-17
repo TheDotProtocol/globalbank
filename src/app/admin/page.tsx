@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Users, 
   Shield, 
@@ -58,29 +59,81 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [kycFilter, setKycFilter] = useState('all');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  const router = useRouter();
 
   useEffect(() => {
-    fetchAdminData();
+    checkAuthentication();
   }, []);
 
+  const checkAuthentication = () => {
+    const token = localStorage.getItem('token') || localStorage.getItem('adminSessionToken');
+    if (!token) {
+      // No token found, redirect to login
+      router.push('/admin/login');
+      return;
+    }
+    
+    setIsAuthenticated(true);
+    fetchAdminData();
+  };
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token') || localStorage.getItem('adminSessionToken');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    };
+  };
+
   const fetchAdminData = async () => {
+    // Don't fetch if not authenticated
+    if (!isAuthenticated) return;
+    
     try {
       setLoading(true);
       
+      const headers = getAuthHeaders();
+      
       // Fetch admin statistics
-      const statsResponse = await fetch('/api/admin/dashboard');
-      const statsData = await statsResponse.json();
-      setStats(statsData.statistics);
+      const statsResponse = await fetch('/api/admin/dashboard', { headers });
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        setStats(statsData.statistics);
+      } else if (statsResponse.status === 401) {
+        // Unauthorized, redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('adminSessionToken');
+        router.push('/admin/login');
+        return;
+      }
 
       // Fetch users
-      const usersResponse = await fetch('/api/admin/users');
-      const usersData = await usersResponse.json();
-      setUsers(usersData.users);
+      const usersResponse = await fetch('/api/admin/users', { headers });
+      if (usersResponse.ok) {
+        const usersData = await usersResponse.json();
+        setUsers(usersData.users || []);
+      } else if (usersResponse.status === 401) {
+        // Unauthorized, redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('adminSessionToken');
+        router.push('/admin/login');
+        return;
+      }
 
       // Fetch KYC documents
-      const kycResponse = await fetch('/api/admin/kyc');
-      const kycData = await kycResponse.json();
-      setKycDocuments(kycData.documents);
+      const kycResponse = await fetch('/api/admin/kyc', { headers });
+      if (kycResponse.ok) {
+        const kycData = await kycResponse.json();
+        setKycDocuments(kycData.documents || []);
+      } else if (kycResponse.status === 401) {
+        // Unauthorized, redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('adminSessionToken');
+        router.push('/admin/login');
+        return;
+      }
 
     } catch (error) {
       console.error('Error fetching admin data:', error);
@@ -91,9 +144,10 @@ export default function AdminDashboard() {
 
   const handleKycAction = async (documentId: string, action: 'approve' | 'reject') => {
     try {
+      const headers = getAuthHeaders();
       const response = await fetch('/api/admin/kyc', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           documentId,
           status: action === 'approve' ? 'VERIFIED' : 'REJECTED',
@@ -103,22 +157,42 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         fetchAdminData(); // Refresh data
+      } else if (response.status === 401) {
+        // Unauthorized, redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('adminSessionToken');
+        router.push('/admin/login');
       }
     } catch (error) {
       console.error('Error updating KYC status:', error);
     }
   };
 
-  const filteredUsers = users.filter(user =>
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('adminSessionToken');
+    router.push('/admin/login');
+  };
+
+  const filteredUsers = (users || []).filter(user =>
     user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredKycDocuments = kycDocuments.filter(doc => {
+  const filteredKycDocuments = (kycDocuments || []).filter(doc => {
     if (kycFilter === 'all') return true;
     return doc.status.toLowerCase() === kycFilter.toLowerCase();
   });
+
+  // Show loading while checking authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -153,6 +227,12 @@ export default function AdminDashboard() {
               <p className="text-gray-600">Manage users, KYC, and system compliance</p>
             </div>
             <div className="flex items-center space-x-4">
+              <button 
+                onClick={handleLogout}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
               <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                 <Download className="w-4 h-4 mr-2 inline" />
                 Export Report
