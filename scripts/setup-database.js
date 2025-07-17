@@ -42,18 +42,15 @@ async function setupDatabase() {
     }
     
     // Update existing users to have emailVerified = true (for backward compatibility)
+    // Use raw SQL instead of Prisma to avoid schema validation issues
     console.log('🔄 Updating existing users...');
-    const updateResult = await prisma.user.updateMany({
-      where: {
-        emailVerified: null
-      },
-      data: {
-        emailVerified: true,
-        emailVerifiedAt: new Date()
-      }
-    });
+    const updateResult = await prisma.$executeRaw`
+      UPDATE users 
+      SET "emailVerified" = true, "emailVerifiedAt" = NOW() 
+      WHERE "emailVerified" IS NULL OR "emailVerified" = false
+    `;
     
-    console.log(`✅ Updated ${updateResult.count} existing users`);
+    console.log(`✅ Updated existing users with email verification`);
     
     // Verify the setup
     const userCount = await prisma.user.count();
