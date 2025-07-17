@@ -53,9 +53,9 @@ export const POST = requireAuth(async (request: NextRequest) => {
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: currency,
-        automatic_payment_methods: {
-          enabled: true,
-        },
+        payment_method_types: ['card'],
+        capture_method: 'automatic',
+        confirm: false, // Don't confirm immediately, let frontend handle it
         metadata: {
           userId: user.id,
           accountId: account.id,
@@ -64,6 +64,12 @@ export const POST = requireAuth(async (request: NextRequest) => {
         },
         description: `${type === 'deposit' ? 'Account Deposit' : 'Account Withdrawal'} - ${account.accountNumber}`,
         setup_future_usage: 'off_session',
+        // Enable 3D Secure for debit cards
+        payment_method_options: {
+          card: {
+            request_three_d_secure: 'automatic',
+          },
+        },
       });
 
       return NextResponse.json({

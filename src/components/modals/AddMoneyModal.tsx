@@ -87,18 +87,23 @@ function CardPaymentForm({ amount, setAmount, selectedAccount, setSelectedAccoun
         setup_future_usage: 'off_session',
       });
 
+      console.log('Payment confirmation result:', { confirmError, confirmedIntent });
+
       if (confirmError) {
+        console.error('Stripe confirmation error:', confirmError);
         if (confirmError.code === 'authentication_required') {
           // Handle 3D Secure authentication
+          console.log('3D Secure authentication required');
           setRequiresAction(true);
           setPaymentIntent(confirmedIntent);
           return;
         }
-        throw new Error(confirmError.message || 'Payment failed');
+        throw new Error(`Payment failed: ${confirmError.message} (Code: ${confirmError.code})`);
       }
 
       // Check if payment requires additional action (3D Secure)
       if (confirmedIntent && confirmedIntent.status === 'requires_action') {
+        console.log('Payment requires action:', confirmedIntent.status);
         setRequiresAction(true);
         setPaymentIntent(confirmedIntent);
         return;
@@ -106,7 +111,11 @@ function CardPaymentForm({ amount, setAmount, selectedAccount, setSelectedAccoun
 
       // Payment succeeded
       if (confirmedIntent && confirmedIntent.status === 'succeeded') {
+        console.log('Payment succeeded:', confirmedIntent.id);
         await handlePaymentSuccess(confirmedIntent.id, numAmount, selectedAccount, token);
+      } else {
+        console.log('Unexpected payment status:', confirmedIntent?.status);
+        throw new Error(`Unexpected payment status: ${confirmedIntent?.status}`);
       }
 
     } catch (error: any) {
@@ -154,19 +163,25 @@ function CardPaymentForm({ amount, setAmount, selectedAccount, setSelectedAccoun
     setLoading(true);
 
     try {
+      console.log('Starting 3D Secure authentication...');
       const { error, paymentIntent: updatedIntent } = await stripe.confirmCardPayment(paymentIntent.client_secret);
 
+      console.log('3D Secure result:', { error, updatedIntent });
+
       if (error) {
-        throw new Error(error.message || '3D Secure authentication failed');
+        console.error('3D Secure error:', error);
+        throw new Error(`3D Secure authentication failed: ${error.message} (Code: ${error.code})`);
       }
 
       if (updatedIntent && updatedIntent.status === 'succeeded') {
+        console.log('3D Secure authentication successful');
         const token = localStorage.getItem('token');
         if (token) {
           await handlePaymentSuccess(updatedIntent.id, parseFloat(amount), selectedAccount, token);
         }
       } else {
-        throw new Error('Payment authentication failed');
+        console.log('3D Secure authentication failed - unexpected status:', updatedIntent?.status);
+        throw new Error(`Payment authentication failed - Status: ${updatedIntent?.status}`);
       }
     } catch (error: any) {
       console.error('3D Secure error:', error);
