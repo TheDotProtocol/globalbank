@@ -64,12 +64,8 @@ export const POST = requireAuth(async (request: NextRequest) => {
         },
         description: `${type === 'deposit' ? 'Account Deposit' : 'Account Withdrawal'} - ${account.accountNumber}`,
         setup_future_usage: 'off_session',
-        // Enable 3D Secure for debit cards
-        payment_method_options: {
-          card: {
-            request_three_d_secure: 'automatic',
-          },
-        },
+        // Remove problematic payment_method_options that can cause authentication issues
+        // Let Stripe handle 3D Secure automatically based on card type
       });
 
       return NextResponse.json({

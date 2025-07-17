@@ -98,6 +98,28 @@ function CardPaymentForm({ amount, setAmount, selectedAccount, setSelectedAccoun
           setPaymentIntent(confirmedIntent);
           return;
         }
+        
+        // Handle specific authentication errors
+        if (confirmError.code === 'payment_intent_authentication_failure') {
+          throw new Error('Payment authentication failed. Please try a different card or contact your bank.');
+        }
+        
+        if (confirmError.code === 'card_declined') {
+          throw new Error('Card was declined. Please check your card details and try again.');
+        }
+        
+        if (confirmError.code === 'expired_card') {
+          throw new Error('Card has expired. Please use a different card.');
+        }
+        
+        if (confirmError.code === 'incorrect_cvc') {
+          throw new Error('Incorrect CVC. Please check your card details and try again.');
+        }
+        
+        if (confirmError.code === 'processing_error') {
+          throw new Error('Payment processing error. Please try again or use a different payment method.');
+        }
+        
         throw new Error(`Payment failed: ${confirmError.message} (Code: ${confirmError.code})`);
       }
 
@@ -294,6 +316,11 @@ function CardPaymentForm({ amount, setAmount, selectedAccount, setSelectedAccoun
         <p className="text-xs text-gray-500 mt-1">
           Debit cards may require 3D Secure authentication from your bank.
         </p>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
+          <p className="text-xs text-yellow-800">
+            <strong>Testing:</strong> Use Stripe test cards for testing (e.g., 4242424242424242). Real cards will work in production.
+          </p>
+        </div>
       </div>
 
       <div className="flex space-x-3 pt-4">
