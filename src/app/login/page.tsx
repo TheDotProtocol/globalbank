@@ -53,7 +53,12 @@ function LoginPageContent() {
         // Redirect to dashboard
         router.push('/dashboard');
       } else {
-        setError(data.error || 'Login failed');
+        if (data.requiresVerification) {
+          localStorage.setItem('pendingEmail', formData.email);
+          router.push('/verify-email');
+        } else {
+          setError(data.error || 'Login failed');
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -73,7 +78,7 @@ function LoginPageContent() {
           </div>
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Sign in to your GlobalBank account
+            Sign in to your Global Dot Bank account
           </p>
         </div>
 
@@ -105,6 +110,7 @@ function LoginPageContent() {
                   id="email"
                   name="email"
                   type="email"
+                  autoComplete="username"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -126,6 +132,7 @@ function LoginPageContent() {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -188,7 +195,7 @@ function LoginPageContent() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">New to GlobalBank?</span>
+                <span className="px-2 bg-white text-gray-500">New to Global Dot Bank?</span>
               </div>
             </div>
 

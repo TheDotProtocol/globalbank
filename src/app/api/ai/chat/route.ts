@@ -218,7 +218,7 @@ Would you like me to help you set up additional security features or explain any
   
   // General Banking
   if (lowerMessage.includes('feature') || lowerMessage.includes('service') || lowerMessage.includes('what can')) {
-    return `**Welcome to GlobalBank!** 🏦
+    return `**Welcome to Global Dot Bank!** 🏦
 
 Here's what we offer to help you manage your finances:
 
@@ -330,7 +330,7 @@ What specific area would you like help with? I'm here to make banking easier for
   // Default Response
   return `**Hello! I'm BankBugger AI, your personal banking assistant!** 🤖
 
-I'm here to help you with all things banking at GlobalBank. Here's what I can do:
+I'm here to help you with all things banking at Global Dot Bank. Here's what I can do:
 
 **💡 I can help you with:**
 • **Fixed Deposits** - Learn about rates, create deposits, calculate earnings

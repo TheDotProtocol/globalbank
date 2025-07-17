@@ -52,7 +52,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     
     // For now, we'll simulate file upload
     const fileName = `${user.id}_${documentType}_${Date.now()}.${file.type.split('/')[1]}`;
-    const fileUrl = `https://storage.globalbank.com/kyc/${fileName}`;
+    const fileUrl = `https://storage.globaldotbank.org/kyc/${fileName}`;
 
     // Check if document type already exists for this user
     const existingDocument = await prisma.kycDocument.findFirst({

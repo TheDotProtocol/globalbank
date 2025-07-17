@@ -116,11 +116,11 @@ export function getClientIdentifier(request: Request): string {
 // Content Security Policy
 export const cspHeader = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://connect-js.stripe.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self'",
-  "connect-src 'self'",
+  "connect-src 'self' https://api.stripe.com https://api.globaldotbank.org",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'"

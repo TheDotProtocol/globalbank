@@ -97,9 +97,9 @@ export const POST = requireAuth(async (request: NextRequest) => {
         routingNumber: '021000021', // This would be your routing number
         amount: amount,
         reference: `GB${Date.now()}${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-        description: `GlobalBank Transfer - ${account.accountNumber}`,
-        bankName: 'GlobalBank',
-        accountName: 'GlobalBank Business Account'
+        description: `Global Dot Bank Transfer - ${account.accountNumber}`,
+        bankName: 'Global Dot Bank',
+        accountName: 'Global Dot Bank Business Account'
       };
 
       // Generate QR code for bank transfer

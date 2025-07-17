@@ -6,6 +6,7 @@ import {
   AlertCircle, Settings, CreditCard, FileText, Bell, Save
 } from 'lucide-react';
 import Logo from '@/components/Logo';
+import KYCUploadForm from '@/components/KYCUploadForm';
 
 interface UserProfile {
   id: string;
@@ -178,7 +179,8 @@ export default function ProfilePage() {
               { id: 'profile', label: 'Profile', icon: User },
               { id: 'security', label: 'Security', icon: Shield },
               { id: 'accounts', label: 'Accounts', icon: CreditCard },
-              { id: 'preferences', label: 'Preferences', icon: Settings }
+              { id: 'preferences', label: 'Preferences', icon: Settings },
+              { id: 'kyc', label: 'KYC', icon: FileText }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -523,6 +525,13 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'kyc' && (
+            <div className="p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">KYC Verification</h2>
+              <KYCUploadForm />
             </div>
           )}
         </div>

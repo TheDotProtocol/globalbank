@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth } from '@/lib/auth';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 // Admin dashboard statistics
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = requireAdminAuth(async (request: NextRequest) => {
   try {
-    const user = (request as any).user;
-
-    // Check if user is admin (you can implement admin role checking here)
-    // For now, we'll allow access to all authenticated users
+    const admin = (request as any).admin;
 
     // Get system statistics
     const [

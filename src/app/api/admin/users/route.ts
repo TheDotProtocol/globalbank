@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth } from '@/lib/auth';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 // Get all users for admin management
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = requireAdminAuth(async (request: NextRequest) => {
   try {
+    const admin = (request as any).admin;
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');

@@ -14,7 +14,8 @@ import {
   Download,
   Upload,
   Plus,
-  Eye
+  Eye,
+  Globe
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/useToast';
@@ -24,6 +25,7 @@ import NotificationCenter from '@/components/NotificationCenter';
 import AddMoneyModal from '@/components/modals/AddMoneyModal';
 import NewCardModal from '@/components/modals/NewCardModal';
 import FixedDepositModal from '@/components/modals/FixedDepositModal';
+import MultiCurrencyDisplay, { CurrencyConverter } from '@/components/MultiCurrencyDisplay';
 import { exportTransactions, exportFixedDeposits } from '@/lib/export';
 
 interface User {
@@ -125,6 +127,12 @@ export default function Dashboard() {
       const userData = await userResponse.json();
       setUser(userData.user);
 
+      // Check if user needs to complete KYC
+      if (userData.user.kycStatus === 'PENDING') {
+        showToast('Please complete your KYC verification to access all features', 'info');
+        // Don't redirect immediately, let user see the dashboard but show KYC prompt
+      }
+
       // Fetch accounts
       const accountsResponse = await fetch('/api/user/accounts', { headers });
       const accountsData = await accountsResponse.json();
@@ -185,6 +193,9 @@ export default function Dashboard() {
         break;
       case 'fixed-deposit':
         setFixedDepositModalOpen(true);
+        break;
+      case 'kyc':
+        router.push('/profile?tab=kyc');
         break;
       default:
         break;
@@ -262,7 +273,7 @@ export default function Dashboard() {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <h1 className="text-xl font-bold text-gray-900">GlobalBank</h1>
+            <h1 className="text-xl font-bold text-gray-900">Global Dot Bank</h1>
           </div>
           <div className="flex items-center space-x-2">
             <NotificationCenter />
@@ -280,7 +291,7 @@ export default function Dashboard() {
       <div className="hidden lg:block bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
-            <h1 className="text-2xl font-bold text-gray-900">GlobalBank</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Global Dot Bank</h1>
             <div className="flex items-center space-x-4">
               <span className="text-gray-600">
                 Welcome, {user?.firstName} {user?.lastName}
@@ -386,9 +397,10 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-blue-50 rounded-lg p-4">
                       <p className="text-sm font-medium text-blue-600">Total Balance</p>
-                      <p className="text-2xl font-bold text-blue-900">
-                        ${totalBalance.toLocaleString()}
-                      </p>
+                      <MultiCurrencyDisplay 
+                        usdAmount={totalBalance}
+                        className="mt-2"
+                      />
                     </div>
                     <div className="bg-green-50 rounded-lg p-4">
                       <p className="text-sm font-medium text-green-600">Active Accounts</p>
@@ -405,10 +417,23 @@ export default function Dashboard() {
                   </div>
                 </div>
 
+                {/* Currency Converter Tool */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <Globe className="w-5 h-5 text-blue-600" />
+                    <h2 className="text-xl font-semibold text-gray-900">Currency Converter</h2>
+                  </div>
+                  <CurrencyConverter 
+                    amount={100}
+                    fromCurrency="USD"
+                    toCurrency="EUR"
+                  />
+                </div>
+
                 {/* Quick Actions */}
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     <button 
                       onClick={() => handleQuickAction('add-money')}
                       className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
@@ -436,6 +461,13 @@ export default function Dashboard() {
                     >
                       <TrendingUp className="w-5 h-5 text-orange-600" />
                       <span className="text-sm font-medium">Fixed Deposit</span>
+                    </button>
+                    <button 
+                      onClick={() => handleQuickAction('kyc')}
+                      className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    >
+                      <FileText className="w-5 h-5 text-indigo-600" />
+                      <span className="text-sm font-medium">KYC Documents</span>
                     </button>
                   </div>
                 </div>
@@ -494,9 +526,11 @@ export default function Dashboard() {
                           <h3 className="font-medium text-gray-900">{account.accountType}</h3>
                           <span className="text-sm text-gray-500">{account.currency}</span>
                         </div>
-                        <p className="text-2xl font-bold text-gray-900">
-                          ${account.balance.toLocaleString()}
-                        </p>
+                        <MultiCurrencyDisplay 
+                          usdAmount={account.balance}
+                          className="mb-2"
+                          showSettings={false}
+                        />
                         <p className="text-sm text-gray-500 mt-1">
                           Account: {account.accountNumber}
                         </p>

@@ -12,7 +12,7 @@ export default function AMLKYCPolicy() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <Logo variant="icon" className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">GlobalBank</span>
+              <span className="text-xl font-bold text-gray-900">Global Dot Bank</span>
             </div>
             <button 
               onClick={() => window.history.back()}
@@ -38,7 +38,7 @@ export default function AMLKYCPolicy() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
               <p className="text-gray-700 mb-4">
-                GlobalBank is committed to preventing money laundering and terrorist financing. 
+                Global Dot Bank is committed to preventing money laundering and terrorist financing. 
                 Our Anti-Money Laundering (AML) and Know Your Customer (KYC) policies ensure 
                 compliance with international regulations and protect our customers and the 
                 financial system.
@@ -179,8 +179,8 @@ export default function AMLKYCPolicy() {
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700">
-                  <strong>AML Officer:</strong> aml@globalbank.com<br />
-                  <strong>Compliance Team:</strong> compliance@globalbank.com<br />
+                  <strong>AML Officer:</strong> aml@globaldotbank.org<br />
+                  <strong>Compliance Team:</strong> compliance@globaldotbank.org<br />
                   <strong>Phone:</strong> +1 (555) 123-4567<br />
                   <strong>Address:</strong> 123 Banking Street, Financial District, NY 10001
                 </p>

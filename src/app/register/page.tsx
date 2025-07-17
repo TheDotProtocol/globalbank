@@ -112,7 +112,7 @@ export default function AccountSelection() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <Logo variant="icon" className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">GlobalBank</span>
+              <span className="text-xl font-bold text-gray-900">Global Dot Bank</span>
             </div>
             <button 
               onClick={() => window.location.href = '/'}

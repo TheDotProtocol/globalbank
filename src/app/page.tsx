@@ -32,7 +32,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <Logo variant="icon" className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">GlobalBank</span>
+              <span className="text-xl font-bold text-gray-900">Global Dot Bank</span>
             </div>
             <div className="flex items-center space-x-4">
               <button className="text-gray-600 hover:text-gray-900 transition-colors">
@@ -77,7 +77,7 @@ export default function LandingPage() {
             <h1 className={`text-5xl md:text-7xl font-bold text-gray-900 mb-6 transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
               The World's First
               <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                New Age Bank
+                Next-Generation Bank
               </span>
             </h1>
 
@@ -115,7 +115,7 @@ export default function LandingPage() {
             <div>
               <div className="flex items-center space-x-3 mb-4">
                 <Logo variant="icon" className="h-8 w-8" />
-                <span className="text-xl font-bold">GlobalBank</span>
+                <span className="text-xl font-bold">Global Dot Bank</span>
               </div>
               <p className="text-gray-400">
                 The world's first new age bank, redefining digital banking for the future.
@@ -189,7 +189,7 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 GlobalBank. All rights reserved.</p>
+            <p>&copy; 2024 Global Dot Bank. All rights reserved.</p>
           </div>
         </div>
       </footer>

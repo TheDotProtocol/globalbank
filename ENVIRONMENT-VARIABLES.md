@@ -28,7 +28,7 @@ SMTP_HOST=smtp.resend.com
 SMTP_PORT=587
 SMTP_USER=resend
 SMTP_PASS=re_8dzAZGVf_7943rLPnE1ko55Z2s7kvbLfw
-SMTP_FROM=noreply@globalbank.com
+SMTP_FROM=noreply@globaldotbank.org
 ```
 
 ### OpenAI (AI Assistant)
@@ -94,7 +94,7 @@ SMTP_HOST=smtp.resend.com
 SMTP_PORT=587
 SMTP_USER=resend
 SMTP_PASS=re_8dzAZGVf_7943rLPnE1ko55Z2s7kvbLfw
-SMTP_FROM=noreply@globalbank.com
+SMTP_FROM=noreply@globaldotbank.org
 OPENAI_API_KEY=sk-your_openai_key
 NEXT_PUBLIC_APP_URL=https://your-app-name.railway.app
 NODE_ENV=production

@@ -6,32 +6,32 @@ import { ToastProvider } from '@/hooks/useToast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'GlobalBank - Digital Banking Platform',
+  title: 'Global Dot Bank - Digital Banking Platform',
   description: 'Modern digital banking with AI-powered assistance, secure transactions, and comprehensive financial services.',
   keywords: 'digital banking, online banking, financial services, AI assistant, secure banking',
-  authors: [{ name: 'GlobalBank Team' }],
-  creator: 'GlobalBank',
-  publisher: 'GlobalBank',
+  authors: [{ name: 'Global Dot Bank Team' }],
+  creator: 'Global Dot Bank',
+  publisher: 'Global Dot Bank',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://globalbank.com'),
+  metadataBase: new URL('https://globaldotbank.org'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'GlobalBank - Digital Banking Platform',
+    title: 'Global Dot Bank - Digital Banking Platform',
     description: 'Modern digital banking with AI-powered assistance, secure transactions, and comprehensive financial services.',
-    url: 'https://globalbank.com',
-    siteName: 'GlobalBank',
+    url: 'https://globaldotbank.org',
+    siteName: 'Global Dot Bank',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'GlobalBank Digital Banking Platform',
+        alt: 'Global Dot Bank Digital Banking Platform',
       },
     ],
     locale: 'en_US',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GlobalBank - Digital Banking Platform',
+    title: 'Global Dot Bank - Digital Banking Platform',
     description: 'Modern digital banking with AI-powered assistance, secure transactions, and comprehensive financial services.',
     images: ['/og-image.png'],
   },

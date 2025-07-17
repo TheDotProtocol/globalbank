@@ -40,11 +40,11 @@ export const sendEmail = async (emailData: EmailData) => {
 // Email templates
 export const emailTemplates = {
   welcome: (userName: string, email: string, accountNumber?: string) => ({
-    subject: 'Welcome to GlobalBank! 🏦',
+    subject: 'Welcome to Global Dot Bank! 🏦',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center; color: white;">
-          <h1 style="margin: 0; font-size: 28px;">Welcome to GlobalBank!</h1>
+          <h1 style="margin: 0; font-size: 28px;">Welcome to Global Dot Bank!</h1>
           <p style="margin: 10px 0 0 0; opacity: 0.9;">Your digital banking journey starts here</p>
         </div>
         
@@ -52,7 +52,7 @@ export const emailTemplates = {
           <h2 style="color: #333; margin-bottom: 20px;">Hello ${userName}!</h2>
           
           <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-            Welcome to GlobalBank! We're excited to have you as part of our digital banking family. 
+            Welcome to Global Dot Bank! We're excited to have you as part of our digital banking family. 
             Your account has been successfully created and you're now ready to experience modern banking.
           </p>
           
@@ -91,22 +91,22 @@ export const emailTemplates = {
           
           <p style="color: #666; line-height: 1.6;">
             Best regards,<br>
-            The GlobalBank Team
+            The Global Dot Bank Team
           </p>
         </div>
         
         <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
           <p>This email was sent to ${email}</p>
-          <p>© 2024 GlobalBank. All rights reserved.</p>
+          <p>© 2024 Global Dot Bank. All rights reserved.</p>
         </div>
       </div>
     `,
     text: `
-Welcome to GlobalBank!
+Welcome to Global Dot Bank!
 
 Hello ${userName}!
 
-Welcome to GlobalBank! We're excited to have you as part of our digital banking family. 
+Welcome to Global Dot Bank! We're excited to have you as part of our digital banking family. 
 Your account has been successfully created and you're now ready to experience modern banking.
 
 ${accountNumber ? `
@@ -129,7 +129,7 @@ Login to your account: ${process.env.NEXT_PUBLIC_APP_URL}/login
 If you have any questions, our support team is here to help.
 
 Best regards,
-The GlobalBank Team
+The Global Dot Bank Team
     `
   }),
 
@@ -167,12 +167,12 @@ The GlobalBank Team
           
           <p style="color: #666; line-height: 1.6;">
             Best regards,<br>
-            The GlobalBank Team
+            The Global Dot Bank Team
           </p>
         </div>
         
         <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
-          <p>© 2024 GlobalBank. All rights reserved.</p>
+          <p>© 2024 Global Dot Bank. All rights reserved.</p>
         </div>
       </div>
     `,
@@ -192,7 +192,7 @@ View transaction details: ${process.env.NEXT_PUBLIC_APP_URL}
 If you didn't authorize this transaction, please contact our support team immediately.
 
 Best regards,
-The GlobalBank Team
+The Global Dot Bank Team
     `
   }),
 
@@ -228,12 +228,12 @@ The GlobalBank Team
           
           <p style="color: #666; line-height: 1.6;">
             Best regards,<br>
-            The GlobalBank Team
+            The Global Dot Bank Team
           </p>
         </div>
         
         <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
-          <p>© 2024 GlobalBank. All rights reserved.</p>
+          <p>© 2024 Global Dot Bank. All rights reserved.</p>
         </div>
       </div>
     `,
@@ -253,7 +253,7 @@ Review security settings: ${process.env.NEXT_PUBLIC_APP_URL}/profile
 If this activity was not authorized by you, please contact our support team immediately.
 
 Best regards,
-The GlobalBank Team
+The Global Dot Bank Team
     `
   }),
 
@@ -288,12 +288,12 @@ The GlobalBank Team
           
           <p style="color: #666; line-height: 1.6;">
             Best regards,<br>
-            The GlobalBank Team
+            The Global Dot Bank Team
           </p>
         </div>
         
         <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
-          <p>© 2024 GlobalBank. All rights reserved.</p>
+          <p>© 2024 Global Dot Bank. All rights reserved.</p>
         </div>
       </div>
     `,
@@ -312,7 +312,7 @@ View KYC status: ${process.env.NEXT_PUBLIC_APP_URL}/profile
 Thank you for your patience during the verification process.
 
 Best regards,
-The GlobalBank Team
+The Global Dot Bank Team
     `
   }),
 
@@ -329,7 +329,7 @@ The GlobalBank Team
           <h2 style="color: #333; margin-bottom: 20px;">Hello!</h2>
           
           <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-            We received a request to reset your password for your GlobalBank account.
+            We received a request to reset your password for your Global Dot Bank account.
             To proceed with the password reset, please click the button below.
           </p>
           
@@ -346,12 +346,12 @@ The GlobalBank Team
           
           <p style="color: #666; line-height: 1.6;">
             Best regards,<br>
-            The GlobalBank Team
+            The Global Dot Bank Team
           </p>
         </div>
         
         <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
-          <p>© 2024 GlobalBank. All rights reserved.</p>
+          <p>© 2024 Global Dot Bank. All rights reserved.</p>
         </div>
       </div>
     `,
@@ -360,7 +360,7 @@ Password Reset Request
 
 Hello!
 
-We received a request to reset your password for your GlobalBank account.
+We received a request to reset your password for your Global Dot Bank account.
 To proceed with the password reset, please click the button below.
 
 ${resetUrl}
@@ -368,7 +368,7 @@ ${resetUrl}
 If you did not request this password reset, please ignore this email.
 
 Best regards,
-The GlobalBank Team
+The Global Dot Bank Team
     `
   }),
 
@@ -385,7 +385,7 @@ The GlobalBank Team
           <h2 style="color: #333; margin-bottom: 20px;">Hello!</h2>
           
           <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-            Thank you for registering with GlobalBank! To complete your registration,
+            Thank you for registering with Global Dot Bank! To complete your registration,
             please click the button below to verify your email address.
           </p>
           
@@ -397,17 +397,17 @@ The GlobalBank Team
           </div>
           
           <p style="color: #666; line-height: 1.6;">
-            If you did not create an account with GlobalBank, please disregard this email.
+            If you did not create an account with Global Dot Bank, please disregard this email.
           </p>
           
           <p style="color: #666; line-height: 1.6;">
             Best regards,<br>
-            The GlobalBank Team
+            The Global Dot Bank Team
           </p>
         </div>
         
         <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
-          <p>© 2024 GlobalBank. All rights reserved.</p>
+          <p>© 2024 Global Dot Bank. All rights reserved.</p>
         </div>
       </div>
     `,
@@ -416,15 +416,15 @@ Email Verification Required
 
 Hello!
 
-Thank you for registering with GlobalBank! To complete your registration,
+Thank you for registering with Global Dot Bank! To complete your registration,
 please click the button below to verify your email address.
 
 ${verificationUrl}
 
-If you did not create an account with GlobalBank, please disregard this email.
+If you did not create an account with Global Dot Bank, please disregard this email.
 
 Best regards,
-The GlobalBank Team
+The Global Dot Bank Team
     `
   })
 };

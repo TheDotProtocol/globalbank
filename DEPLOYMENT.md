@@ -68,7 +68,7 @@ SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
 SMTP_USER="your-email@gmail.com"
 SMTP_PASS="your-app-password"
-SMTP_FROM="noreply@globalbank.com"
+SMTP_FROM="noreply@globaldotbank.org"
 
 # App Configuration
 NEXT_PUBLIC_APP_URL="https://your-domain.vercel.app"

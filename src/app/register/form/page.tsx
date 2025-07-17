@@ -110,9 +110,14 @@ function RegistrationFormContent() {
         return;
       }
 
-      // Registration successful
+      // Registration successful - redirect to email verification
       setIsLoading(false);
-      window.location.href = '/login?message=Registration successful! Please check your email to verify your account.';
+      
+      // Store email for verification page
+      localStorage.setItem('pendingEmail', formData.email);
+      
+      // Redirect to verification page
+      window.location.href = '/verify-email';
     } catch (error) {
       console.error('Registration error:', error);
       setError('Registration failed. Please try again.');
@@ -128,7 +133,7 @@ function RegistrationFormContent() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <Logo variant="icon" className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">GlobalBank</span>
+              <span className="text-xl font-bold text-gray-900">Global Dot Bank</span>
             </div>
             <button 
               onClick={() => window.location.href = '/register'}
@@ -151,7 +156,7 @@ function RegistrationFormContent() {
                 Create Your Account
               </h1>
               <p className="text-gray-600">
-                Join GlobalBank and start your financial journey
+                Join Global Dot Bank and start your financial journey
               </p>
             </div>
 
@@ -367,7 +372,7 @@ function RegistrationFormContent() {
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Why Choose GlobalBank?
+                Why Choose Global Dot Bank?
               </h2>
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
@@ -403,7 +408,7 @@ function RegistrationFormContent() {
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
               <h3 className="text-xl font-bold mb-4">Ready to Get Started?</h3>
               <p className="text-blue-100 mb-6">
-                Join thousands of customers who trust GlobalBank for their financial needs.
+                Join thousands of customers who trust Global Dot Bank for their financial needs.
               </p>
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">

@@ -14,8 +14,8 @@ export const POST = requireAuth(async (request: NextRequest) => {
     if (action === 'generate') {
       // Generate secret for TOTP
       const secret = speakeasy.generateSecret({
-        name: `GlobalBank (${user.email})`,
-        issuer: 'GlobalBank'
+        name: `Global Dot Bank (${user.email})`,
+        issuer: 'Global Dot Bank'
       });
 
       // Generate QR code

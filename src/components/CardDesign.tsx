@@ -64,7 +64,7 @@ export default function CardDesign({
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
               <span className="text-xs font-bold text-gray-800">GB</span>
             </div>
-            <span className="text-sm font-medium opacity-90">GlobalBank</span>
+            <span className="text-sm font-medium opacity-90">Global Dot Bank</span>
           </div>
           <div className="text-right">
             <div className="text-xs opacity-75">{getCardTypeLabel()}</div>

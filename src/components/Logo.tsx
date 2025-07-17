@@ -25,7 +25,7 @@ export default function Logo({ size = 'md', variant = 'full', className = '' }: 
       <div className={`flex items-center justify-center ${className}`}>
         <Image
           src="/logo.png"
-          alt="GlobalBank"
+          alt="Global Dot Bank"
           width={32}
           height={32}
           className={`${iconSize[size]} object-contain`}
@@ -38,7 +38,7 @@ export default function Logo({ size = 'md', variant = 'full', className = '' }: 
     return (
       <div className={`flex items-center ${className}`}>
         <span className={`${sizeClasses[size]} font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent`}>
-          GlobalBank
+          Global Dot Bank
         </span>
       </div>
     );
@@ -48,13 +48,13 @@ export default function Logo({ size = 'md', variant = 'full', className = '' }: 
     <div className={`flex items-center space-x-2 ${className}`}>
       <Image
         src="/logo.png"
-        alt="GlobalBank"
+        alt="Global Dot Bank"
         width={32}
         height={32}
         className={`${iconSize[size]} object-contain`}
       />
       <span className={`${sizeClasses[size]} font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent`}>
-        GlobalBank
+        Global Dot Bank
       </span>
     </div>
   );

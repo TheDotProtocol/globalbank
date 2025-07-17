@@ -48,7 +48,14 @@ export default function NotificationCenter() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('/api/notifications');
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch('/api/notifications', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await response.json();
       setNotifications(data.notifications || []);
       setUnreadCount(data.notifications?.filter((n: Notification) => !n.read).length || 0);
@@ -59,9 +66,15 @@ export default function NotificationCenter() {
 
   const markAsRead = async (notificationId: string) => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
       await fetch('/api/notifications', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ notificationId })
       });
       
@@ -76,9 +89,15 @@ export default function NotificationCenter() {
 
   const markAllAsRead = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
       await fetch('/api/notifications', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ markAll: true })
       });
       

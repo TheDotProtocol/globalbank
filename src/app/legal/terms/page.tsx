@@ -12,7 +12,7 @@ export default function TermsOfUse() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <Logo variant="icon" className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">GlobalBank</span>
+              <span className="text-xl font-bold text-gray-900">Global Dot Bank</span>
             </div>
             <button 
               onClick={() => window.history.back()}
@@ -38,7 +38,7 @@ export default function TermsOfUse() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
               <p className="text-gray-700 mb-4">
-                By accessing and using GlobalBank's digital banking services, you agree to be bound by these Terms of Use. 
+                By accessing and using Global Dot Bank's digital banking services, you agree to be bound by these Terms of Use. 
                 If you do not agree to these terms, please do not use our services.
               </p>
             </section>
@@ -46,7 +46,7 @@ export default function TermsOfUse() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Service Description</h2>
               <p className="text-gray-700 mb-4">
-                GlobalBank provides digital banking services including but not limited to:
+                Global Dot Bank provides digital banking services including but not limited to:
               </p>
               <ul className="list-disc pl-6 text-gray-700 mb-4">
                 <li>Online account management</li>
@@ -111,7 +111,7 @@ export default function TermsOfUse() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Limitation of Liability</h2>
               <p className="text-gray-700 mb-4">
-                GlobalBank's liability is limited to the extent permitted by law. 
+                Global Dot Bank's liability is limited to the extent permitted by law. 
                 We are not liable for indirect, incidental, or consequential damages.
               </p>
             </section>
@@ -139,7 +139,7 @@ export default function TermsOfUse() {
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700">
-                  <strong>Email:</strong> legal@globalbank.com<br />
+                  <strong>Email:</strong> legal@globaldotbank.org<br />
                   <strong>Phone:</strong> +1 (555) 123-4567<br />
                   <strong>Address:</strong> 123 Banking Street, Financial District, NY 10001
                 </p>

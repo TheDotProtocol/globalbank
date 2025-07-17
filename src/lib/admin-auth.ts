@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const ADMIN_CREDENTIALS = {
   username: 'admingdb',
   password: 'GlobalBank2024!@#$%^&*()_+SecureAdmin', // Strong password with special characters
-  email: 'admin@globalbank.com',
+  email: 'admin@globaldotbank.org',
   role: 'SUPER_ADMIN'
 };
 

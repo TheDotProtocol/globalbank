@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
               <Logo variant="icon" className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">GlobalBank</span>
+              <span className="text-xl font-bold text-gray-900">Global Dot Bank</span>
             </div>
             <button 
               onClick={() => window.history.back()}
@@ -169,10 +169,10 @@ export default function PrivacyPolicy() {
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700">
-                  <strong>Email:</strong> privacy@globalbank.com<br />
+                  <strong>Email:</strong> privacy@globaldotbank.org<br />
                   <strong>Phone:</strong> +1 (555) 123-4567<br />
                   <strong>Address:</strong> 123 Banking Street, Financial District, NY 10001<br />
-                  <strong>Data Protection Officer:</strong> dpo@globalbank.com
+                  <strong>Data Protection Officer:</strong> dpo@globaldotbank.org
                 </p>
               </div>
             </section>

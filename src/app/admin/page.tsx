@@ -72,9 +72,9 @@ export default function AdminDashboard() {
   const checkAuthentication = () => {
     if (typeof window === 'undefined') return;
     
-    const token = localStorage.getItem('token') || localStorage.getItem('adminSessionToken');
-    if (!token) {
-      // No token found, redirect to login
+    const adminToken = localStorage.getItem('adminSessionToken');
+    if (!adminToken) {
+      // No admin token found, redirect to login
       router.push('/admin/login');
       return;
     }
@@ -86,10 +86,10 @@ export default function AdminDashboard() {
   const getAuthHeaders = () => {
     if (typeof window === 'undefined') return {};
     
-    const token = localStorage.getItem('token') || localStorage.getItem('adminSessionToken');
+    const adminToken = localStorage.getItem('adminSessionToken');
     return {
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : ''
+      'Authorization': adminToken ? `Bearer ${adminToken}` : ''
     };
   };
 
@@ -110,7 +110,6 @@ export default function AdminDashboard() {
       } else if (statsResponse.status === 401) {
         // Unauthorized, redirect to login
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
           localStorage.removeItem('adminSessionToken');
         }
         router.push('/admin/login');
@@ -125,7 +124,6 @@ export default function AdminDashboard() {
       } else if (usersResponse.status === 401) {
         // Unauthorized, redirect to login
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
           localStorage.removeItem('adminSessionToken');
         }
         router.push('/admin/login');
@@ -140,7 +138,6 @@ export default function AdminDashboard() {
       } else if (kycResponse.status === 401) {
         // Unauthorized, redirect to login
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
           localStorage.removeItem('adminSessionToken');
         }
         router.push('/admin/login');
@@ -172,7 +169,6 @@ export default function AdminDashboard() {
       } else if (response.status === 401) {
         // Unauthorized, redirect to login
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
           localStorage.removeItem('adminSessionToken');
         }
         router.push('/admin/login');
@@ -184,7 +180,6 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
       localStorage.removeItem('adminSessionToken');
     }
     router.push('/admin/login');

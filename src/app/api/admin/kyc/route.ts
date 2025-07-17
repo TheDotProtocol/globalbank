@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth } from '@/lib/auth';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
 // Get KYC documents for admin review
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = requireAdminAuth(async (request: NextRequest) => {
   try {
+    const admin = (request as any).admin;
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -74,8 +75,9 @@ export const GET = requireAuth(async (request: NextRequest) => {
 });
 
 // Review KYC document (approve/reject)
-export const PUT = requireAuth(async (request: NextRequest) => {
+export const PUT = requireAdminAuth(async (request: NextRequest) => {
   try {
+    const admin = (request as any).admin;
     const { documentId, status, comments } = await request.json();
 
     // Update KYC document status
