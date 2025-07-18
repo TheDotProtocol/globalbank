@@ -17,7 +17,12 @@ import {
   MapPin,
   User,
   CreditCard,
-  FileText
+  FileText,
+  Shield,
+  Mail,
+  Phone,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 
 interface User {
@@ -25,30 +30,40 @@ interface User {
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
   kycStatus: string;
-  country?: string;
-  city?: string;
-  dateOfBirth?: string;
+  emailVerified: boolean;
   createdAt: string;
   accounts: Account[];
+  kycDocuments: any[];
+  fixedDeposits: any[];
+  recentTransactions: any[];
+  totalBalance: number;
+  totalCards: number;
+  totalTransactions: number;
 }
 
 interface Account {
   id: string;
   accountNumber: string;
+  accountType: string;
   balance: number;
   currency: string;
-  accountType: string;
+  isActive: boolean;
+  createdAt: string;
+  transactions: any[];
+  cards: any[];
 }
 
 interface Transaction {
   id: string;
-  amount: number;
   type: string;
+  amount: number;
+  description: string;
   status: string;
   createdAt: string;
-  isSuspicious: boolean;
-  requiresVerification: boolean;
+  isSuspicious?: boolean;
+  requiresVerification?: boolean;
 }
 
 export default function AdminDashboard() {
@@ -57,12 +72,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
-    country: '',
     kycStatus: '',
-    dateRange: '',
-    accountType: ''
+    accountType: '',
+    emailVerified: ''
   });
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showUserDetails, setShowUserDetails] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualEntry, setManualEntry] = useState({
     userId: '',
@@ -106,12 +121,15 @@ export default function AdminDashboard() {
       user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.accounts.some(acc => acc.accountNumber.includes(searchTerm));
+      user.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.accounts.some(acc => acc.accountNumber.includes(searchTerm)) ||
+      user.accounts.some(acc => acc.cards.some(card => card.cardNumber.includes(searchTerm)));
     
-    const matchesCountry = !filters.country || user.country === filters.country;
     const matchesKYC = !filters.kycStatus || user.kycStatus === filters.kycStatus;
+    const matchesEmailVerified = filters.emailVerified === '' || 
+      (filters.emailVerified === 'true' ? user.emailVerified : !user.emailVerified);
     
-    return matchesSearch && matchesCountry && matchesKYC;
+    return matchesSearch && matchesKYC && matchesEmailVerified;
   });
 
   const handleManualEntry = async (e: React.FormEvent) => {
@@ -143,10 +161,10 @@ export default function AdminDashboard() {
 
   const updateKYCStatus = async (userId: string, status: string) => {
     try {
-      const response = await fetch(`/api/admin/kyc/${userId}`, {
+      const response = await fetch('/api/admin/users', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ userId, kycStatus: status })
       });
 
       if (response.ok) {
@@ -157,23 +175,26 @@ export default function AdminDashboard() {
     }
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    // You could add a toast notification here
+  };
+
   const getStats = () => {
     const totalUsers = users.length;
     const verifiedUsers = users.filter(u => u.kycStatus === 'VERIFIED').length;
     const pendingKYC = users.filter(u => u.kycStatus === 'PENDING').length;
-    const totalBalance = users.reduce((sum, user) => 
-      sum + user.accounts.reduce((accSum, acc) => accSum + acc.balance, 0), 0
-    );
-    const suspiciousTransactions = transactions.filter(t => t.isSuspicious).length;
-    const pendingVerification = transactions.filter(t => t.requiresVerification).length;
+    const totalBalance = users.reduce((sum, user) => sum + user.totalBalance, 0);
+    const totalCards = users.reduce((sum, user) => sum + user.totalCards, 0);
+    const emailVerified = users.filter(u => u.emailVerified).length;
 
     return {
       totalUsers,
       verifiedUsers,
       pendingKYC,
       totalBalance,
-      suspiciousTransactions,
-      pendingVerification
+      totalCards,
+      emailVerified
     };
   };
 
@@ -235,48 +256,25 @@ export default function AdminDashboard() {
 
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+              <CreditCard className="w-8 h-8 text-purple-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Suspicious Transactions</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.suspiciousTransactions}</p>
+                <p className="text-sm font-medium text-gray-600">Total Cards</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalCards}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-              <div className="flex-1 max-w-lg">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search by name, email, or account number..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+        {/* Users Management Section */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-medium text-gray-900">User Management</h2>
+                <p className="text-sm text-gray-500">Manage user accounts, KYC status, and account details</p>
               </div>
 
-              <div className="flex flex-wrap gap-4">
-                <select
-                  value={filters.country}
-                  onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">All Countries</option>
-                  <option value="US">United States</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="CA">Canada</option>
-                  <option value="AU">Australia</option>
-                  <option value="IN">India</option>
-                  <option value="TH">Thailand</option>
-                  <option value="SG">Singapore</option>
-                </select>
-
+              <div className="flex flex-wrap gap-4 mt-4 sm:mt-0">
                 <select
                   value={filters.kycStatus}
                   onChange={(e) => setFilters(prev => ({ ...prev, kycStatus: e.target.value }))}
@@ -288,6 +286,16 @@ export default function AdminDashboard() {
                   <option value="REJECTED">Rejected</option>
                 </select>
 
+                <select
+                  value={filters.emailVerified}
+                  onChange={(e) => setFilters(prev => ({ ...prev, emailVerified: e.target.value }))}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">All Email Status</option>
+                  <option value="true">Email Verified</option>
+                  <option value="false">Email Not Verified</option>
+                </select>
+
                 <button
                   onClick={() => setShowManualEntry(true)}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
@@ -295,6 +303,20 @@ export default function AdminDashboard() {
                   <Plus className="w-4 h-4" />
                   <span>Manual Entry</span>
                 </button>
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mt-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search by name, email, phone, account number, or card number..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
             </div>
           </div>
@@ -305,16 +327,13 @@ export default function AdminDashboard() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
+                    User Details
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     KYC Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Location
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Accounts
+                    Accounts & Cards
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Balance
@@ -338,7 +357,20 @@ export default function AdminDashboard() {
                           <div className="text-sm font-medium text-gray-900">
                             {user.firstName} {user.lastName}
                           </div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
+                          <div className="text-sm text-gray-500 flex items-center space-x-2">
+                            <Mail className="w-3 h-3" />
+                            <span>{user.email}</span>
+                            {user.emailVerified && <Shield className="w-3 h-3 text-green-500" />}
+                          </div>
+                          {user.phone && (
+                            <div className="text-sm text-gray-500 flex items-center space-x-2">
+                              <Phone className="w-3 h-3" />
+                              <span>{user.phone}</span>
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-400">
+                            Joined: {new Date(user.createdAt).toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -352,35 +384,61 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.city && user.country ? `${user.city}, ${user.country}` : 'N/A'}
+                      <div className="space-y-1">
+                        {user.accounts.map(account => (
+                          <div key={account.id} className="border-l-2 border-blue-200 pl-2">
+                            <div className="font-medium">{account.accountType} Account</div>
+                            <div className="text-xs text-gray-500 flex items-center space-x-1">
+                              <span>{account.accountNumber}</span>
+                              <button
+                                onClick={() => copyToClipboard(account.accountNumber)}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <Copy className="w-3 h-3" />
+                              </button>
+                            </div>
+                            {account.cards.length > 0 && (
+                              <div className="text-xs text-gray-500">
+                                {account.cards.length} card(s)
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.accounts.length} account(s)
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${user.accounts.reduce((sum, acc) => sum + acc.balance, 0).toLocaleString()}
+                      <div className="font-medium">${user.totalBalance.toLocaleString()}</div>
+                      <div className="text-xs text-gray-500">
+                        {user.accounts.length} account(s)
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => setSelectedUser(user)}
-                          className="text-blue-600 hover:text-blue-900"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowUserDetails(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900 flex items-center space-x-1"
                         >
                           <Eye className="w-4 h-4" />
+                          <span>Details</span>
                         </button>
                         {user.kycStatus === 'PENDING' && (
                           <>
                             <button
                               onClick={() => updateKYCStatus(user.id, 'VERIFIED')}
-                              className="text-green-600 hover:text-green-900"
+                              className="text-green-600 hover:text-green-900 flex items-center space-x-1"
                             >
                               <CheckCircle className="w-4 h-4" />
+                              <span>Verify</span>
                             </button>
                             <button
                               onClick={() => updateKYCStatus(user.id, 'REJECTED')}
-                              className="text-red-600 hover:text-red-900"
+                              className="text-red-600 hover:text-red-900 flex items-center space-x-1"
                             >
                               <XCircle className="w-4 h-4" />
+                              <span>Reject</span>
                             </button>
                           </>
                         )}
@@ -393,60 +451,192 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* User Details Modal */}
+        {showUserDetails && selectedUser && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  User Details: {selectedUser.firstName} {selectedUser.lastName}
+                </h3>
+                <button
+                  onClick={() => setShowUserDetails(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* User Information */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Personal Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>Name:</strong> {selectedUser.firstName} {selectedUser.lastName}</div>
+                    <div><strong>Email:</strong> {selectedUser.email}</div>
+                    <div><strong>Phone:</strong> {selectedUser.phone || 'N/A'}</div>
+                    <div><strong>KYC Status:</strong> 
+                      <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
+                        selectedUser.kycStatus === 'VERIFIED' ? 'bg-green-100 text-green-800' :
+                        selectedUser.kycStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {selectedUser.kycStatus}
+                      </span>
+                    </div>
+                    <div><strong>Email Verified:</strong> {selectedUser.emailVerified ? 'Yes' : 'No'}</div>
+                    <div><strong>Joined:</strong> {new Date(selectedUser.createdAt).toLocaleString()}</div>
+                  </div>
+                </div>
+
+                {/* Account Summary */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Account Summary</h4>
+                  <div className="space-y-2 text-sm">
+                    <div><strong>Total Balance:</strong> ${selectedUser.totalBalance.toLocaleString()}</div>
+                    <div><strong>Total Accounts:</strong> {selectedUser.accounts.length}</div>
+                    <div><strong>Total Cards:</strong> {selectedUser.totalCards}</div>
+                    <div><strong>Total Transactions:</strong> {selectedUser.totalTransactions}</div>
+                    <div><strong>Fixed Deposits:</strong> {selectedUser.fixedDeposits.length}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Accounts Details */}
+              <div className="mt-6">
+                <h4 className="font-medium text-gray-900 mb-3">Account Details</h4>
+                <div className="space-y-4">
+                  {selectedUser.accounts.map(account => (
+                    <div key={account.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h5 className="font-medium">{account.accountType} Account</h5>
+                          <div className="text-sm text-gray-500 flex items-center space-x-2">
+                            <span>{account.accountNumber}</span>
+                            <button
+                              onClick={() => copyToClipboard(account.accountNumber)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">${account.balance.toLocaleString()}</div>
+                          <div className="text-sm text-gray-500">{account.currency}</div>
+                        </div>
+                      </div>
+
+                      {/* Cards */}
+                      {account.cards.length > 0 && (
+                        <div className="mt-3">
+                          <h6 className="text-sm font-medium text-gray-700 mb-2">Cards</h6>
+                          <div className="space-y-2">
+                            {account.cards.map(card => (
+                              <div key={card.id} className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded">
+                                <div>
+                                  <div className="font-medium">{card.cardNumber}</div>
+                                  <div className="text-gray-500">{card.cardType} • Expires {card.expiryDate}</div>
+                                </div>
+                                <div className="text-right">
+                                  <div className={`px-2 py-1 text-xs rounded ${
+                                    card.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                                    card.status === 'SUSPENDED' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {card.status}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Recent Transactions */}
+                      {account.transactions.length > 0 && (
+                        <div className="mt-3">
+                          <h6 className="text-sm font-medium text-gray-700 mb-2">Recent Transactions</h6>
+                          <div className="space-y-1">
+                            {account.transactions.slice(0, 3).map(tx => (
+                              <div key={tx.id} className="flex justify-between items-center text-sm">
+                                <div>
+                                  <div className="font-medium">{tx.description}</div>
+                                  <div className="text-gray-500">{new Date(tx.createdAt).toLocaleDateString()}</div>
+                                </div>
+                                <div className={`font-medium ${
+                                  tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                  {tx.type === 'CREDIT' ? '+' : '-'}${tx.amount}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Manual Entry Modal */}
         {showManualEntry && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Manual Entry</h3>
-              
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Manual Transaction Entry</h3>
+                <button
+                  onClick={() => setShowManualEntry(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+
               <form onSubmit={handleManualEntry} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    User ID
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">User ID</label>
                   <input
                     type="text"
                     value={manualEntry.userId}
                     onChange={(e) => setManualEntry(prev => ({ ...prev, userId: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Account ID
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Account ID</label>
                   <input
                     type="text"
                     value={manualEntry.accountId}
                     onChange={(e) => setManualEntry(prev => ({ ...prev, accountId: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Amount
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Amount</label>
                   <input
                     type="number"
+                    step="0.01"
                     value={manualEntry.amount}
                     onChange={(e) => setManualEntry(prev => ({ ...prev, amount: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Type
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Type</label>
                   <select
                     value={manualEntry.type}
                     onChange={(e) => setManualEntry(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="CREDIT">Credit</option>
                     <option value="DEBIT">Debit</option>
@@ -454,109 +644,42 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
                   <input
                     type="text"
                     value={manualEntry.description}
                     onChange={(e) => setManualEntry(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Admin Note
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700">Admin Note</label>
                   <textarea
                     value={manualEntry.adminNote}
                     onChange={(e) => setManualEntry(prev => ({ ...prev, adminNote: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     rows={3}
-                    required
                   />
                 </div>
 
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    type="submit"
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Create Entry
-                  </button>
+                <div className="flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={() => setShowManualEntry(false)}
-                    className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
                     Cancel
                   </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Create Entry
+                  </button>
                 </div>
               </form>
-            </div>
-          </div>
-        )}
-
-        {/* User Detail Modal */}
-        {selectedUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  User Details: {selectedUser.firstName} {selectedUser.lastName}
-                </h3>
-                <button
-                  onClick={() => setSelectedUser(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <XCircle className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Personal Information</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Email:</span>
-                      <p className="font-medium">{selectedUser.email}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">KYC Status:</span>
-                      <p className="font-medium">{selectedUser.kycStatus}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Country:</span>
-                      <p className="font-medium">{selectedUser.country || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">City:</span>
-                      <p className="font-medium">{selectedUser.city || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Accounts</h4>
-                  <div className="space-y-2">
-                    {selectedUser.accounts.map((account) => (
-                      <div key={account.id} className="bg-gray-50 p-3 rounded-lg">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-medium">{account.accountNumber}</p>
-                            <p className="text-sm text-gray-600">{account.accountType}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium">{account.currency} {account.balance.toLocaleString()}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}
