@@ -20,9 +20,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
         { firstName: { contains: search, mode: 'insensitive' } },
         { lastName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
-        { accounts: { accountNumber: { contains: search, mode: 'insensitive' } } },
-        { cards: { cardNumber: { contains: search, mode: 'insensitive' } } }
+        { phone: { contains: search, mode: 'insensitive' } }
       ];
     }
 
@@ -30,7 +28,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
       where.kycStatus = kycStatus.toUpperCase();
     }
 
-    // Get users with comprehensive data
+    // Get users with basic data - avoid cards table for now
     const [users, totalCount] = await Promise.all([
       prisma.user.findMany({
         where,
@@ -54,33 +52,8 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
               accountType: true,
               balance: true,
               currency: true,
-              status: true,
               isActive: true,
-              createdAt: true,
-              transactions: {
-                select: {
-                  id: true,
-                  type: true,
-                  amount: true,
-                  description: true,
-                  status: true,
-                  createdAt: true
-                },
-                orderBy: { createdAt: 'desc' },
-                take: 10
-              },
-              cards: {
-                select: {
-                  id: true,
-                  cardNumber: true,
-                  cardType: true,
-                  expiryDate: true,
-                  status: true,
-                  dailyLimit: true,
-                  monthlyLimit: true,
-                  createdAt: true
-                }
-              }
+              createdAt: true
             }
           },
           kycDocuments: {
@@ -102,26 +75,37 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
               maturityDate: true,
               createdAt: true
             }
-          },
-          transactions: {
-            select: {
-              id: true,
-              type: true,
-              amount: true,
-              description: true,
-              status: true,
-              createdAt: true
-            },
-            orderBy: { createdAt: 'desc' },
-            take: 5
           }
         }
       }),
       prisma.user.count({ where })
     ]);
 
-    return NextResponse.json({
-      users: users.map(user => ({
+    // Get transactions separately
+    const userIds = users.map(user => user.id);
+    const transactions = await prisma.transaction.findMany({
+      where: { userId: { in: userIds } },
+      select: {
+        id: true,
+        userId: true,
+        type: true,
+        amount: true,
+        description: true,
+        status: true,
+        createdAt: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
+
+    // Combine the data
+    const usersWithData = users.map(user => {
+      const userTransactions = transactions.filter(tx => tx.userId === user.id);
+      const totalBalance = user.accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+      const totalCards = 0; // Skip cards for now due to schema issues
+      const totalTransactions = userTransactions.length;
+
+      return {
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -131,14 +115,22 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
         emailVerified: user.emailVerified,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-        accounts: user.accounts,
+        accounts: user.accounts.map(account => ({
+          ...account,
+          cards: [], // Empty array for now
+          transactions: userTransactions.filter(tx => tx.userId === user.id)
+        })),
         kycDocuments: user.kycDocuments,
         fixedDeposits: user.fixedDeposits,
-        recentTransactions: user.transactions,
-        totalBalance: user.accounts.reduce((sum, acc) => sum + Number(acc.balance), 0),
-        totalCards: user.accounts.reduce((sum, acc) => sum + acc.cards.length, 0),
-        totalTransactions: user.accounts.reduce((sum, acc) => sum + acc.transactions.length, 0)
-      })),
+        recentTransactions: userTransactions.slice(0, 5),
+        totalBalance,
+        totalCards,
+        totalTransactions
+      };
+    });
+
+    return NextResponse.json({
+      users: usersWithData,
       pagination: {
         page,
         limit,
@@ -149,7 +141,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
   } catch (error) {
     console.error('Admin users error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -175,15 +167,7 @@ export const PUT = requireAdminAuth(async (request: NextRequest) => {
         updatedAt: new Date()
       },
       include: {
-        accounts: {
-          include: {
-            cards: true,
-            transactions: {
-              orderBy: { createdAt: 'desc' },
-              take: 5
-            }
-          }
-        }
+        accounts: true
       }
     });
 

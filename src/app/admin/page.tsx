@@ -94,17 +94,22 @@ export default function AdminDashboard() {
   useEffect(() => {
     // Check for admin session token
     const sessionToken = localStorage.getItem('adminSessionToken');
+    console.log('Admin session token found:', !!sessionToken);
+    
     if (!sessionToken) {
       console.log('No admin session token found, redirecting to login');
       router.push('/admin/login');
       return;
     }
 
+    console.log('Starting to fetch dashboard data...');
     fetchDashboardData();
   }, [router]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
+    console.log('fetchDashboardData called');
+    
     try {
       // Get admin session token
       const sessionToken = localStorage.getItem('adminSessionToken');
@@ -112,40 +117,50 @@ export default function AdminDashboard() {
       if (!sessionToken) {
         console.error('No admin session token found');
         setLoading(false);
+        router.push('/admin/login');
         return;
       }
+
+      console.log('Making API calls with session token:', sessionToken.substring(0, 10) + '...');
 
       const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${sessionToken}`
       };
 
-      const [usersResponse, transactionsResponse] = await Promise.all([
-        fetch('/api/admin/users', { headers }),
-        fetch('/api/admin/transactions', { headers })
-      ]);
+      console.log('Fetching users data...');
+      
+      // Only fetch users data since transactions endpoint doesn't exist
+      const usersResponse = await fetch('/api/admin/users', { headers });
 
       console.log('Users response status:', usersResponse.status);
-      console.log('Transactions response status:', transactionsResponse.status);
 
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
-        console.log('Users data:', usersData);
+        console.log('Users data received:', usersData);
+        console.log('Number of users:', usersData.users?.length || 0);
         setUsers(usersData.users || []);
       } else {
-        console.error('Failed to fetch users:', await usersResponse.text());
+        const errorText = await usersResponse.text();
+        console.error('Failed to fetch users:', errorText);
+        console.error('Users response status:', usersResponse.status);
+        
+        // If it's an authentication error, redirect to login
+        if (usersResponse.status === 401) {
+          console.log('Authentication failed, redirecting to login');
+          localStorage.removeItem('adminSessionToken');
+          router.push('/admin/login');
+          return;
+        }
       }
 
-      if (transactionsResponse.ok) {
-        const transactionsData = await transactionsResponse.json();
-        console.log('Transactions data:', transactionsData);
-        setTransactions(transactionsData.transactions || []);
-      } else {
-        console.error('Failed to fetch transactions:', await transactionsResponse.text());
-      }
+      // Set empty transactions array since endpoint doesn't exist
+      setTransactions([]);
+      
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
+      console.log('Setting loading to false');
       setLoading(false);
     }
   };
@@ -156,8 +171,7 @@ export default function AdminDashboard() {
       user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.accounts.some(acc => acc.accountNumber.includes(searchTerm)) ||
-      user.accounts.some(acc => acc.cards.some(card => card.cardNumber.includes(searchTerm)));
+      user.accounts.some(acc => acc.accountNumber.includes(searchTerm));
     
     const matchesKYC = !filters.kycStatus || user.kycStatus === filters.kycStatus;
     const matchesEmailVerified = filters.emailVerified === '' || 
@@ -459,6 +473,11 @@ export default function AdminDashboard() {
                             {account.cards.length > 0 && (
                               <div className="text-xs text-gray-500">
                                 {account.cards.length} card(s)
+                              </div>
+                            )}
+                            {account.cards.length === 0 && (
+                              <div className="text-xs text-gray-400">
+                                No cards
                               </div>
                             )}
                           </div>
