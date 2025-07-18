@@ -1,34 +1,24 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { 
+  Search, 
+  Filter, 
   Users, 
-  Shield, 
-  FileText, 
-  CreditCard, 
+  DollarSign, 
   TrendingUp, 
   AlertTriangle,
   CheckCircle,
   XCircle,
   Eye,
   Download,
-  Filter,
-  Search
+  Plus,
+  Calendar,
+  MapPin,
+  User,
+  CreditCard,
+  FileText
 } from 'lucide-react';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import Skeleton from '@/components/ui/Skeleton';
-
-interface AdminStats {
-  totalUsers: number;
-  activeUsers: number;
-  pendingKyc: number;
-  verifiedKyc: number;
-  totalTransactions: number;
-  totalCards: number;
-  totalFixedDeposits: number;
-  systemBalance: number;
-}
 
 interface User {
   id: string;
@@ -36,192 +26,165 @@ interface User {
   lastName: string;
   email: string;
   kycStatus: string;
+  country?: string;
+  city?: string;
+  dateOfBirth?: string;
   createdAt: string;
-  accounts: any[];
-  kycDocuments: any[];
+  accounts: Account[];
 }
 
-interface KycDocument {
+interface Account {
   id: string;
-  userId: string;
-  documentType: string;
+  accountNumber: string;
+  balance: number;
+  currency: string;
+  accountType: string;
+}
+
+interface Transaction {
+  id: string;
+  amount: number;
+  type: string;
   status: string;
-  uploadedAt: string;
-  verifiedAt?: string;
-  user: User;
+  createdAt: string;
+  isSuspicious: boolean;
+  requiresVerification: boolean;
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const [kycDocuments, setKycDocuments] = useState<KycDocument[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
   const [searchTerm, setSearchTerm] = useState('');
-  const [kycFilter, setKycFilter] = useState('all');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-  
-  const router = useRouter();
+  const [filters, setFilters] = useState({
+    country: '',
+    kycStatus: '',
+    dateRange: '',
+    accountType: ''
+  });
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualEntry, setManualEntry] = useState({
+    userId: '',
+    accountId: '',
+    amount: '',
+    type: 'CREDIT',
+    description: '',
+    adminNote: ''
+  });
 
   useEffect(() => {
-    setIsClient(true);
-    checkAuthentication();
+    fetchDashboardData();
   }, []);
 
-  const checkAuthentication = () => {
-    if (typeof window === 'undefined') return;
-    
-    const adminToken = localStorage.getItem('adminSessionToken');
-    if (!adminToken) {
-      // No admin token found, redirect to login
-      router.push('/admin/login');
-      return;
-    }
-    
-    setIsAuthenticated(true);
-    fetchAdminData();
-  };
-
-  const getAuthHeaders = () => {
-    if (typeof window === 'undefined') return {};
-    
-    const adminToken = localStorage.getItem('adminSessionToken');
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': adminToken ? `Bearer ${adminToken}` : ''
-    };
-  };
-
-  const fetchAdminData = async () => {
-    // Don't fetch if not authenticated
-    if (!isAuthenticated) return;
-    
+  const fetchDashboardData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      const headers = getAuthHeaders();
-      
-      // Fetch admin statistics
-      const statsResponse = await fetch('/api/admin/dashboard', { headers });
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setStats(statsData.statistics);
-      } else if (statsResponse.status === 401) {
-        // Unauthorized, redirect to login
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('adminSessionToken');
-        }
-        router.push('/admin/login');
-        return;
-      }
+      const [usersResponse, transactionsResponse] = await Promise.all([
+        fetch('/api/admin/users'),
+        fetch('/api/admin/transactions')
+      ]);
 
-      // Fetch users
-      const usersResponse = await fetch('/api/admin/users', { headers });
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
-        setUsers(usersData.users || []);
-      } else if (usersResponse.status === 401) {
-        // Unauthorized, redirect to login
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('adminSessionToken');
-        }
-        router.push('/admin/login');
-        return;
+        setUsers(usersData.users);
       }
 
-      // Fetch KYC documents
-      const kycResponse = await fetch('/api/admin/kyc', { headers });
-      if (kycResponse.ok) {
-        const kycData = await kycResponse.json();
-        setKycDocuments(kycData.documents || []);
-      } else if (kycResponse.status === 401) {
-        // Unauthorized, redirect to login
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('adminSessionToken');
-        }
-        router.push('/admin/login');
-        return;
+      if (transactionsResponse.ok) {
+        const transactionsData = await transactionsResponse.json();
+        setTransactions(transactionsData.transactions);
       }
-
     } catch (error) {
-      console.error('Error fetching admin data:', error);
+      console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleKycAction = async (documentId: string, action: 'approve' | 'reject') => {
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = 
+      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.accounts.some(acc => acc.accountNumber.includes(searchTerm));
+    
+    const matchesCountry = !filters.country || user.country === filters.country;
+    const matchesKYC = !filters.kycStatus || user.kycStatus === filters.kycStatus;
+    
+    return matchesSearch && matchesCountry && matchesKYC;
+  });
+
+  const handleManualEntry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
     try {
-      const headers = getAuthHeaders();
-      const response = await fetch('/api/admin/kyc', {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify({
-          documentId,
-          status: action === 'approve' ? 'VERIFIED' : 'REJECTED',
-          comments: action === 'approve' ? 'Document verified' : 'Document rejected'
-        })
+      const response = await fetch('/api/admin/manual-entry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(manualEntry)
       });
 
       if (response.ok) {
-        fetchAdminData(); // Refresh data
-      } else if (response.status === 401) {
-        // Unauthorized, redirect to login
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('adminSessionToken');
-        }
-        router.push('/admin/login');
+        setShowManualEntry(false);
+        setManualEntry({
+          userId: '',
+          accountId: '',
+          amount: '',
+          type: 'CREDIT',
+          description: '',
+          adminNote: ''
+        });
+        fetchDashboardData(); // Refresh data
       }
     } catch (error) {
-      console.error('Error updating KYC status:', error);
+      console.error('Failed to create manual entry:', error);
     }
   };
 
-  const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('adminSessionToken');
+  const updateKYCStatus = async (userId: string, status: string) => {
+    try {
+      const response = await fetch(`/api/admin/kyc/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+
+      if (response.ok) {
+        fetchDashboardData(); // Refresh data
+      }
+    } catch (error) {
+      console.error('Failed to update KYC status:', error);
     }
-    router.push('/admin/login');
   };
 
-  const filteredUsers = (users || []).filter(user =>
-    (user?.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user?.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user?.email || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredKycDocuments = (kycDocuments || []).filter(doc => {
-    if (kycFilter === 'all') return true;
-    return (doc?.status || '').toLowerCase() === kycFilter.toLowerCase();
-  });
-
-  // Show loading while checking authentication or during SSR
-  if (!isClient || !isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
+  const getStats = () => {
+    const totalUsers = users.length;
+    const verifiedUsers = users.filter(u => u.kycStatus === 'VERIFIED').length;
+    const pendingKYC = users.filter(u => u.kycStatus === 'PENDING').length;
+    const totalBalance = users.reduce((sum, user) => 
+      sum + user.accounts.reduce((accSum, acc) => accSum + acc.balance, 0), 0
     );
-  }
+    const suspiciousTransactions = transactions.filter(t => t.isSuspicious).length;
+    const pendingVerification = transactions.filter(t => t.requiresVerification).length;
+
+    return {
+      totalUsers,
+      verifiedUsers,
+      pendingKYC,
+      totalBalance,
+      suspiciousTransactions,
+      pendingVerification
+    };
+  };
+
+  const stats = getStats();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <Skeleton className="h-8 w-64 mb-4" />
-            <Skeleton className="h-4 w-96" />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-lg p-6 shadow-sm">
-                <Skeleton className="h-4 w-24 mb-2" />
-                <Skeleton className="h-8 w-16" />
-              </div>
-            ))}
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
         </div>
       </div>
     );
@@ -229,355 +192,374 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage users, KYC, and system compliance</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={handleLogout}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Logout
-              </button>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                <Download className="w-4 h-4 mr-2 inline" />
-                Export Report
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Statistics Cards */}
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600">Manage users, transactions, and system operations</p>
+        </div>
+
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
+          <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
-              </div>
+              <Users className="w-8 h-8 text-blue-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.totalUsers || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
+          <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <AlertTriangle className="w-6 h-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending KYC</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.pendingKyc || 0}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
+              <CheckCircle className="w-8 h-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Verified KYC</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.verifiedKyc || 0}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.verifiedUsers}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-6 shadow-sm border">
+          <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-purple-600" />
-              </div>
+              <DollarSign className="w-8 h-8 text-green-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Transactions</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.totalTransactions || 0}</p>
+                <p className="text-sm font-medium text-gray-600">Total Balance</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  ${stats.totalBalance.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <AlertTriangle className="w-8 h-8 text-red-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Suspicious Transactions</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.suspiciousTransactions}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="bg-white rounded-lg shadow-sm border mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
-              {[
-                { id: 'overview', label: 'Overview', icon: TrendingUp },
-                { id: 'users', label: 'Users', icon: Users },
-                { id: 'kyc', label: 'KYC Management', icon: Shield },
-                { id: 'transactions', label: 'Transactions', icon: FileText },
-                { id: 'cards', label: 'Cards', icon: CreditCard }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg shadow mb-8">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+              <div className="flex-1 max-w-lg">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or account number..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-4">
+                <select
+                  value={filters.country}
+                  onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <tab.icon className="w-4 h-4 mr-2" />
-                  {tab.label}
+                  <option value="">All Countries</option>
+                  <option value="US">United States</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="CA">Canada</option>
+                  <option value="AU">Australia</option>
+                  <option value="IN">India</option>
+                  <option value="TH">Thailand</option>
+                  <option value="SG">Singapore</option>
+                </select>
+
+                <select
+                  value={filters.kycStatus}
+                  onChange={(e) => setFilters(prev => ({ ...prev, kycStatus: e.target.value }))}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">All KYC Status</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="VERIFIED">Verified</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+
+                <button
+                  onClick={() => setShowManualEntry(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Manual Entry</span>
                 </button>
-              ))}
-            </nav>
+              </div>
+            </div>
           </div>
 
-          <div className="p-6">
-            {activeTab === 'overview' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">System Overview</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Recent Activity</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                        New user registration
+          {/* Users Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    KYC Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Location
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Accounts
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Balance
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                            <User className="w-5 h-5 text-gray-600" />
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {user.firstName} {user.lastName}
+                          </div>
+                          <div className="text-sm text-gray-500">{user.email}</div>
+                        </div>
                       </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
-                        KYC document uploaded
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        user.kycStatus === 'VERIFIED' ? 'bg-green-100 text-green-800' :
+                        user.kycStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {user.kycStatus}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {user.city && user.country ? `${user.city}, ${user.country}` : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {user.accounts.length} account(s)
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      ${user.accounts.reduce((sum, acc) => sum + acc.balance, 0).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setSelectedUser(user)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        {user.kycStatus === 'PENDING' && (
+                          <>
+                            <button
+                              onClick={() => updateKYCStatus(user.id, 'VERIFIED')}
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => updateKYCStatus(user.id, 'REJECTED')}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
                       </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
-                        Transaction processed
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Quick Actions</h4>
-                    <div className="space-y-2">
-                      <button className="w-full text-left text-sm text-blue-600 hover:text-blue-800">
-                        Review pending KYC documents
-                      </button>
-                      <button className="w-full text-left text-sm text-blue-600 hover:text-blue-800">
-                        Generate compliance report
-                      </button>
-                      <button className="w-full text-left text-sm text-blue-600 hover:text-blue-800">
-                        Monitor system health
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'users' && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium text-gray-900">User Management</h3>
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      <input
-                        type="text"
-                        placeholder="Search users..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          User
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          KYC Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Accounts
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Joined
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredUsers.map((user) => (
-                        <tr key={user.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-10 w-10">
-                                <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-gray-700">
-                                    {user.firstName[0]}{user.lastName[0]}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">
-                                  {user.firstName} {user.lastName}
-                                </div>
-                                <div className="text-sm text-gray-500">{user.email}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              user.kycStatus === 'VERIFIED' 
-                                ? 'bg-green-100 text-green-800'
-                                : user.kycStatus === 'PENDING'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {user.kycStatus}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {user.accounts?.length || 0} accounts
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button className="text-blue-600 hover:text-blue-900 mr-3">
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button className="text-green-600 hover:text-green-900">
-                              <Download className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'kyc' && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium text-gray-900">KYC Document Management</h3>
-                  <div className="flex items-center space-x-4">
-                    <select
-                      value={kycFilter}
-                      onChange={(e) => setKycFilter(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="pending">Pending</option>
-                      <option value="verified">Verified</option>
-                      <option value="rejected">Rejected</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          User
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Document Type
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Uploaded
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredKycDocuments.map((doc) => (
-                        <tr key={doc.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
-                              {doc.user.firstName} {doc.user.lastName}
-                            </div>
-                            <div className="text-sm text-gray-500">{doc.user.email}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {doc.documentType.replace('_', ' ')}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              doc.status === 'VERIFIED' 
-                                ? 'bg-green-100 text-green-800'
-                                : doc.status === 'PENDING'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {doc.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(doc.uploadedAt).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            {doc.status === 'PENDING' && (
-                              <>
-                                <button
-                                  onClick={() => handleKycAction(doc.id, 'approve')}
-                                  className="text-green-600 hover:text-green-900 mr-3"
-                                >
-                                  <CheckCircle className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleKycAction(doc.id, 'reject')}
-                                  className="text-red-600 hover:text-red-900 mr-3"
-                                >
-                                  <XCircle className="w-4 h-4" />
-                                </button>
-                              </>
-                            )}
-                            <button className="text-blue-600 hover:text-blue-900">
-                              <Eye className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'transactions' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">Transaction Monitoring</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-600">Transaction monitoring and fraud detection features will be implemented here.</p>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'cards' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">Card Management</h3>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-gray-600">Card issuance, monitoring, and security features will be implemented here.</p>
-                </div>
-              </div>
-            )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
+
+        {/* Manual Entry Modal */}
+        {showManualEntry && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Manual Entry</h3>
+              
+              <form onSubmit={handleManualEntry} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    User ID
+                  </label>
+                  <input
+                    type="text"
+                    value={manualEntry.userId}
+                    onChange={(e) => setManualEntry(prev => ({ ...prev, userId: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Account ID
+                  </label>
+                  <input
+                    type="text"
+                    value={manualEntry.accountId}
+                    onChange={(e) => setManualEntry(prev => ({ ...prev, accountId: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Amount
+                  </label>
+                  <input
+                    type="number"
+                    value={manualEntry.amount}
+                    onChange={(e) => setManualEntry(prev => ({ ...prev, amount: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Type
+                  </label>
+                  <select
+                    value={manualEntry.type}
+                    onChange={(e) => setManualEntry(prev => ({ ...prev, type: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="CREDIT">Credit</option>
+                    <option value="DEBIT">Debit</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    value={manualEntry.description}
+                    onChange={(e) => setManualEntry(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Admin Note
+                  </label>
+                  <textarea
+                    value={manualEntry.adminNote}
+                    onChange={(e) => setManualEntry(prev => ({ ...prev, adminNote: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    rows={3}
+                    required
+                  />
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Create Entry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowManualEntry(false)}
+                    className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* User Detail Modal */}
+        {selectedUser && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  User Details: {selectedUser.firstName} {selectedUser.lastName}
+                </h3>
+                <button
+                  onClick={() => setSelectedUser(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Personal Information</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-600">Email:</span>
+                      <p className="font-medium">{selectedUser.email}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">KYC Status:</span>
+                      <p className="font-medium">{selectedUser.kycStatus}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Country:</span>
+                      <p className="font-medium">{selectedUser.country || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">City:</span>
+                      <p className="font-medium">{selectedUser.city || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Accounts</h4>
+                  <div className="space-y-2">
+                    {selectedUser.accounts.map((account) => (
+                      <div key={account.id} className="bg-gray-50 p-3 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">{account.accountNumber}</p>
+                            <p className="text-sm text-gray-600">{account.accountType}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium">{account.currency} {account.balance.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
