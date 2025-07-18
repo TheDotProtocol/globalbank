@@ -186,14 +186,14 @@ export default function AdminDashboard() {
   };
 
   const filteredUsers = (users || []).filter(user =>
-    user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (user?.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user?.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user?.email || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const filteredKycDocuments = (kycDocuments || []).filter(doc => {
     if (kycFilter === 'all') return true;
-    return doc.status.toLowerCase() === kycFilter.toLowerCase();
+    return (doc?.status || '').toLowerCase() === kycFilter.toLowerCase();
   });
 
   // Show loading while checking authentication or during SSR

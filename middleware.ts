@@ -14,11 +14,11 @@ export function middleware(request: NextRequest) {
   // Content Security Policy - Comprehensive policy for third-party libraries
   const cspHeader = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://js.stripe.com https://checkout.stripe.com https://m.stripe.com https://b.stripecdn.com",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://js.stripe.com https://checkout.stripe.com https://m.stripe.com https://b.stripecdn.com https://api.openai.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://js.stripe.com https://b.stripecdn.com",
     "img-src 'self' data: blob: https: https://js.stripe.com https://checkout.stripe.com https://m.stripe.com https://b.stripecdn.com",
     "font-src 'self' https://fonts.gstatic.com https://b.stripecdn.com",
-    "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://m.stripe.com https://b.stripecdn.com wss://m.stripe.com",
+    "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://m.stripe.com https://b.stripecdn.com wss://m.stripe.com https://api.openai.com",
     "frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://m.stripe.com https://b.stripecdn.com",
     "object-src 'none'",
     "base-uri 'self'",

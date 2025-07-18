@@ -259,7 +259,7 @@ export default function Dashboard() {
     );
   }
 
-  const totalBalance = accounts.reduce((sum, account) => sum + account.balance, 0);
+  const totalBalance = accounts.reduce((sum, account) => sum + (account?.balance || 0), 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -294,7 +294,7 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-gray-900">Global Dot Bank</h1>
             <div className="flex items-center space-x-4">
               <span className="text-gray-600">
-                Welcome, {user?.firstName} {user?.lastName}
+                Welcome, {user?.firstName || 'User'} {user?.lastName || ''}
               </span>
               <NotificationCenter />
               <button
@@ -492,21 +492,21 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    {transactions.slice(0, 5).map((transaction) => (
-                      <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    {(transactions || []).slice(0, 5).map((transaction) => (
+                      <div key={transaction?.id || Math.random()} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
-                          <p className="font-medium text-gray-900">{transaction.description}</p>
+                          <p className="font-medium text-gray-900">{transaction?.description || 'Transaction'}</p>
                           <p className="text-sm text-gray-500">
-                            {new Date(transaction.createdAt).toLocaleDateString()}
+                            {transaction?.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'Unknown date'}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className={`font-semibold ${
-                            transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                            transaction?.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            {transaction.type === 'CREDIT' ? '+' : '-'}${transaction.amount}
+                            {transaction?.type === 'CREDIT' ? '+' : '-'}${transaction?.amount || 0}
                           </p>
-                          <p className="text-xs text-gray-500">{transaction.status}</p>
+                          <p className="text-xs text-gray-500">{transaction?.status || 'Unknown'}</p>
                         </div>
                       </div>
                     ))}
@@ -520,22 +520,22 @@ export default function Dashboard() {
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Accounts</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {accounts.map((account) => (
-                      <div key={account.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
+                    {(accounts || []).map((account) => (
+                      <div key={account?.id || Math.random()} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-gray-900">{account.accountType}</h3>
-                          <span className="text-sm text-gray-500">{account.currency}</span>
+                          <h3 className="font-medium text-gray-900">{account?.accountType || 'Account'}</h3>
+                          <span className="text-sm text-gray-500">{account?.currency || 'USD'}</span>
                         </div>
                         <MultiCurrencyDisplay 
-                          usdAmount={account.balance}
+                          usdAmount={account?.balance || 0}
                           className="mb-2"
                           showSettings={false}
                         />
                         <p className="text-sm text-gray-500 mt-1">
-                          Account: {account.accountNumber}
+                          Account: {account?.accountNumber || 'N/A'}
                         </p>
                         <button
-                          onClick={() => handleAccountClick(account.id)}
+                          onClick={() => handleAccountClick(account?.id || '')}
                           className="mt-3 w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                         >
                           <Eye className="w-4 h-4" />
@@ -569,21 +569,21 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    {transactions.map((transaction) => (
-                      <div key={transaction.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    {(transactions || []).map((transaction) => (
+                      <div key={transaction?.id || Math.random()} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                         <div>
-                          <p className="font-medium text-gray-900">{transaction.description}</p>
+                          <p className="font-medium text-gray-900">{transaction?.description || 'Transaction'}</p>
                           <p className="text-sm text-gray-500">
-                            {new Date(transaction.createdAt).toLocaleDateString()}
+                            {transaction?.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'Unknown date'}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className={`font-semibold ${
-                            transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                            transaction?.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            {transaction.type === 'CREDIT' ? '+' : '-'}${transaction.amount}
+                            {transaction?.type === 'CREDIT' ? '+' : '-'}${transaction?.amount || 0}
                           </p>
-                          <p className="text-xs text-gray-500">{transaction.status}</p>
+                          <p className="text-xs text-gray-500">{transaction?.status || 'Unknown'}</p>
                         </div>
                       </div>
                     ))}
@@ -613,24 +613,24 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {fixedDeposits.map((deposit) => (
-                      <div key={deposit.id} className="border border-gray-200 rounded-lg p-4">
+                    {(fixedDeposits || []).map((deposit) => (
+                      <div key={deposit?.id || Math.random()} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-medium text-gray-900">Fixed Deposit</h3>
                           <span className={`px-2 py-1 text-xs rounded-full ${
-                            deposit.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                            deposit?.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                           }`}>
-                            {deposit.status}
+                            {deposit?.status || 'UNKNOWN'}
                           </span>
                         </div>
                         <p className="text-2xl font-bold text-gray-900">
-                          ${deposit.amount.toLocaleString()}
+                          ${(deposit?.amount || 0).toLocaleString()}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
-                          {deposit.interestRate}% for {deposit.duration} months
+                          {deposit?.interestRate || 0}% for {deposit?.duration || 0} months
                         </p>
                         <p className="text-xs text-gray-400 mt-2">
-                          Matures: {new Date(deposit.maturityDate).toLocaleDateString()}
+                          Matures: {deposit?.maturityDate ? new Date(deposit.maturityDate).toLocaleDateString() : 'Unknown'}
                         </p>
                       </div>
                     ))}
@@ -840,19 +840,19 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-sm font-medium text-gray-600">Total Transactions</p>
-                <p className="text-lg font-bold text-gray-900">{selectedAccount.statistics?.totalTransactions || 0}</p>
+                <p className="text-lg font-bold text-gray-900">{selectedAccount?.statistics?.totalTransactions || 0}</p>
               </div>
               <div className="bg-green-50 rounded-lg p-4">
                 <p className="text-sm font-medium text-green-600">Total Credits</p>
-                <p className="text-lg font-bold text-green-900">${(selectedAccount.statistics?.totalCredits || 0).toLocaleString()}</p>
+                <p className="text-lg font-bold text-green-900">${(selectedAccount?.statistics?.totalCredits || 0).toLocaleString()}</p>
               </div>
               <div className="bg-red-50 rounded-lg p-4">
                 <p className="text-sm font-medium text-red-600">Total Debits</p>
-                <p className="text-lg font-bold text-red-900">${(selectedAccount.statistics?.totalDebits || 0).toLocaleString()}</p>
+                <p className="text-lg font-bold text-red-900">${(selectedAccount?.statistics?.totalDebits || 0).toLocaleString()}</p>
               </div>
               <div className="bg-blue-50 rounded-lg p-4">
                 <p className="text-sm font-medium text-blue-600">Avg Transaction</p>
-                <p className="text-lg font-bold text-blue-900">${(selectedAccount.statistics?.averageTransactionAmount || 0).toLocaleString()}</p>
+                <p className="text-lg font-bold text-blue-900">${(selectedAccount?.statistics?.averageTransactionAmount || 0).toLocaleString()}</p>
               </div>
             </div>
 
@@ -860,25 +860,25 @@ export default function Dashboard() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Transaction History</h3>
               <div className="space-y-3">
-                {selectedAccount.transactions.length > 0 ? (
+                {(selectedAccount?.transactions || []).length > 0 ? (
                   selectedAccount.transactions.map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div key={transaction?.id || Math.random()} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div>
-                        <p className="font-medium text-gray-900">{transaction.description}</p>
+                        <p className="font-medium text-gray-900">{transaction?.description || 'Transaction'}</p>
                         <p className="text-sm text-gray-500">
-                          {new Date(transaction.createdAt).toLocaleDateString()} at {new Date(transaction.createdAt).toLocaleTimeString()}
+                          {transaction?.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'Unknown date'} at {transaction?.createdAt ? new Date(transaction.createdAt).toLocaleTimeString() : 'Unknown time'}
                         </p>
-                        {transaction.reference && (
+                        {transaction?.reference && (
                           <p className="text-xs text-gray-400">Ref: {transaction.reference}</p>
                         )}
                       </div>
                       <div className="text-right">
                         <p className={`font-semibold ${
-                          transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                          transaction?.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {transaction.type === 'CREDIT' ? '+' : '-'}${transaction.amount}
+                          {transaction?.type === 'CREDIT' ? '+' : '-'}${transaction?.amount || 0}
                         </p>
-                        <p className="text-xs text-gray-500">{transaction.status}</p>
+                        <p className="text-xs text-gray-500">{transaction?.status || 'Unknown'}</p>
                       </div>
                     </div>
                   ))
