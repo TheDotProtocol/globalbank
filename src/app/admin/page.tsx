@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Search, 
   Filter, 
@@ -88,26 +89,59 @@ export default function AdminDashboard() {
     adminNote: ''
   });
 
+  const router = useRouter();
+
   useEffect(() => {
+    // Check for admin session token
+    const sessionToken = localStorage.getItem('adminSessionToken');
+    if (!sessionToken) {
+      console.log('No admin session token found, redirecting to login');
+      router.push('/admin/login');
+      return;
+    }
+
     fetchDashboardData();
-  }, []);
+  }, [router]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      // Get admin session token
+      const sessionToken = localStorage.getItem('adminSessionToken');
+      
+      if (!sessionToken) {
+        console.error('No admin session token found');
+        setLoading(false);
+        return;
+      }
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${sessionToken}`
+      };
+
       const [usersResponse, transactionsResponse] = await Promise.all([
-        fetch('/api/admin/users'),
-        fetch('/api/admin/transactions')
+        fetch('/api/admin/users', { headers }),
+        fetch('/api/admin/transactions', { headers })
       ]);
+
+      console.log('Users response status:', usersResponse.status);
+      console.log('Transactions response status:', transactionsResponse.status);
 
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
-        setUsers(usersData.users);
+        console.log('Users data:', usersData);
+        setUsers(usersData.users || []);
+      } else {
+        console.error('Failed to fetch users:', await usersResponse.text());
       }
 
       if (transactionsResponse.ok) {
         const transactionsData = await transactionsResponse.json();
-        setTransactions(transactionsData.transactions);
+        console.log('Transactions data:', transactionsData);
+        setTransactions(transactionsData.transactions || []);
+      } else {
+        console.error('Failed to fetch transactions:', await transactionsResponse.text());
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -136,9 +170,19 @@ export default function AdminDashboard() {
     e.preventDefault();
     
     try {
+      const sessionToken = localStorage.getItem('adminSessionToken');
+      
+      if (!sessionToken) {
+        console.error('No admin session token found');
+        return;
+      }
+
       const response = await fetch('/api/admin/manual-entry', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
         body: JSON.stringify(manualEntry)
       });
 
@@ -153,6 +197,8 @@ export default function AdminDashboard() {
           adminNote: ''
         });
         fetchDashboardData(); // Refresh data
+      } else {
+        console.error('Failed to create manual entry:', await response.text());
       }
     } catch (error) {
       console.error('Failed to create manual entry:', error);
@@ -161,14 +207,27 @@ export default function AdminDashboard() {
 
   const updateKYCStatus = async (userId: string, status: string) => {
     try {
+      const sessionToken = localStorage.getItem('adminSessionToken');
+      
+      if (!sessionToken) {
+        console.error('No admin session token found');
+        return;
+      }
+
       const response = await fetch('/api/admin/users', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionToken}`
+        },
         body: JSON.stringify({ userId, kycStatus: status })
       });
 
       if (response.ok) {
+        console.log('KYC status updated successfully');
         fetchDashboardData(); // Refresh data
+      } else {
+        console.error('Failed to update KYC status:', await response.text());
       }
     } catch (error) {
       console.error('Failed to update KYC status:', error);
