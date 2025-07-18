@@ -1,0 +1,11 @@
+# Add these environment variables to your .env file:
+
+# Sumsub API Integration
+SUMSUB_APP_TOKEN=prd:H78MrYM7FHN7lRzxXynDryyo.6OXz0sYlxkKgiAH7mw6SUlWHIKoV7q6P
+SUMSUB_SECRET_KEY=hqfdbn5pVcA7AA9UqIClnb4MLZ5U3TcJ
+SUMSUB_BASE_URL=https://api.sumsub.com
+SUMSUB_VERIFICATION_LEVEL=basic
+
+# Also add these to your Vercel environment variables:
+# Go to Vercel Dashboard -> Your Project -> Settings -> Environment Variables
+# Add each variable with the same names and values above 
