@@ -1,23 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// Get card details
-export const GET = requireAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const GET = requireAuth(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const user = (request as any).user;
-    const cardId = params.id;
+    const { id } = await params;
 
     const card = await prisma.card.findFirst({
       where: {
-        id: cardId,
+        id: id,
         userId: user.id
+      },
+      include: {
+        account: {
+          select: {
+            accountNumber: true,
+            accountType: true,
+            balance: true
+          }
+        }
       }
     });
 
     if (!card) {
       return NextResponse.json(
-        { error: 'Card not found or not accessible' },
+        { error: 'Card not found' },
         { status: 404 }
       );
     }
@@ -27,121 +35,127 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
         id: card.id,
         cardNumber: card.cardNumber,
         cardType: card.cardType,
+        status: card.status,
         expiryDate: card.expiryDate,
+        isVirtual: card.isVirtual,
         isActive: card.isActive,
         dailyLimit: card.dailyLimit,
         monthlyLimit: card.monthlyLimit,
-        createdAt: card.createdAt
+        createdAt: card.createdAt,
+        account: card.account
       }
     });
+
   } catch (error) {
-    console.error('Get card details error:', error);
+    console.error('Error fetching card:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch card' },
       { status: 500 }
     );
   }
 });
 
-// Update card (activate/deactivate, update limits)
-export const PUT = requireAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const PUT = requireAuth(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const user = (request as any).user;
-    const cardId = params.id;
-    const { isActive, dailyLimit, monthlyLimit } = await request.json();
+    const { id } = await params;
+    const { action, dailyLimit, monthlyLimit } = await request.json();
 
-    // Find card and verify ownership
     const card = await prisma.card.findFirst({
       where: {
-        id: cardId,
+        id: id,
         userId: user.id
       }
     });
 
     if (!card) {
       return NextResponse.json(
-        { error: 'Card not found or not accessible' },
+        { error: 'Card not found' },
         { status: 404 }
       );
     }
 
-    // Prepare update data
-    const updateData: any = {};
-    
-    if (typeof isActive === 'boolean') {
-      updateData.isActive = isActive;
-    }
-    
-    if (dailyLimit && dailyLimit > 0) {
-      updateData.dailyLimit = dailyLimit;
-    }
-    
-    if (monthlyLimit && monthlyLimit > 0) {
-      updateData.monthlyLimit = monthlyLimit;
+    let updateData: any = {};
+
+    if (action === 'block') {
+      updateData.isActive = false;
+      updateData.status = 'BLOCKED';
+    } else if (action === 'unblock') {
+      updateData.isActive = true;
+      updateData.status = 'ACTIVE';
+    } else if (action === 'update-limits') {
+      if (dailyLimit && dailyLimit > 0) {
+        updateData.dailyLimit = dailyLimit;
+      }
+      if (monthlyLimit && monthlyLimit > 0) {
+        updateData.monthlyLimit = monthlyLimit;
+      }
     }
 
-    // Update card
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid action' },
+        { status: 400 }
+      );
+    }
+
     const updatedCard = await prisma.card.update({
-      where: { id: cardId },
+      where: { id: id },
       data: updateData
     });
 
     return NextResponse.json({
-      message: 'Card updated successfully',
-      card: {
-        id: updatedCard.id,
-        cardNumber: updatedCard.cardNumber,
-        cardType: updatedCard.cardType,
-        expiryDate: updatedCard.expiryDate,
-        isActive: updatedCard.isActive,
-        dailyLimit: updatedCard.dailyLimit,
-        monthlyLimit: updatedCard.monthlyLimit,
-        createdAt: updatedCard.createdAt
-      }
+      success: true,
+      card: updatedCard,
+      message: `Card ${action === 'block' ? 'blocked' : action === 'unblock' ? 'unblocked' : 'updated'} successfully`
     });
+
   } catch (error) {
-    console.error('Update card error:', error);
+    console.error('Error updating card:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to update card' },
       { status: 500 }
     );
   }
 });
 
-// Deactivate card
-export const DELETE = requireAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const DELETE = requireAuth(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const user = (request as any).user;
-    const cardId = params.id;
+    const { id } = await params;
 
-    // Find card and verify ownership
     const card = await prisma.card.findFirst({
       where: {
-        id: cardId,
+        id: id,
         userId: user.id
       }
     });
 
     if (!card) {
       return NextResponse.json(
-        { error: 'Card not found or not accessible' },
+        { error: 'Card not found' },
         { status: 404 }
       );
     }
 
-    // Deactivate card (soft delete)
+    // Soft delete - mark as inactive
     await prisma.card.update({
-      where: { id: cardId },
-      data: { isActive: false }
+      where: { id: id },
+      data: {
+        isActive: false,
+        status: 'EXPIRED'
+      }
     });
 
     return NextResponse.json({
+      success: true,
       message: 'Card deactivated successfully'
     });
+
   } catch (error) {
-    console.error('Deactivate card error:', error);
+    console.error('Error deactivating card:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to deactivate card' },
       { status: 500 }
     );
   }

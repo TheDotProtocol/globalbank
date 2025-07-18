@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// Get fixed deposit details
-export const GET = requireAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const GET = requireAuth(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const user = (request as any).user;
-    const depositId = params.id;
+    const { id } = await params;
 
     const fixedDeposit = await prisma.fixedDeposit.findFirst({
       where: {
-        id: depositId,
+        id: id,
         userId: user.id
       },
       include: {
-        user: {
+        account: {
           select: {
-            firstName: true,
-            lastName: true,
-            email: true
+            accountNumber: true,
+            accountType: true
           }
         }
       }
@@ -26,159 +24,123 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
 
     if (!fixedDeposit) {
       return NextResponse.json(
-        { error: 'Fixed deposit not found or not accessible' },
+        { error: 'Fixed deposit not found' },
         { status: 404 }
       );
     }
 
-    // Calculate current values
-    const now = new Date();
-    const isMatured = now >= fixedDeposit.maturityDate;
-    const isActive = fixedDeposit.status === 'ACTIVE';
-    
     // Calculate interest earned
+    const now = new Date();
     const startDate = fixedDeposit.createdAt;
-    const endDate = isMatured ? fixedDeposit.maturityDate : now;
-    const monthsElapsed = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
-    const interestEarned = isActive ? 
-      (Number(fixedDeposit.amount) * Number(fixedDeposit.interestRate) / 100 * monthsElapsed / 12) : 0;
+    const maturityDate = fixedDeposit.maturityDate;
+    const isMatured = now >= maturityDate;
     
-    const currentValue = Number(fixedDeposit.amount) + interestEarned;
-    const daysRemaining = isActive ? Math.ceil((fixedDeposit.maturityDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+    const daysElapsed = Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.floor((maturityDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    const interestEarned = isMatured 
+      ? Number(fixedDeposit.amount) * Number(fixedDeposit.interestRate) / 100 * (totalDays / 365)
+      : Number(fixedDeposit.amount) * Number(fixedDeposit.interestRate) / 100 * (daysElapsed / 365);
 
     return NextResponse.json({
       fixedDeposit: {
-        id: fixedDeposit.id,
-        amount: fixedDeposit.amount,
-        interestRate: fixedDeposit.interestRate,
-        duration: fixedDeposit.duration,
-        maturityDate: fixedDeposit.maturityDate,
-        status: fixedDeposit.status,
-        createdAt: fixedDeposit.createdAt,
-        currentValue: Math.round(currentValue * 100) / 100,
-        interestEarned: Math.round(interestEarned * 100) / 100,
+        ...fixedDeposit,
+        interestEarned: interestEarned.toFixed(2),
         isMatured,
-        daysRemaining,
-        canWithdraw: isMatured && fixedDeposit.status === 'ACTIVE'
+        daysElapsed,
+        totalDays,
+        maturityAmount: (Number(fixedDeposit.amount) + interestEarned).toFixed(2)
       }
     });
+
   } catch (error) {
-    console.error('Get fixed deposit details error:', error);
+    console.error('Error fetching fixed deposit:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch fixed deposit' },
       { status: 500 }
     );
   }
 });
 
-// Withdraw matured fixed deposit
-export const PUT = requireAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const PUT = requireAuth(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const user = (request as any).user;
-    const depositId = params.id;
+    const { id } = await params;
     const { action } = await request.json();
 
-    if (action !== 'withdraw') {
-      return NextResponse.json(
-        { error: 'Invalid action' },
-        { status: 400 }
-      );
-    }
-
-    // Find fixed deposit
     const fixedDeposit = await prisma.fixedDeposit.findFirst({
       where: {
-        id: depositId,
+        id: id,
         userId: user.id
       }
     });
 
     if (!fixedDeposit) {
       return NextResponse.json(
-        { error: 'Fixed deposit not found or not accessible' },
+        { error: 'Fixed deposit not found' },
         { status: 404 }
       );
     }
 
-    // Check if deposit is matured and active
-    const now = new Date();
-    const isMatured = now >= fixedDeposit.maturityDate;
-
-    if (!isMatured) {
-      return NextResponse.json(
-        { error: 'Fixed deposit has not matured yet' },
-        { status: 400 }
-      );
-    }
-
-    if (fixedDeposit.status !== 'ACTIVE') {
-      return NextResponse.json(
-        { error: 'Fixed deposit is not active' },
-        { status: 400 }
-      );
-    }
-
-    // Calculate final amount with interest
-    const monthsElapsed = (fixedDeposit.maturityDate.getTime() - fixedDeposit.createdAt.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
-    const interestEarned = Number(fixedDeposit.amount) * Number(fixedDeposit.interestRate) / 100 * monthsElapsed / 12;
-    const finalAmount = Number(fixedDeposit.amount) + interestEarned;
-
-    // Get user's savings account
-    const savingsAccount = await prisma.account.findFirst({
-      where: {
-        userId: user.id,
-        accountType: 'SAVINGS',
-        isActive: true
+    if (action === 'withdraw' && fixedDeposit.status === 'ACTIVE') {
+      // Check if matured
+      const now = new Date();
+      if (now < fixedDeposit.maturityDate) {
+        return NextResponse.json(
+          { error: 'Fixed deposit has not matured yet' },
+          { status: 400 }
+        );
       }
-    });
 
-    if (!savingsAccount) {
-      return NextResponse.json(
-        { error: 'No active savings account found' },
-        { status: 400 }
-      );
-    }
+      // Calculate final amount with interest
+      const daysElapsed = Math.floor((now.getTime() - fixedDeposit.createdAt.getTime()) / (1000 * 60 * 60 * 24));
+      const interestEarned = Number(fixedDeposit.amount) * Number(fixedDeposit.interestRate) / 100 * (daysElapsed / 365);
+      const totalAmount = Number(fixedDeposit.amount) + interestEarned;
 
-    // Update fixed deposit status
-    await prisma.fixedDeposit.update({
-      where: { id: depositId },
-      data: { status: 'WITHDRAWN' }
-    });
+      // Update fixed deposit status
+      await prisma.fixedDeposit.update({
+        where: { id: id },
+        data: { status: 'WITHDRAWN' }
+      });
 
-    // Add amount to savings account
-    await prisma.account.update({
-      where: { id: savingsAccount.id },
-      data: {
-        balance: {
-          increment: finalAmount
+      // Add to account balance
+      await prisma.account.update({
+        where: { id: fixedDeposit.accountId },
+        data: {
+          balance: {
+            increment: totalAmount
+          }
         }
-      }
-    });
+      });
 
-    // Create transaction record
-    await prisma.transaction.create({
-      data: {
-        accountId: savingsAccount.id,
-        userId: user.id,
-        type: 'CREDIT',
-        amount: finalAmount,
-        description: `Fixed Deposit Maturity - Principal: $${fixedDeposit.amount}, Interest: $${Math.round(interestEarned * 100) / 100}`,
-        status: 'COMPLETED'
-      }
-    });
+      // Create transaction record
+      await prisma.transaction.create({
+        data: {
+          userId: user.id,
+          accountId: fixedDeposit.accountId,
+          type: 'CREDIT',
+          amount: totalAmount,
+          description: `Fixed deposit withdrawal - ${fixedDeposit.amount} + ${interestEarned.toFixed(2)} interest`,
+          status: 'COMPLETED'
+        }
+      });
 
-    return NextResponse.json({
-      message: 'Fixed deposit withdrawn successfully',
-      withdrawal: {
-        principal: fixedDeposit.amount,
-        interest: Math.round(interestEarned * 100) / 100,
-        totalAmount: Math.round(finalAmount * 100) / 100
-      }
-    });
-  } catch (error) {
-    console.error('Withdraw fixed deposit error:', error);
+      return NextResponse.json({
+        success: true,
+        message: 'Fixed deposit withdrawn successfully',
+        amount: totalAmount.toFixed(2)
+      });
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Invalid action' },
+      { status: 400 }
+    );
+
+  } catch (error) {
+    console.error('Error updating fixed deposit:', error);
+    return NextResponse.json(
+      { error: 'Failed to update fixed deposit' },
       { status: 500 }
     );
   }

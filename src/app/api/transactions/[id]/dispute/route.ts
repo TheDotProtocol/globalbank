@@ -1,57 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// Create dispute
-export const POST = requireAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const POST = requireAuth(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const user = (request as any).user;
-    const transactionId = params.id;
+    const { id } = await params;
     const { reason } = await request.json();
 
-    // Validate input
-    if (!reason || reason.trim().length < 10) {
+    if (!reason) {
       return NextResponse.json(
-        { error: 'Dispute reason is required and must be at least 10 characters' },
+        { error: 'Dispute reason is required' },
         { status: 400 }
       );
     }
 
-    // Find transaction and verify ownership
+    // Check if transaction exists and belongs to user
     const transaction = await prisma.transaction.findFirst({
       where: {
-        id: transactionId,
+        id: id,
         userId: user.id
       }
     });
 
     if (!transaction) {
       return NextResponse.json(
-        { error: 'Transaction not found or not accessible' },
+        { error: 'Transaction not found' },
         { status: 404 }
       );
     }
 
-    // Check if transaction can be disputed
-    if (transaction.isDisputed) {
-      return NextResponse.json(
-        { error: 'Transaction is already disputed' },
-        { status: 400 }
-      );
-    }
-
-    // Check if transaction is recent enough (within 60 days)
-    const daysSinceTransaction = Math.floor((Date.now() - transaction.createdAt.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysSinceTransaction > 60) {
-      return NextResponse.json(
-        { error: 'Transactions can only be disputed within 60 days' },
-        { status: 400 }
-      );
-    }
-
-    // Update transaction with dispute
+    // Update transaction with dispute information
     const updatedTransaction = await prisma.transaction.update({
-      where: { id: transactionId },
+      where: { id: id },
       data: {
         isDisputed: true,
         disputeReason: reason,
@@ -61,59 +42,62 @@ export const POST = requireAuth(async (request: NextRequest, { params }: { param
     });
 
     return NextResponse.json({
-      message: 'Dispute created successfully',
-      dispute: {
-        id: updatedTransaction.id,
-        isDisputed: updatedTransaction.isDisputed,
-        disputeReason: updatedTransaction.disputeReason,
-        disputeStatus: updatedTransaction.disputeStatus,
-        disputeCreatedAt: updatedTransaction.disputeCreatedAt
-      }
+      success: true,
+      transaction: updatedTransaction,
+      message: 'Dispute filed successfully'
     });
+
   } catch (error) {
-    console.error('Create dispute error:', error);
+    console.error('Error filing dispute:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to file dispute' },
       { status: 500 }
     );
   }
 });
 
-// Get dispute status
-export const GET = requireAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const GET = requireAuth(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const user = (request as any).user;
-    const transactionId = params.id;
+    const { id } = await params;
 
-    // Find transaction and verify ownership
+    // Get transaction with dispute information
     const transaction = await prisma.transaction.findFirst({
       where: {
-        id: transactionId,
+        id: id,
         userId: user.id
+      },
+      select: {
+        id: true,
+        type: true,
+        amount: true,
+        description: true,
+        status: true,
+        isDisputed: true,
+        disputeReason: true,
+        disputeStatus: true,
+        disputeCreatedAt: true,
+        disputeResolvedAt: true,
+        disputeResolution: true,
+        createdAt: true
       }
     });
 
     if (!transaction) {
       return NextResponse.json(
-        { error: 'Transaction not found or not accessible' },
+        { error: 'Transaction not found' },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
-      dispute: {
-        isDisputed: transaction.isDisputed,
-        disputeReason: transaction.disputeReason,
-        disputeStatus: transaction.disputeStatus,
-        disputeCreatedAt: transaction.disputeCreatedAt,
-        disputeResolvedAt: transaction.disputeResolvedAt,
-        disputeResolution: transaction.disputeResolution
-      }
+      transaction
     });
+
   } catch (error) {
-    console.error('Get dispute error:', error);
+    console.error('Error fetching dispute:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch dispute information' },
       { status: 500 }
     );
   }

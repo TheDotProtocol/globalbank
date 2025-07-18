@@ -3,11 +3,13 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params;
+    
     const user = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       select: { kycStatus: true }
     });
 
@@ -20,7 +22,7 @@ export async function GET(
 
     return NextResponse.json({
       status: user.kycStatus,
-      userId: params.userId
+      userId: userId
     });
   } catch (error) {
     console.error('Error fetching KYC status:', error);
