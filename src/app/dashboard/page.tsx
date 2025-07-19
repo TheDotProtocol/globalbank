@@ -25,6 +25,7 @@ import NotificationCenter from '@/components/NotificationCenter';
 import AddMoneyModal from '@/components/modals/AddMoneyModal';
 import NewCardModal from '@/components/modals/NewCardModal';
 import FixedDepositModal from '@/components/modals/FixedDepositModal';
+import FixedDepositCertificate from '@/components/FixedDepositCertificate';
 import MultiCurrencyDisplay, { CurrencyConverter } from '@/components/MultiCurrencyDisplay';
 import BankBuggerAI from '@/components/BankBuggerAI';
 import { exportTransactions, exportFixedDeposits } from '@/lib/export';
@@ -96,6 +97,8 @@ export default function Dashboard() {
   const [fixedDepositModalOpen, setFixedDepositModalOpen] = useState(false);
   const [accountDetailsModalOpen, setAccountDetailsModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<AccountDetails | null>(null);
+  const [certificateModalOpen, setCertificateModalOpen] = useState(false);
+  const [selectedCertificate, setSelectedCertificate] = useState<any>(null);
   
   const router = useRouter();
   const { showToast } = useToast();
@@ -237,6 +240,36 @@ export default function Dashboard() {
     }
   };
 
+  const handleCertificateGeneration = async (depositId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch(`/api/fixed-deposits/${depositId}/certificate`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedCertificate(data.certificate);
+        setCertificateModalOpen(true);
+      } else {
+        const errorData = await response.json();
+        console.error('Certificate generation error:', errorData);
+        showToast('Failed to generate certificate', 'error');
+      }
+    } catch (error) {
+      console.error('Error generating certificate:', error);
+      showToast('Error generating certificate', 'error');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -333,6 +366,7 @@ export default function Dashboard() {
                 {[
                   { id: 'overview', label: 'Overview', icon: Home },
                   { id: 'accounts', label: 'Accounts', icon: CreditCard },
+                  { id: 'cards', label: 'Cards', icon: CreditCard },
                   { id: 'transactions', label: 'Transactions', icon: TrendingUp },
                   { id: 'deposits', label: 'Fixed Deposits', icon: TrendingUp },
                   { id: 'documents', label: 'Documents', icon: FileText },
@@ -342,7 +376,11 @@ export default function Dashboard() {
                   <button
                     key={item.id}
                     onClick={() => {
-                      setActiveTab(item.id);
+                      if (item.id === 'cards') {
+                        window.location.href = '/dashboard/cards';
+                      } else {
+                        setActiveTab(item.id);
+                      }
                       setSidebarOpen(false);
                     }}
                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
@@ -368,6 +406,7 @@ export default function Dashboard() {
               {[
                 { id: 'overview', label: 'Overview', icon: Home },
                 { id: 'accounts', label: 'Accounts', icon: CreditCard },
+                { id: 'cards', label: 'Cards', icon: CreditCard },
                 { id: 'transactions', label: 'Transactions', icon: TrendingUp },
                 { id: 'deposits', label: 'Fixed Deposits', icon: TrendingUp },
                 { id: 'documents', label: 'Documents', icon: FileText },
@@ -376,7 +415,13 @@ export default function Dashboard() {
               ].map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    if (item.id === 'cards') {
+                      window.location.href = '/dashboard/cards';
+                    } else {
+                      setActiveTab(item.id);
+                    }
+                  }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
                     activeTab === item.id
                       ? 'bg-blue-50 text-blue-600'
@@ -637,6 +682,15 @@ export default function Dashboard() {
                         <p className="text-xs text-gray-400 mt-2">
                           Matures: {deposit?.maturityDate ? new Date(deposit.maturityDate).toLocaleDateString() : 'Unknown'}
                         </p>
+                        {deposit?.status === 'ACTIVE' && (
+                          <button
+                            onClick={() => handleCertificateGeneration(deposit?.id || '')}
+                            className="mt-3 w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                          >
+                            <FileText className="w-4 h-4" />
+                            <span>Generate Certificate</span>
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -900,6 +954,17 @@ export default function Dashboard() {
 
       {/* Bank Bugger AI */}
       <BankBuggerAI userId={user?.id || ''} />
+
+      {/* Certificate Modal */}
+      {certificateModalOpen && selectedCertificate && (
+        <FixedDepositCertificate
+          certificate={selectedCertificate}
+          onClose={() => {
+            setCertificateModalOpen(false);
+            setSelectedCertificate(null);
+          }}
+        />
+      )}
     </div>
   );
 } 
