@@ -43,14 +43,9 @@ export const POST = async (request: NextRequest) => {
         accountId: account.id,
         type: 'CREDIT',
         amount: parseFloat(amount),
-        description: description || 'Manual deposit entry',
+        description: description || 'Manual deposit entry from API',
         status: 'COMPLETED',
-        reference: `MANUAL-${Date.now()}`,
-        metadata: {
-          adminNote: 'Manual deposit entry from API',
-          createdBy: 'admin',
-          timestamp: new Date().toISOString()
-        }
+        reference: `MANUAL-${Date.now()}`
       }
     });
 
