@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface ExportOptions {
   format: 'pdf' | 'csv';
@@ -27,7 +27,7 @@ export class ExportManager {
       options.fields.map(field => item[field] || '')
     );
     
-    (doc as any).autoTable({
+    autoTable(doc, {
       head: [options.headers],
       body: tableData,
       startY: 40,
