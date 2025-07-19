@@ -108,46 +108,49 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     setLoading(true);
-    console.log('fetchDashboardData called');
+    console.log('Admin: fetchDashboardData called');
     
     try {
       // Get admin session token
       const sessionToken = localStorage.getItem('adminSessionToken');
+      console.log('Admin: Session token found:', !!sessionToken);
+      console.log('Admin: Session token preview:', sessionToken ? sessionToken.substring(0, 20) + '...' : 'No token');
       
       if (!sessionToken) {
-        console.error('No admin session token found');
+        console.error('Admin: No admin session token found');
         setLoading(false);
         router.push('/admin/login');
         return;
       }
 
-      console.log('Making API calls with session token:', sessionToken.substring(0, 10) + '...');
+      console.log('Admin: Making API calls with session token:', sessionToken.substring(0, 10) + '...');
 
       const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${sessionToken}`
       };
 
-      console.log('Fetching users data...');
+      console.log('Admin: Fetching users data...');
       
       // Only fetch users data since transactions endpoint doesn't exist
       const usersResponse = await fetch('/api/admin/users', { headers });
 
-      console.log('Users response status:', usersResponse.status);
+      console.log('Admin: Users response status:', usersResponse.status);
 
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
-        console.log('Users data received:', usersData);
-        console.log('Number of users:', usersData.users?.length || 0);
+        console.log('Admin: Users data received:', usersData);
+        console.log('Admin: Number of users:', usersData.users?.length || 0);
+        console.log('Admin: Users array:', usersData.users);
         setUsers(usersData.users || []);
       } else {
         const errorText = await usersResponse.text();
-        console.error('Failed to fetch users:', errorText);
-        console.error('Users response status:', usersResponse.status);
+        console.error('Admin: Failed to fetch users:', errorText);
+        console.error('Admin: Users response status:', usersResponse.status);
         
         // If it's an authentication error, redirect to login
         if (usersResponse.status === 401) {
-          console.log('Authentication failed, redirecting to login');
+          console.log('Admin: Authentication failed, redirecting to login');
           localStorage.removeItem('adminSessionToken');
           router.push('/admin/login');
           return;
@@ -158,9 +161,9 @@ export default function AdminDashboard() {
       setTransactions([]);
       
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+      console.error('Admin: Failed to fetch dashboard data:', error);
     } finally {
-      console.log('Setting loading to false');
+      console.log('Admin: Setting loading to false');
       setLoading(false);
     }
   };

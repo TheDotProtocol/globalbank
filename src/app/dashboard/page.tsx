@@ -109,7 +109,11 @@ export default function Dashboard() {
       
       // Get token from localStorage
       const token = localStorage.getItem('token');
+      console.log('Dashboard: Token found:', !!token);
+      console.log('Dashboard: Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
+      
       if (!token) {
+        console.log('Dashboard: No token found, redirecting to login');
         router.push('/login');
         return;
       }
@@ -119,13 +123,21 @@ export default function Dashboard() {
         'Content-Type': 'application/json'
       };
       
+      console.log('Dashboard: Fetching user profile...');
       // Fetch user data
       const userResponse = await fetch('/api/user/profile', { headers });
+      console.log('Dashboard: User profile response status:', userResponse.status);
+      
       if (!userResponse.ok) {
+        console.log('Dashboard: User profile failed, redirecting to login');
+        const errorText = await userResponse.text();
+        console.log('Dashboard: Error response:', errorText);
         router.push('/login');
         return;
       }
+      
       const userData = await userResponse.json();
+      console.log('Dashboard: User data received:', userData);
       setUser(userData.user);
 
       // Check if user needs to complete KYC
@@ -134,19 +146,25 @@ export default function Dashboard() {
         // Don't redirect immediately, let user see the dashboard but show KYC prompt
       }
 
+      console.log('Dashboard: Fetching accounts...');
       // Fetch accounts
       const accountsResponse = await fetch('/api/user/accounts', { headers });
       const accountsData = await accountsResponse.json();
+      console.log('Dashboard: Accounts data received:', accountsData);
       setAccounts(accountsData.accounts);
 
+      console.log('Dashboard: Fetching transactions...');
       // Fetch recent transactions
       const transactionsResponse = await fetch('/api/transactions?limit=5', { headers });
       const transactionsData = await transactionsResponse.json();
+      console.log('Dashboard: Transactions data received:', transactionsData);
       setTransactions(transactionsData.transactions);
 
+      console.log('Dashboard: Fetching fixed deposits...');
       // Fetch fixed deposits
       const depositsResponse = await fetch('/api/fixed-deposits', { headers });
       const depositsData = await depositsResponse.json();
+      console.log('Dashboard: Fixed deposits data received:', depositsData);
       setFixedDeposits(depositsData.fixedDeposits);
 
     } catch (error) {
