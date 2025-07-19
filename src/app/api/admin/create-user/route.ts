@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { generateCardNumber, generateCVV, maskCardNumber } from '@/lib/cardUtils';
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -148,19 +149,4 @@ export const POST = async (request: NextRequest) => {
       { status: 500 }
     );
   }
-};
-
-function generateCardNumber(): string {
-  // Generate a valid VISA card number (starts with 4)
-  const prefix = '4';
-  const middle = Array.from({ length: 15 }, () => Math.floor(Math.random() * 10)).join('');
-  return prefix + middle;
-}
-
-function generateCVV(): string {
-  return Array.from({ length: 3 }, () => Math.floor(Math.random() * 10)).join('');
-}
-
-function maskCardNumber(cardNumber: string): string {
-  return cardNumber.replace(/(\d{4})(\d{8})(\d{4})/, '$1 **** **** $3');
-} 
+}; 
