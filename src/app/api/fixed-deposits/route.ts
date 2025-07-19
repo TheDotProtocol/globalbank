@@ -10,13 +10,6 @@ const FIXED_DEPOSIT_RATES = {
   24: { rate: 10.0, minAmount: 100, name: '24 Months' }
 };
 
-// Savings account interest tiers
-const SAVINGS_INTEREST_TIERS = {
-  BASIC: { minBalance: 0, maxBalance: 500, rate: 4.5 },
-  STANDARD: { minBalance: 500, maxBalance: 2000, rate: 5.5 },
-  PREMIUM: { minBalance: 2000, maxBalance: null, rate: 6.0 }
-};
-
 // List user's fixed deposits
 export const GET = requireAuth(async (request: NextRequest) => {
   try {
@@ -162,7 +155,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     const maturityDate = new Date();
     maturityDate.setMonth(maturityDate.getMonth() + duration);
 
-    // Create fixed deposit
+    // Create fixed deposit with explicit status
     const fixedDeposit = await prisma.fixedDeposit.create({
       data: {
         userId: user.id,
@@ -170,7 +163,8 @@ export const POST = requireAuth(async (request: NextRequest) => {
         amount,
         interestRate: rateInfo.rate,
         duration,
-        maturityDate
+        maturityDate,
+        status: 'ACTIVE' as any
       }
     });
 
@@ -197,6 +191,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     });
 
     return NextResponse.json({
+      success: true,
       message: 'Fixed deposit created successfully',
       fixedDeposit: {
         id: fixedDeposit.id,
