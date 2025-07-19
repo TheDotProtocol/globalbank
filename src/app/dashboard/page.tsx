@@ -26,6 +26,7 @@ import AddMoneyModal from '@/components/modals/AddMoneyModal';
 import NewCardModal from '@/components/modals/NewCardModal';
 import FixedDepositModal from '@/components/modals/FixedDepositModal';
 import MultiCurrencyDisplay, { CurrencyConverter } from '@/components/MultiCurrencyDisplay';
+import BankBuggerAI from '@/components/BankBuggerAI';
 import { exportTransactions, exportFixedDeposits } from '@/lib/export';
 
 interface User {
@@ -896,6 +897,9 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Bank Bugger AI */}
+      <BankBuggerAI userId={user?.id || ''} />
     </div>
   );
 } 
