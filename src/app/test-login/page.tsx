@@ -28,7 +28,7 @@ export default function TestLogin() {
       });
     } catch (error) {
       setResult({
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
       });
     } finally {
       setLoading(false);

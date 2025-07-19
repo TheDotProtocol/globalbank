@@ -16,12 +16,6 @@ class PrismaClientSingleton {
             url: process.env.DATABASE_URL,
           },
         },
-        // Add connection management for serverless environments
-        __internal: {
-          engine: {
-            enableEngineDebugMode: false,
-          },
-        },
       });
 
       // Handle graceful shutdown
