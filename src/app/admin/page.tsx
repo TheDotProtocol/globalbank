@@ -23,7 +23,8 @@ import {
   Mail,
   Phone,
   Copy,
-  ExternalLink
+  ExternalLink,
+  LogOut
 } from 'lucide-react';
 
 interface User {
@@ -237,6 +238,11 @@ export default function AdminDashboard() {
     // You could add a toast notification here
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('adminSessionToken');
+    router.push('/admin/login');
+  };
+
   const getStats = () => {
     const totalUsers = users.length;
     const verifiedUsers = users.filter(u => u.kycStatus === 'VERIFIED').length;
@@ -273,8 +279,19 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage users, transactions, and system operations</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600">Manage users, transactions, and system operations</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -521,12 +538,28 @@ export default function AdminDashboard() {
                 <h3 className="text-lg font-medium text-gray-900">
                   User Details: {selectedUser.firstName} {selectedUser.lastName}
                 </h3>
-                <button
-                  onClick={() => setShowUserDetails(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <XCircle className="w-6 h-6" />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      setManualEntry(prev => ({
+                        ...prev,
+                        userId: selectedUser.id,
+                        accountId: selectedUser.accounts[0]?.id || ''
+                      }));
+                      setShowUserDetails(false);
+                      setShowManualEntry(true);
+                    }}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Manual Entry
+                  </button>
+                  <button
+                    onClick={() => setShowUserDetails(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <XCircle className="w-6 h-6" />
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -534,6 +567,7 @@ export default function AdminDashboard() {
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Personal Information</h4>
                   <div className="space-y-2 text-sm">
+                    <div><strong>User ID:</strong> <span className="font-mono text-gray-600">{selectedUser.id}</span></div>
                     <div><strong>Name:</strong> {selectedUser.firstName} {selectedUser.lastName}</div>
                     <div><strong>Email:</strong> {selectedUser.email}</div>
                     <div><strong>Phone:</strong> {selectedUser.phone || 'N/A'}</div>
@@ -574,13 +608,16 @@ export default function AdminDashboard() {
                         <div>
                           <h5 className="font-medium">{account.accountType} Account</h5>
                           <div className="text-sm text-gray-500 flex items-center space-x-2">
-                            <span>{account.accountNumber}</span>
+                            <span>Account: {account.accountNumber}</span>
                             <button
                               onClick={() => copyToClipboard(account.accountNumber)}
                               className="text-blue-600 hover:text-blue-800"
                             >
                               <Copy className="w-3 h-3" />
                             </button>
+                          </div>
+                          <div className="text-xs text-gray-400 font-mono">
+                            Account ID: {account.id}
                           </div>
                         </div>
                         <div className="text-right">
