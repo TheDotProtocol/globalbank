@@ -11,14 +11,6 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
       where: {
         id: id,
         userId: user.id
-      },
-      include: {
-        account: {
-          select: {
-            accountNumber: true,
-            accountType: true
-          }
-        }
       }
     });
 
@@ -144,4 +136,4 @@ export const PUT = requireAuth(async (request: NextRequest, { params }: { params
       { status: 500 }
     );
   }
-}); 
+});
