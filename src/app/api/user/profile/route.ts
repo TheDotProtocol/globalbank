@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/auth';
 export const GET = requireAuth(async (request: NextRequest) => {
   try {
     const user = (request as any).user;
+    console.log('User profile API: User ID from token:', user.id);
 
     // Get user with accounts
     const userWithAccounts = await prisma.user.findUnique({
@@ -21,7 +22,11 @@ export const GET = requireAuth(async (request: NextRequest) => {
       }
     });
 
+    console.log('User profile API: User found:', !!userWithAccounts);
+    console.log('User profile API: User accounts count:', userWithAccounts?.accounts?.length || 0);
+
     if (!userWithAccounts) {
+      console.log('User profile API: User not found in database');
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -29,7 +34,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
     }
 
     // Return user profile without sensitive data
-    return NextResponse.json({
+    const response = {
       user: {
         id: userWithAccounts.id,
         email: userWithAccounts.email,
@@ -56,11 +61,19 @@ export const GET = requireAuth(async (request: NextRequest) => {
           }))
         }))
       }
-    });
+    };
+
+    console.log('User profile API: Response prepared successfully');
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Get user profile error:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      name: error instanceof Error ? error.name : 'Unknown error type'
+    });
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
