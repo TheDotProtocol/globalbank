@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     console.log(`Updated ${result} transaction(s)`);
     
     // Check if there are any other invalid transactions
-    const invalidCount = await prisma.$queryRaw`
+    const invalidCount = await prisma.$queryRaw<Array<{ count: bigint }>>`
       SELECT COUNT(*) as count
       FROM transactions 
       WHERE type NOT IN ('CREDIT', 'DEBIT', 'TRANSFER', 'WITHDRAWAL', 'DEPOSIT')
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     
     console.log(`Remaining invalid transactions: ${invalidCount[0].count}`);
     
-    if (invalidCount[0].count > 0) {
+    if (Number(invalidCount[0].count) > 0) {
       // Fix any remaining invalid transactions
       const fixResult = await prisma.$executeRaw`
         UPDATE transactions 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Database fixed successfully',
       updatedTransactions: result,
-      remainingInvalid: invalidCount[0].count
+      remainingInvalid: Number(invalidCount[0].count)
     });
     
   } catch (error) {
