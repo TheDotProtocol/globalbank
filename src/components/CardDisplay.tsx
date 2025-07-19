@@ -16,34 +16,20 @@ export default function CardDisplay({ card, showDetails = false }: CardDisplayPr
     return cardNumber.replace(/(\d{4})(\d{4})(\d{4})(\d{4})/, '$1 $2 $3 $4');
   };
 
-  const formatExpiry = (month: number, year: number) => {
-    return `${month.toString().padStart(2, '0')}/${year.toString().slice(-2)}`;
+  const formatExpiry = (expiryDate: Date) => {
+    const date = new Date(expiryDate);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    return `${month}/${year}`;
   };
 
   const getCardBrandColor = () => {
-    switch (card.cardBrand) {
-      case 'VISA':
-        return 'from-blue-600 to-blue-800';
-      case 'MASTERCARD':
-        return 'from-orange-500 to-red-600';
-      case 'AMEX':
-        return 'from-green-600 to-green-800';
-      default:
-        return 'from-gray-600 to-gray-800';
-    }
+    // Default to VISA blue since we don't have cardBrand in schema
+    return 'from-blue-600 to-blue-800';
   };
 
   const getCardBrandLogo = () => {
-    switch (card.cardBrand) {
-      case 'VISA':
-        return '💳';
-      case 'MASTERCARD':
-        return '💳';
-      case 'AMEX':
-        return '💳';
-      default:
-        return '💳';
-    }
+    return '💳';
   };
 
   return (
@@ -79,7 +65,7 @@ export default function CardDisplay({ card, showDetails = false }: CardDisplayPr
             </div>
             <div>
               <div className="text-sm text-blue-100 mb-1">Expires</div>
-              <div className="font-medium">{formatExpiry(card.expiryMonth, card.expiryYear)}</div>
+              <div className="font-medium">{formatExpiry(card.expiryDate)}</div>
             </div>
           </div>
 
@@ -136,14 +122,14 @@ export default function CardDisplay({ card, showDetails = false }: CardDisplayPr
               <span className="font-medium">{card.cardType}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Brand:</span>
-              <span className="font-medium">{card.cardBrand}</span>
+              <span className="text-gray-600">Status:</span>
+              <span className={`font-medium ${card.status === 'ACTIVE' ? 'text-green-600' : 'text-red-600'}`}>
+                {card.status}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Status:</span>
-              <span className={`font-medium ${card.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                {card.isActive ? 'Active' : 'Inactive'}
-              </span>
+              <span className="text-gray-600">Expiry Date:</span>
+              <span className="font-medium">{formatExpiry(card.expiryDate)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Daily Limit:</span>
