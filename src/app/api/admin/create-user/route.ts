@@ -45,10 +45,8 @@ export const POST = async (request: NextRequest) => {
         firstName,
         lastName,
         phone: phone || null,
-        kycStatus: 'COMPLETED',
-        kycVerified: true,
-        isActive: true,
-        role: 'USER'
+        kycStatus: 'PENDING',
+        emailVerified: true
       }
     });
 
@@ -57,7 +55,7 @@ export const POST = async (request: NextRequest) => {
       data: {
         userId: user.id,
         accountNumber: `GB${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-        accountType: 'PERSONAL',
+        accountType: 'CHECKING',
         balance: balance,
         currency: 'USD',
         isActive: true
@@ -71,9 +69,8 @@ export const POST = async (request: NextRequest) => {
         accountId: account.id,
         cardNumber: generateCardNumber(),
         cardType: 'DEBIT',
-        cardBrand: 'VISA',
-        expiryMonth: 12,
-        expiryYear: 2028,
+        status: 'ACTIVE',
+        expiryDate: new Date('2028-12-31'),
         cvv: generateCVV(),
         isActive: true,
         dailyLimit: 5000,
@@ -108,9 +105,9 @@ export const POST = async (request: NextRequest) => {
           accountId: account.id,
           amount: fd.amount,
           interestRate: fd.interestRate || 5.5,
+          duration: fd.duration || 12,
           maturityDate: new Date(fd.maturityDate),
-          status: 'ACTIVE',
-          certificateNumber: `FD-${Date.now()}-${Math.random().toString(36).substr(2, 8).toUpperCase()}`
+          status: 'ACTIVE'
         }
       });
       createdFixedDeposits.push(fixedDeposit);
@@ -125,8 +122,7 @@ export const POST = async (request: NextRequest) => {
         firstName: user.firstName,
         lastName: user.lastName,
         phone: user.phone,
-        kycStatus: user.kycStatus,
-        kycVerified: user.kycVerified
+        kycStatus: user.kycStatus
       },
       account: {
         id: account.id,
@@ -138,9 +134,8 @@ export const POST = async (request: NextRequest) => {
         id: card.id,
         cardNumber: maskCardNumber(card.cardNumber),
         cardType: card.cardType,
-        cardBrand: card.cardBrand,
-        expiryMonth: card.expiryMonth,
-        expiryYear: card.expiryYear
+        status: card.status,
+        expiryDate: card.expiryDate
       },
       transactions: createdTransactions,
       fixedDeposits: createdFixedDeposits
