@@ -5,18 +5,27 @@ import { prisma } from './prisma';
 export async function authenticateUser(request: NextRequest): Promise<{ user: any; error?: string }> {
   try {
     const authHeader = request.headers.get('authorization');
+    console.log('Auth: Authorization header present:', !!authHeader);
+    
     const token = extractTokenFromHeader(authHeader);
+    console.log('Auth: Token extracted:', !!token);
 
     if (!token) {
+      console.log('Auth: No token provided');
       return { user: null, error: 'No token provided' };
     }
 
     const payload = verifyToken(token);
+    console.log('Auth: Token verified:', !!payload);
+    console.log('Auth: Payload user ID:', payload?.userId);
+    
     if (!payload) {
+      console.log('Auth: Invalid token');
       return { user: null, error: 'Invalid token' };
     }
 
     // Verify user still exists in database
+    console.log('Auth: Looking up user in database...');
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
       select: {
@@ -30,13 +39,22 @@ export async function authenticateUser(request: NextRequest): Promise<{ user: an
       }
     });
 
+    console.log('Auth: User found in database:', !!user);
+    console.log('Auth: User email:', user?.email);
+
     if (!user) {
+      console.log('Auth: User not found in database');
       return { user: null, error: 'User not found' };
     }
 
+    console.log('Auth: Authentication successful');
     return { user };
   } catch (error) {
     console.error('Authentication error:', error);
+    console.error('Auth error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    });
     return { user: null, error: 'Authentication failed' };
   }
 }
