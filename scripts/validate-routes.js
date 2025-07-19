@@ -56,7 +56,15 @@ function findRouteFiles(dir) {
 function validateAllRoutes() {
   console.log('🔍 Validating all route files...\n');
   
+  // Fix the path resolution - we're in scripts/ directory, so go up one level to find src/
   const apiDir = path.join(__dirname, '..', 'src', 'app', 'api');
+  
+  // Check if the API directory exists
+  if (!fs.existsSync(apiDir)) {
+    console.error(`❌ API directory not found: ${apiDir}`);
+    process.exit(1);
+  }
+  
   const routeFiles = findRouteFiles(apiDir);
   
   let validCount = 0;
