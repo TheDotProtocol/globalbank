@@ -5,11 +5,11 @@ import { requireAuth } from '@/lib/auth';
 export const GET = requireAuth(async (request: NextRequest) => {
   try {
     const user = (request as any).user;
+    console.log('Fetching cards for user:', user.id);
 
     const cards = await prisma.card.findMany({
       where: {
-        userId: user.id,
-        isActive: true
+        userId: user.id
       },
       include: {
         account: {
@@ -23,6 +23,8 @@ export const GET = requireAuth(async (request: NextRequest) => {
         createdAt: 'desc'
       }
     });
+
+    console.log('Found cards:', cards.length);
 
     return NextResponse.json({
       success: true,
