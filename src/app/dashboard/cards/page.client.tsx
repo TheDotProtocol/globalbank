@@ -6,15 +6,19 @@ import CardDisplay from '@/components/CardDisplay';
 import { Card } from '@prisma/client';
 
 export default function CardsPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [cards, setCards] = useState<Card[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (status === 'loading') return;
+    
     if (session?.user?.email) {
       fetchCards();
+    } else {
+      setLoading(false);
     }
-  }, [session]);
+  }, [session, status]);
 
   const fetchCards = async () => {
     try {
@@ -29,6 +33,34 @@ export default function CardsPage() {
       setLoading(false);
     }
   };
+
+  // Show loading while session is loading
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login prompt if not authenticated
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🔒</div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Authentication Required</h3>
+          <p className="text-gray-600 mb-6">Please log in to view your cards.</p>
+          <a href="/login" className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
+            Login
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

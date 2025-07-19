@@ -84,21 +84,18 @@ export const POST = async (request: NextRequest) => {
       );
     }
 
-    // Create transaction
+    // Create transaction with admin note in description
+    const fullDescription = adminNote ? `${description} (Admin Note: ${adminNote})` : description;
+    
     const transaction = await prisma.transaction.create({
       data: {
         userId,
         accountId,
         type,
         amount: numericAmount,
-        description,
+        description: fullDescription,
         status: 'COMPLETED',
-        reference: `ADMIN-${Date.now()}`,
-        metadata: {
-          adminNote,
-          createdBy: 'admin',
-          timestamp: new Date().toISOString()
-        }
+        reference: `ADMIN-${Date.now()}`
       }
     });
 

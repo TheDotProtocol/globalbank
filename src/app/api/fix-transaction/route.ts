@@ -65,6 +65,13 @@ export const POST = async (request: NextRequest) => {
       where: { id: account.id }
     });
 
+    if (!updatedAccount) {
+      return NextResponse.json(
+        { error: 'Failed to retrieve updated account' },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Transaction fixed successfully',
