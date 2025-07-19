@@ -55,12 +55,7 @@ async function fixUserTransaction() {
         amount: 150000,
         description: 'Deposit from AR Holdings Group Corporation, Singapore',
         status: 'COMPLETED',
-        reference: `AR-HOLDINGS-${Date.now()}`,
-        metadata: {
-          adminNote: 'Manual deposit entry from AR Holdings Group Corporation, Singapore',
-          createdBy: 'admin',
-          timestamp: new Date().toISOString()
-        }
+        reference: `AR-HOLDINGS-${Date.now()}`
       }
     });
     
