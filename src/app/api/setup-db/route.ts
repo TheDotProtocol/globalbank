@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ Database connection successful');
     
     // Check if email verification columns exist
-    const tableInfo = await prisma.$queryRaw`
+    const tableInfo = await prisma.$queryRaw<Array<{ column_name: string }>>`
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'users' 
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     console.log('📋 Current user table columns:', tableInfo);
     
     // Add missing columns if they don't exist
-    const existingColumns = tableInfo.map((col: any) => col.column_name);
+    const existingColumns = tableInfo.map((col) => col.column_name);
     
     if (!existingColumns.includes('emailVerified')) {
       console.log('➕ Adding emailVerified column...');
