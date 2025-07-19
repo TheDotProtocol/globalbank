@@ -144,8 +144,17 @@ export const POST = requireAuth(async (request: NextRequest) => {
   }
 });
 
-// Handle webhook events
-export const PUT = async (request: NextRequest) => {
+// Handle webhook events - Changed from PUT to POST for Stripe compatibility
+export async function PUT(request: NextRequest) {
+  return handleWebhook(request);
+}
+
+// Add POST method for webhook handling
+export async function POST(request: NextRequest) {
+  return handleWebhook(request);
+}
+
+async function handleWebhook(request: NextRequest) {
   try {
     if (!stripe) {
       return NextResponse.json(
@@ -201,41 +210,37 @@ export const PUT = async (request: NextRequest) => {
       { status: 500 }
     );
   }
-};
+}
 
 async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
   const { userId, accountId, type, paymentMethod } = paymentIntent.metadata;
-  const amount = paymentIntent.amount / 100; // Convert from cents
+  const amount = paymentIntent.amount / 100;
 
   try {
     // Update account balance
-    if (type === 'deposit') {
-      await prisma.account.update({
-        where: { id: accountId },
-        data: {
-          balance: {
-            increment: amount
-          }
+    await prisma.account.update({
+      where: { id: accountId },
+      data: {
+        balance: {
+          increment: type === 'deposit' ? amount : -amount
         }
-      });
+      }
+    });
 
-      // Create transaction record
-      await prisma.transaction.create({
-        data: {
-          accountId,
-          userId,
-          type: 'CREDIT',
-          amount,
-          description: paymentMethod === 'bank_transfer' 
-            ? 'Account Deposit via Bank Transfer' 
-            : 'Account Deposit via Stripe',
-          status: 'COMPLETED',
-          reference: paymentIntent.id
-        }
-      });
-    }
+    // Create transaction record
+    await prisma.transaction.create({
+      data: {
+        accountId,
+        userId,
+        type: type === 'deposit' ? 'CREDIT' : 'DEBIT',
+        amount,
+        description: `Successful ${type} via ${paymentMethod}`,
+        status: 'COMPLETED',
+        reference: paymentIntent.id
+      }
+    });
 
-    console.log(`Payment succeeded: ${paymentIntent.id} for ${amount} via ${paymentMethod}`);
+    console.log(`Payment succeeded: ${paymentIntent.id} via ${paymentMethod}`);
   } catch (error) {
     console.error('Error processing payment success:', error);
   }
@@ -270,14 +275,14 @@ async function handlePaymentRequiresAction(paymentIntent: Stripe.PaymentIntent) 
   const amount = paymentIntent.amount / 100;
 
   try {
-    // Create pending transaction record for 3D Secure
+    // Create pending transaction record
     await prisma.transaction.create({
       data: {
         accountId,
         userId,
         type: type === 'deposit' ? 'CREDIT' : 'DEBIT',
         amount,
-        description: `Pending ${type} via ${paymentMethod} - 3D Secure Required`,
+        description: `Pending ${type} via ${paymentMethod} - Requires Action`,
         status: 'PENDING',
         reference: paymentIntent.id
       }
