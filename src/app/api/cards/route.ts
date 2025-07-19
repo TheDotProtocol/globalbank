@@ -4,26 +4,11 @@ import { requireAuth } from '@/lib/auth';
 
 // Generate unique 16-digit card number
 function generateCardNumber(): string {
-  // Start with 4 (common for many card types)
   let cardNumber = '4';
-  
-  // Generate 15 more random digits
   for (let i = 0; i < 15; i++) {
     cardNumber += Math.floor(Math.random() * 10);
   }
-  
   return cardNumber;
-}
-
-// Generate valid expiry date (3 years from now)
-function generateExpiryDate(): string {
-  const date = new Date();
-  date.setFullYear(date.getFullYear() + 3);
-  
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear().toString().slice(-2);
-  
-  return `${month}/${year}`;
 }
 
 // Generate 3-digit CVV
@@ -44,18 +29,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json({
-      cards: cards.map(card => ({
-        id: card.id,
-        cardNumber: card.cardNumber,
-        cardType: card.cardType,
-        expiryDate: card.expiryDate,
-        isActive: card.isActive,
-        dailyLimit: card.dailyLimit,
-        monthlyLimit: card.monthlyLimit,
-        createdAt: card.createdAt
-      }))
-    });
+    return NextResponse.json({ cards });
   } catch (error) {
     console.error('Get cards error:', error);
     return NextResponse.json(
@@ -71,7 +45,6 @@ export const POST = requireAuth(async (request: NextRequest) => {
     const user = (request as any).user;
     const { cardType, dailyLimit, monthlyLimit, isPhysical = false } = await request.json();
 
-    // Validate input
     if (!cardType) {
       return NextResponse.json(
         { error: 'Card type is required' },
@@ -79,7 +52,6 @@ export const POST = requireAuth(async (request: NextRequest) => {
       );
     }
 
-    // Validate card type
     const validCardTypes = ['DEBIT', 'CREDIT', 'VIRTUAL'];
     if (!validCardTypes.includes(cardType)) {
       return NextResponse.json(
@@ -88,7 +60,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
       );
     }
 
-    // Check if user has sufficient KYC status for card generation
+    // Check KYC status
     const userProfile = await prisma.user.findUnique({
       where: { id: user.id },
       select: { kycStatus: true, firstName: true, lastName: true }
@@ -101,11 +73,24 @@ export const POST = requireAuth(async (request: NextRequest) => {
       );
     }
 
+    // Get user account
+    const userAccount = await prisma.account.findFirst({
+      where: {
+        userId: user.id,
+        isActive: true
+      }
+    });
+
+    if (!userAccount) {
+      return NextResponse.json(
+        { error: 'No active account found for card creation' },
+        { status: 400 }
+      );
+    }
+
     // Generate unique card number
-    let cardNumber: string = "";
+    let cardNumber = "";
     let isUnique = false;
-    
-    // Ensure card number is unique
     while (!isUnique) {
       cardNumber = generateCardNumber();
       const existingCard = await prisma.card.findUnique({
@@ -116,19 +101,15 @@ export const POST = requireAuth(async (request: NextRequest) => {
       }
     }
 
-    // Generate CVV (3 digits)
     const cvv = generateCVV();
-
-    // Set expiry date (3 years from now)
     const expiryDate = new Date();
     expiryDate.setFullYear(expiryDate.getFullYear() + 3);
 
-    // Create card
+    // Create card with direct IDs
     const newCard = await prisma.card.create({
       data: {
-        user: {
-          connect: { id: user.id }
-        },
+        userId: user.id,
+        accountId: userAccount.id,
         cardNumber,
         cardType,
         expiryDate,
@@ -139,22 +120,17 @@ export const POST = requireAuth(async (request: NextRequest) => {
       }
     });
 
-    // Format expiry date for display
     const formattedExpiryDate = `${(expiryDate.getMonth() + 1).toString().padStart(2, '0')}/${expiryDate.getFullYear().toString().slice(-2)}`;
-
-    // Card holder name
     const cardHolderName = `${userProfile.firstName} ${userProfile.lastName}`;
 
     return NextResponse.json({
-      message: isPhysical 
-        ? 'Physical card request submitted successfully' 
-        : 'Virtual card generated successfully',
+      message: isPhysical ? 'Physical card request submitted successfully' : 'Virtual card generated successfully',
       card: {
         id: newCard.id,
         cardNumber: newCard.cardNumber,
         cardType: newCard.cardType,
         expiryDate: formattedExpiryDate,
-        cvv: newCard.cvv, // Only show CVV once during creation
+        cvv: newCard.cvv,
         isActive: newCard.isActive,
         dailyLimit: newCard.dailyLimit,
         monthlyLimit: newCard.monthlyLimit,
@@ -175,4 +151,4 @@ export const POST = requireAuth(async (request: NextRequest) => {
       { status: 500 }
     );
   }
-}); 
+});

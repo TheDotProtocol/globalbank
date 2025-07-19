@@ -139,7 +139,7 @@ export async function GET() {
     Object.keys(mockRates).forEach(currency => {
       if (currency !== 'USD') {
         const variation = (Math.random() - 0.5) * 0.02; // ±1% variation
-        mockRates[currency] = mockRates[currency] * (1 + variation);
+        mockRates[currency as keyof typeof mockRates] = mockRates[currency as keyof typeof mockRates] * (1 + variation);
       }
     });
 
