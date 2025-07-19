@@ -51,6 +51,7 @@ interface Transaction {
   description: string;
   status: string;
   createdAt: string;
+  reference?: string;
 }
 
 interface FixedDeposit {

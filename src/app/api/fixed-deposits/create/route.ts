@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
         interestRate: finalInterestRate,
         duration,
         maturityDate,
-        maturityAmount: amount + interestAmount,
         status: 'ACTIVE'
       }
     });
@@ -86,7 +85,7 @@ export async function POST(request: NextRequest) {
         interestRate: finalInterestRate,
         duration,
         maturityDate,
-        maturityAmount: fixedDeposit.maturityAmount,
+        maturityAmount: amount + interestAmount,
         status: fixedDeposit.status
       }
     });

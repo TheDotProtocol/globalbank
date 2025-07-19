@@ -14,9 +14,6 @@ export async function POST(request: NextRequest) {
         firstName: true,
         lastName: true,
         phone: true,
-        country: true,
-        city: true,
-        dateOfBirth: true,
       }
     });
 
@@ -32,9 +29,8 @@ export async function POST(request: NextRequest) {
       info: {
         firstName: user.firstName,
         lastName: user.lastName,
-        country: user.country || 'US',
-        city: user.city || '',
-        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : undefined,
+        country: 'US', // Default country
+        city: '', // Default empty city
       },
       levelName: levelName,
     };
