@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
           destinationAccountNumber: toAccount.accountNumber,
           destinationAccountHolder: `${toAccount.user.firstName} ${toAccount.user.lastName}`,
           sourceAccountNumber: fromAccount.accountNumber,
-          sourceAccountHolder: `${fromAccount.user.firstName} ${fromAccount.user.lastName}`
+          sourceAccountHolder: `${fromAccount.user.firstName} ${fromAccount.user.lastName}`,
+          isDisputed: false
         }
       });
 
@@ -77,7 +78,8 @@ export async function POST(request: NextRequest) {
           sourceAccountNumber: fromAccount.accountNumber,
           sourceAccountHolder: `${fromAccount.user.firstName} ${fromAccount.user.lastName}`,
           destinationAccountNumber: toAccount.accountNumber,
-          destinationAccountHolder: `${toAccount.user.firstName} ${toAccount.user.lastName}`
+          destinationAccountHolder: `${toAccount.user.firstName} ${toAccount.user.lastName}`,
+          isDisputed: false
         }
       });
 
