@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     } catch (schemaError) {
       // If the enhanced fields don't exist, fall back to basic update
-      console.log('Falling back to basic schema update:', schemaError.message);
+      console.log('Falling back to basic schema update:', (schemaError as Error).message);
       
       const updatedDocument = await prisma.kycDocument.update({
         where: { id: documentId },
