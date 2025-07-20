@@ -11,33 +11,30 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  firstName String
-  lastName  String
-  phone     String?
-  kycStatus KycStatus @default(PENDING)
-  // Email verification fields
-  emailVerified    Boolean   @default(false)
-  emailVerifiedAt  DateTime?
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  password              String
+  firstName             String
+  lastName              String
+  phone                 String?
+  kycStatus             KycStatus @default(PENDING)
+  emailVerified         Boolean   @default(false)
+  emailVerifiedAt       DateTime?
   emailVerificationToken String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // 2FA fields
-  twoFactorSecret     String?
-  twoFactorEnabled    Boolean @default(false)
-  twoFactorVerifiedAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  twoFactorSecret       String?
+  twoFactorEnabled      Boolean   @default(false)
+  twoFactorVerifiedAt   DateTime?
 
   // Relations
-  accounts     Account[]
-  cards        Card[]
-  fixedDeposits FixedDeposit[]
-  kycDocuments KycDocument[]
-  aiInteractions AiInteraction[]
-  transactions Transaction[]
-  eChecks      ECheck[]
+  accounts              Account[]
+  transactions          Transaction[]
+  cards                 Card[]
+  fixedDeposits         FixedDeposit[]
+  kycDocuments          KycDocument[]
+  aiInteractions        AiInteraction[]
+  eChecks               ECheck[]
 
   @@map("users")
 }
@@ -46,7 +43,7 @@ model Account {
   id            String      @id @default(cuid())
   userId        String
   accountNumber String      @unique
-  accountType   AccountType
+  accountType   AccountType @default(SAVINGS)
   balance       Decimal     @default(0)
   currency      String      @default("USD")
   isActive      Boolean     @default(true)
@@ -54,10 +51,9 @@ model Account {
   updatedAt     DateTime    @updatedAt
 
   // Relations
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions Transaction[]
-  eChecks      ECheck[]
-  cards        Card[]
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions  Transaction[]
+  cards         Card[]
 
   @@map("accounts")
 }
@@ -146,9 +142,17 @@ model KycDocument {
   userId      String
   documentType DocumentType
   fileUrl     String
+  fileName    String?
+  fileSize    Int?
+  mimeType    String?
   status      DocumentStatus @default(PENDING)
   uploadedAt  DateTime  @default(now())
   verifiedAt  DateTime?
+  verifiedBy  String?   // Admin ID who verified
+  rejectionReason String?
+  notes       String?   // Admin notes
+  isActive    Boolean   @default(true)
+  version     Int       @default(1) // For document updates
 
   // Relations
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -252,6 +256,22 @@ enum DocumentType {
   ADDRESS_PROOF
   INCOME_PROOF
   BANK_STATEMENT
+  SELFIE_PHOTO
+  LIVELINESS_VIDEO
+  PASSPORT
+  DRIVERS_LICENSE
+  NATIONAL_ID
+  UTILITY_BILL
+  RENTAL_AGREEMENT
+  EMPLOYMENT_LETTER
+  PAYSLIP
+  TAX_RETURN
+  BUSINESS_LICENSE
+  ARTICLES_OF_INCORPORATION
+  PROOF_OF_FUNDS
+  SOURCE_OF_WEALTH
+  POLITICALLY_EXPOSED_PERSON
+  SANCTIONS_CHECK
 }
 
 enum DocumentStatus {
@@ -282,4 +302,4 @@ enum TransferMode {
   CARD_TRANSFER
   MOBILE_TRANSFER
   INTERNATIONAL_TRANSFER
-}
+} 
