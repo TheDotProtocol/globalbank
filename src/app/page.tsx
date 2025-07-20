@@ -79,6 +79,7 @@ export default function LandingPage() {
               <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Next-Generation Bank
               </span>
+              <span className="block text-sm text-gray-500 mt-2">🚀 Latest Version Deployed</span>
             </h1>
 
             <p className={`text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
