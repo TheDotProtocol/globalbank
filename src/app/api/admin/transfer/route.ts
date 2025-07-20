@@ -57,12 +57,10 @@ export async function POST(request: NextRequest) {
           description: description || `Transfer to ${toAccount.user.firstName} ${toAccount.user.lastName} (${toAccount.accountNumber})`,
           status: 'COMPLETED',
           transferMode: 'INTERNAL_TRANSFER',
-          metadata: {
-            destinationAccount: toAccount.accountNumber,
-            destinationUser: `${toAccount.user.firstName} ${toAccount.user.lastName}`,
-            transferType: 'internal_transfer',
-            adminTransfer: true
-          }
+          destinationAccountNumber: toAccount.accountNumber,
+          destinationAccountHolder: `${toAccount.user.firstName} ${toAccount.user.lastName}`,
+          sourceAccountNumber: fromAccount.accountNumber,
+          sourceAccountHolder: `${fromAccount.user.firstName} ${fromAccount.user.lastName}`
         }
       });
 
@@ -76,12 +74,10 @@ export async function POST(request: NextRequest) {
           description: `Transfer from ${fromAccount.user.firstName} ${fromAccount.user.lastName} (${fromAccount.accountNumber})`,
           status: 'COMPLETED',
           transferMode: 'INTERNAL_TRANSFER',
-          metadata: {
-            sourceAccount: fromAccount.accountNumber,
-            sourceUser: `${fromAccount.user.firstName} ${fromAccount.user.lastName}`,
-            transferType: 'internal_transfer',
-            adminTransfer: true
-          }
+          sourceAccountNumber: fromAccount.accountNumber,
+          sourceAccountHolder: `${fromAccount.user.firstName} ${fromAccount.user.lastName}`,
+          destinationAccountNumber: toAccount.accountNumber,
+          destinationAccountHolder: `${toAccount.user.firstName} ${toAccount.user.lastName}`
         }
       });
 
