@@ -110,14 +110,23 @@ function RegistrationFormContent() {
         return;
       }
 
-      // Registration successful - redirect to email verification
+      // Registration successful - redirect to KYC verification
       setIsLoading(false);
       
-      // Store email for verification page
-      localStorage.setItem('pendingEmail', formData.email);
+      // Store user data for KYC process
+      localStorage.setItem('pendingUser', JSON.stringify({
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        accountNumber: data.account.accountNumber
+      }));
       
-      // Redirect to verification page
-      window.location.href = '/verify-email';
+      // Redirect to KYC verification page
+      if (data.redirectTo) {
+        window.location.href = data.redirectTo;
+      } else {
+        window.location.href = '/kyc/verification';
+      }
     } catch (error) {
       console.error('Registration error:', error);
       setError('Registration failed. Please try again.');

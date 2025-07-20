@@ -11,6 +11,18 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Fallback transporter for development (logs emails instead of sending)
+const devTransporter = {
+  sendMail: async (mailOptions: any) => {
+    console.log('📧 DEVELOPMENT EMAIL (not sent):', {
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+      html: mailOptions.html ? 'HTML content present' : 'No HTML content'
+    });
+    return { messageId: 'dev-' + Date.now() };
+  }
+};
+
 export interface EmailData {
   to: string;
   subject: string;
@@ -28,11 +40,22 @@ export const sendEmail = async (emailData: EmailData) => {
       text: emailData.text,
     };
 
-    const info = await transporter.sendMail(mailOptions);
+    // Use development transporter if no SMTP credentials or in development
+    const isDevelopment = process.env.NODE_ENV === 'development' || !process.env.RESEND_API_KEY;
+    const currentTransporter = isDevelopment ? devTransporter : transporter;
+
+    const info = await currentTransporter.sendMail(mailOptions);
     console.log('Email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('Email sending failed:', error);
+    
+    // In development, don't fail if email sending fails
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📧 Email would have been sent in production');
+      return { success: true, messageId: 'dev-fallback' };
+    }
+    
     return { success: false, error };
   }
 };
@@ -78,9 +101,9 @@ export const emailTemplates = {
           </div>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/login" 
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/kyc/verification" 
                style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
-              Login to Your Account
+              Complete KYC Verification
             </a>
           </div>
           
@@ -124,12 +147,114 @@ What's Next?
 - Generate virtual cards for secure payments
 - Use e-checks for digital payments
 
-Login to your account: ${process.env.NEXT_PUBLIC_APP_URL}/login
+Complete KYC verification: ${process.env.NEXT_PUBLIC_APP_URL}/kyc/verification
 
 If you have any questions, our support team is here to help.
 
 Best regards,
 The Global Dot Bank Team
+    `
+  }),
+
+  kycApproved: (userName: string, email: string) => ({
+    subject: '🎉 KYC Verification Approved - Welcome to Global Dot Bank!',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px; text-align: center; color: white;">
+          <h1 style="margin: 0; font-size: 28px;">KYC Verification Approved!</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Your account is now fully activated</p>
+        </div>
+        
+        <div style="padding: 40px; background: white;">
+          <h2 style="color: #333; margin-bottom: 20px;">Congratulations ${userName}!</h2>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            Your KYC verification has been approved! Your Global Dot Bank account is now fully activated 
+            and you can access all our banking features.
+          </p>
+          
+          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0ea5e9;">
+            <h3 style="color: #333; margin-bottom: 15px;">✅ What You Can Do Now</h3>
+            <ul style="color: #666; line-height: 1.6; margin: 0; padding-left: 20px;">
+              <li>Access your dashboard</li>
+              <li>Create virtual cards</li>
+              <li>Set up fixed deposits</li>
+              <li>Make transfers and payments</li>
+              <li>Use e-checks</li>
+              <li>Chat with BankBugger AI</li>
+            </ul>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
+               style="background: #0ea5e9; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Access Your Dashboard
+            </a>
+          </div>
+          
+          <p style="color: #666; line-height: 1.6;">
+            Thank you for choosing Global Dot Bank. We're here to make your banking experience seamless and secure.
+          </p>
+          
+          <p style="color: #666; line-height: 1.6;">
+            Best regards,<br>
+            The Global Dot Bank Team
+          </p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>This email was sent to ${email}</p>
+          <p>© 2024 Global Dot Bank. All rights reserved.</p>
+        </div>
+      </div>
+    `
+  }),
+
+  kycRejected: (userName: string, email: string, reason?: string) => ({
+    subject: '⚠️ KYC Verification Update - Action Required',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 40px; text-align: center; color: white;">
+          <h1 style="margin: 0; font-size: 28px;">KYC Verification Update</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Action required to complete verification</p>
+        </div>
+        
+        <div style="padding: 40px; background: white;">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello ${userName},</h2>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            We received your KYC verification submission, but we need additional information to complete the process.
+          </p>
+          
+          ${reason ? `
+          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+            <h3 style="color: #333; margin-bottom: 15px;">📋 Additional Information Required</h3>
+            <p style="color: #666; margin: 5px 0;">${reason}</p>
+          </div>
+          ` : ''}
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/kyc/verification" 
+               style="background: #f59e0b; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
+              Complete KYC Verification
+            </a>
+          </div>
+          
+          <p style="color: #666; line-height: 1.6;">
+            If you need assistance, please contact our support team. We're here to help you complete the verification process.
+          </p>
+          
+          <p style="color: #666; line-height: 1.6;">
+            Best regards,<br>
+            The Global Dot Bank Team
+          </p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p>This email was sent to ${email}</p>
+          <p>© 2024 Global Dot Bank. All rights reserved.</p>
+        </div>
+      </div>
     `
   }),
 
@@ -429,14 +554,31 @@ The Global Dot Bank Team
   })
 };
 
-// Email sending functions
+// Helper functions
 export const sendWelcomeEmail = async (userEmail: string, userName: string, accountNumber?: string) => {
   const template = emailTemplates.welcome(userName, userEmail, accountNumber);
   return await sendEmail({
     to: userEmail,
     subject: template.subject,
-    html: template.html,
-    text: template.text
+    html: template.html
+  });
+};
+
+export const sendKYCApprovedEmail = async (userEmail: string, userName: string) => {
+  const template = emailTemplates.kycApproved(userName, userEmail);
+  return await sendEmail({
+    to: userEmail,
+    subject: template.subject,
+    html: template.html
+  });
+};
+
+export const sendKYCRejectedEmail = async (userEmail: string, userName: string, reason?: string) => {
+  const template = emailTemplates.kycRejected(userName, userEmail, reason);
+  return await sendEmail({
+    to: userEmail,
+    subject: template.subject,
+    html: template.html
   });
 };
 

@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Generate verification token
     const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-    // Create user with email verification required
+    // Create user with email verification required but KYC pending
     const user = await prisma.user.create({
       data: {
         email,
@@ -71,57 +71,57 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Send verification email
+    // Send welcome email (but don't require verification for now)
     try {
-      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
-      
       await sendEmail({
         to: user.email,
-        subject: 'Welcome to Global Dot Bank - Verify Your Email',
+        subject: 'Welcome to Global Dot Bank - Complete Your KYC',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #1f2937;">Welcome to Global Dot Bank!</h2>
             <p>Hi ${user.firstName},</p>
             <p>Thank you for registering with Global Dot Bank! Your account has been created successfully.</p>
             <p><strong>Account Number:</strong> ${account.accountNumber}</p>
-            <p>To complete your registration and access your account, please verify your email address by clicking the button below:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${verificationUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Verify Email</a>
-            </div>
-            <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
-            <p style="word-break: break-all; color: #6b7280;">${verificationUrl}</p>
-            <p>This link will expire in 24 hours.</p>
-            <p>After verifying your email, you'll be able to:</p>
+            <p>To complete your registration and access your account, please complete your KYC verification.</p>
+            <p>You will be redirected to our secure KYC verification system where you can:</p>
+            <ul>
+              <li>Upload your identity documents</li>
+              <li>Complete identity verification</li>
+              <li>Get verified within minutes</li>
+            </ul>
+            <p>After KYC verification, you'll be able to:</p>
             <ul>
               <li>Access your dashboard</li>
-              <li>Complete KYC verification</li>
               <li>Create cards and manage your account</li>
+              <li>Make transactions and transfers</li>
             </ul>
             <p>Best regards,<br>The Global Dot Bank Team</p>
           </div>
         `
       });
-      console.log('Verification email sent successfully to:', email);
+      console.log('Welcome email sent successfully to:', email);
     } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
+      console.error('Failed to send welcome email:', emailError);
       // Don't fail registration if email fails
     }
 
     return NextResponse.json(
       { 
-        message: 'Registration successful! Please check your email to verify your account.',
+        message: 'Registration successful! Please complete your KYC verification.',
         user: {
           id: user.id,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
-          emailVerified: false
+          emailVerified: false,
+          kycStatus: 'PENDING'
         },
         account: {
           accountNumber: account.accountNumber,
           accountType: account.accountType
         },
-        requiresVerification: true
+        requiresKYC: true,
+        redirectTo: '/kyc/verification'
       },
       { status: 201 }
     );

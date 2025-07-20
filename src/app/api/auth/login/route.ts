@@ -40,25 +40,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if email verification is supported and if email is verified
-    let emailVerified = true; // Default to true for backward compatibility
-    
-    try {
-      // Try to access emailVerified field
-      if ('emailVerified' in user) {
-        emailVerified = user.emailVerified;
-      }
-    } catch (error) {
-      console.log('Email verification not supported, proceeding with login');
-    }
-
-    // Only check email verification if the field exists and is false
-    if (emailVerified === false) {
+    // Check KYC status instead of email verification
+    if (user.kycStatus === 'PENDING') {
       return NextResponse.json(
         { 
-          error: 'Email not verified',
-          requiresVerification: true,
-          message: 'Please verify your email address before logging in'
+          error: 'KYC verification required',
+          requiresKYC: true,
+          message: 'Please complete your KYC verification before logging in'
+        },
+        { status: 403 }
+      );
+    }
+
+    if (user.kycStatus === 'REJECTED') {
+      return NextResponse.json(
+        { 
+          error: 'KYC verification rejected',
+          kycRejected: true,
+          message: 'Your KYC verification was rejected. Please contact support.'
+        },
+        { status: 403 }
+      );
+    }
+
+    if (user.kycStatus === 'REVIEW') {
+      return NextResponse.json(
+        { 
+          error: 'KYC verification under review',
+          kycReview: true,
+          message: 'Your KYC verification is under review. You will be notified once it\'s completed.'
         },
         { status: 403 }
       );
@@ -81,7 +91,7 @@ export async function POST(request: NextRequest) {
         firstName: user.firstName,
         lastName: user.lastName,
         kycStatus: user.kycStatus,
-        emailVerified: emailVerified,
+        emailVerified: user.emailVerified,
         accounts: user.accounts.map(account => ({
           id: account.id,
           accountNumber: account.accountNumber,
