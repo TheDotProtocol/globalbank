@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Download, Printer } from 'lucide-react';
+import { exportFixedDepositCertificate } from '@/lib/export';
 
 interface FixedDepositCertificateProps {
   certificate: {
@@ -33,48 +34,20 @@ export default function FixedDepositCertificate({ certificate, onClose }: FixedD
     window.print();
   };
 
-  const handleDownload = () => {
-    const certificateData = `
-FIXED DEPOSIT CERTIFICATE
-${certificate.bankName}
-${certificate.bankAddress}
+  const handleDownload = async () => {
+    try {
+      await exportFixedDepositCertificate(certificate, 'pdf');
+    } catch (error) {
+      console.error('Error downloading certificate:', error);
+    }
+  };
 
-Certificate Number: ${certificate.certificateNumber}
-Generated: ${new Date(certificate.generatedAt).toLocaleDateString()}
-
-CUSTOMER DETAILS:
-Name: ${certificate.customerName}
-Email: ${certificate.customerEmail}
-Account: ${certificate.accountNumber}
-
-DEPOSIT DETAILS:
-Amount: $${certificate.depositAmount.toLocaleString()}
-Interest Rate: ${certificate.interestRate}% p.a.
-Duration: ${certificate.duration} months
-Start Date: ${new Date(certificate.startDate).toLocaleDateString()}
-Maturity Date: ${new Date(certificate.maturityDate).toLocaleDateString()}
-
-INTEREST CALCULATION:
-Interest Earned: $${certificate.interestEarned}
-Maturity Amount: $${certificate.maturityAmount}
-Status: ${certificate.status}
-Matured: ${certificate.isMatured ? 'Yes' : 'No'}
-
-TERMS AND CONDITIONS:
-${certificate.terms.map((term, index) => `${index + 1}. ${term}`).join('\n')}
-
-This certificate serves as proof of your fixed deposit with Global Dot Bank.
-    `;
-
-    const blob = new Blob([certificateData], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `fixed-deposit-certificate-${certificate.certificateNumber}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleDownloadCSV = async () => {
+    try {
+      await exportFixedDepositCertificate(certificate, 'csv');
+    } catch (error) {
+      console.error('Error downloading certificate CSV:', error);
+    }
   };
 
   return (
@@ -96,7 +69,14 @@ This certificate serves as proof of your fixed deposit with Global Dot Bank.
               className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             >
               <Download className="w-4 h-4" />
-              <span>Download</span>
+              <span>Download PDF</span>
+            </button>
+            <button
+              onClick={handleDownloadCSV}
+              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download CSV</span>
             </button>
             <button
               onClick={onClose}
@@ -218,4 +198,4 @@ This certificate serves as proof of your fixed deposit with Global Dot Bank.
       </div>
     </div>
   );
-} 
+}

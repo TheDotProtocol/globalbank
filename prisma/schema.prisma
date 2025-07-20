@@ -73,6 +73,17 @@ model Transaction {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
+  // Enhanced transfer details
+  transferMode TransferMode?
+  sourceAccountId String?
+  destinationAccountId String?
+  sourceAccountNumber String?
+  destinationAccountNumber String?
+  sourceAccountHolder String?
+  destinationAccountHolder String?
+  transferFee Decimal @default(0)
+  netAmount Decimal?
+  
   // Dispute fields
   isDisputed  Boolean       @default(false)
   disputeReason String?
@@ -261,4 +272,14 @@ enum CheckStatus {
   PENDING
   CLEARED
   REJECTED
+}
+
+enum TransferMode {
+  INTERNAL_TRANSFER
+  EXTERNAL_TRANSFER
+  WIRE_TRANSFER
+  ACH_TRANSFER
+  CARD_TRANSFER
+  MOBILE_TRANSFER
+  INTERNATIONAL_TRANSFER
 }

@@ -61,7 +61,17 @@ export const GET = requireAuth(async (request: NextRequest) => {
         reference: t.reference,
         status: t.status,
         createdAt: t.createdAt,
-        account: t.account
+        account: t.account,
+        // Enhanced transfer details
+        transferMode: t.transferMode,
+        sourceAccountId: t.sourceAccountId,
+        destinationAccountId: t.destinationAccountId,
+        sourceAccountNumber: t.sourceAccountNumber,
+        destinationAccountNumber: t.destinationAccountNumber,
+        sourceAccountHolder: t.sourceAccountHolder,
+        destinationAccountHolder: t.destinationAccountHolder,
+        transferFee: t.transferFee,
+        netAmount: t.netAmount
       })),
       pagination: {
         page,

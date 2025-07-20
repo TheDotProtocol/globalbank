@@ -1,18 +1,57 @@
 const { PrismaClient } = require('@prisma/client');
 
-const prisma = new PrismaClient();
-
 async function addBabyTauTransaction() {
+  // Create a fresh Prisma client instance
+  const prisma = new PrismaClient({
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL
+      }
+    }
+  });
+
   try {
     console.log('💰 Adding transaction for Baby Tau account...');
     
-    // Find Baby Tau user by email
-    const user = await prisma.user.findUnique({
-      where: { email: 'babyaccount@globaldotbank.org' }
-    });
+    // Try different possible email addresses for Baby Tau
+    const possibleEmails = [
+      'babyaccount@globaldotbank.org',
+      'babytau@gmail.com',
+      'baby.tau@gmail.com',
+      'babytau@example.com',
+      'baby.tau@example.com'
+    ];
+    
+    let user = null;
+    for (const email of possibleEmails) {
+      try {
+        user = await prisma.user.findUnique({
+          where: { email: email }
+        });
+        if (user) {
+          console.log(`✅ Found user with email: ${email}`);
+          break;
+        }
+      } catch (error) {
+        console.log(`❌ Error checking email ${email}:`, error.message);
+        continue;
+      }
+    }
     
     if (!user) {
-      console.log('❌ Baby Tau user not found');
+      console.log('❌ Baby Tau user not found with any of the attempted emails');
+      console.log('Attempted emails:', possibleEmails);
+      
+      // List all users to see what's available
+      try {
+        const allUsers = await prisma.user.findMany({
+          select: { email: true, firstName: true, lastName: true }
+        });
+        console.log('Available users:');
+        allUsers.forEach(u => console.log(`  - ${u.email} (${u.firstName} ${u.lastName})`));
+      } catch (error) {
+        console.log('Could not list users:', error.message);
+      }
       return;
     }
     

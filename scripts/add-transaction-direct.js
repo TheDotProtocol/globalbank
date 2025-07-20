@@ -1,8 +1,9 @@
 const { PrismaClient } = require('@prisma/client');
 
-const prisma = new PrismaClient();
-
 async function addBabyTauTransaction() {
+  // Create a fresh Prisma client instance
+  const prisma = new PrismaClient();
+
   try {
     console.log('💰 Adding transaction for Baby Tau account...');
     
@@ -36,40 +37,39 @@ async function addBabyTauTransaction() {
     yesterday.setDate(yesterday.getDate() - 1);
     yesterday.setHours(14, 30, 0, 0); // Set to 2:30 PM yesterday
     
-    // Create the transaction
-    const transaction = await prisma.transaction.create({
-      data: {
-        userId: user.id,
-        accountId: account.id,
-        type: 'CREDIT',
-        amount: 250000,
-        description: 'AR Holdings Group Corporation - Daddy\'s gift',
-        status: 'COMPLETED',
-        reference: `AR-HOLDINGS-GIFT-${Date.now()}`,
-        createdAt: yesterday,
-        updatedAt: yesterday,
-        transferMode: 'EXTERNAL_TRANSFER',
-        sourceAccountHolder: 'AR Holdings Group Corporation',
-        destinationAccountHolder: `${user.firstName} ${user.lastName}`,
-        transferFee: 0,
-        netAmount: 250000
-      }
-    });
-    
-    console.log(`✅ Created transaction: ${transaction.id}`);
-    console.log(`   Type: ${transaction.type}`);
-    console.log(`   Amount: $${transaction.amount}`);
-    console.log(`   Description: ${transaction.description}`);
-    console.log(`   Date: ${transaction.createdAt}`);
-    
-    // Update account balance
-    await prisma.account.update({
-      where: { id: account.id },
-      data: {
-        balance: {
-          increment: 250000
+    // Use database transaction to ensure consistency
+    const result = await prisma.$transaction(async (tx) => {
+      // Create the transaction
+      const transaction = await tx.transaction.create({
+        data: {
+          userId: user.id,
+          accountId: account.id,
+          type: 'CREDIT',
+          amount: 250000,
+          description: 'AR Holdings Group Corporation - Daddy\'s gift',
+          status: 'COMPLETED',
+          reference: `AR-HOLDINGS-GIFT-${Date.now()}`,
+          createdAt: yesterday,
+          updatedAt: yesterday,
+          transferMode: 'EXTERNAL_TRANSFER',
+          sourceAccountHolder: 'AR Holdings Group Corporation',
+          destinationAccountHolder: `${user.firstName} ${user.lastName}`,
+          transferFee: 0,
+          netAmount: 250000
         }
-      }
+      });
+      
+      // Update account balance
+      await tx.account.update({
+        where: { id: account.id },
+        data: {
+          balance: {
+            increment: 250000
+          }
+        }
+      });
+      
+      return transaction;
     });
     
     // Verify the update
@@ -77,7 +77,8 @@ async function addBabyTauTransaction() {
       where: { id: account.id }
     });
     
-    console.log(`✅ Updated balance: $${updatedAccount.balance}`);
+    console.log(`✅ Created transaction: ${result.id}`);
+    console.log(`✅ Updated balance: $${updatedAccount?.balance}`);
     console.log('🎉 Transaction added successfully!');
     
   } catch (error) {

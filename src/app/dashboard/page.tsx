@@ -28,7 +28,8 @@ import FixedDepositModal from '@/components/modals/FixedDepositModal';
 import FixedDepositCertificate from '@/components/FixedDepositCertificate';
 import MultiCurrencyDisplay, { CurrencyConverter } from '@/components/MultiCurrencyDisplay';
 import BankBuggerAI from '@/components/BankBuggerAI';
-import { exportTransactions, exportFixedDeposits } from '@/lib/export';
+import { exportTransactions, exportFixedDeposits, exportStatement, exportFixedDepositCertificate, exportAccountDetails } from '@/lib/export';
+import TransferModal from '@/components/modals/TransferModal';
 
 interface User {
   id: string;
@@ -54,6 +55,10 @@ interface Transaction {
   status: string;
   createdAt: string;
   reference?: string;
+  transferMode?: string;
+  sourceAccountNumber?: string;
+  destinationAccountNumber?: string;
+  transferFee?: number;
 }
 
 interface FixedDeposit {
@@ -95,6 +100,7 @@ export default function Dashboard() {
   const [addMoneyModalOpen, setAddMoneyModalOpen] = useState(false);
   const [newCardModalOpen, setNewCardModalOpen] = useState(false);
   const [fixedDepositModalOpen, setFixedDepositModalOpen] = useState(false);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [accountDetailsModalOpen, setAccountDetailsModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<AccountDetails | null>(null);
   const [certificateModalOpen, setCertificateModalOpen] = useState(false);
@@ -176,8 +182,15 @@ export default function Dashboard() {
   const handleExport = async (type: 'transactions' | 'deposits', format: 'pdf' | 'csv') => {
     try {
       if (type === 'transactions') {
-        await exportTransactions(transactions, format);
-        showToast(`${format.toUpperCase()} export completed`, 'success');
+        if (format === 'pdf' && user && accounts.length > 0) {
+          // Use professional statement export for PDF
+          await exportStatement(user, accounts[0], transactions, format);
+          showToast('Professional statement PDF generated', 'success');
+        } else {
+          // Use regular export for CSV
+          await exportTransactions(transactions, format);
+          showToast(`${format.toUpperCase()} export completed`, 'success');
+        }
       } else {
         await exportFixedDeposits(fixedDeposits, format);
         showToast(`${format.toUpperCase()} export completed`, 'success');
@@ -194,7 +207,7 @@ export default function Dashboard() {
         setAddMoneyModalOpen(true);
         break;
       case 'send-money':
-        showToast('Send money feature coming soon!', 'info');
+        setTransferModalOpen(true);
         break;
       case 'new-card':
         setNewCardModalOpen(true);
@@ -544,11 +557,26 @@ export default function Dashboard() {
                   <div className="space-y-3">
                     {(transactions || []).slice(0, 5).map((transaction) => (
                       <div key={transaction?.id || Math.random()} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium text-gray-900">{transaction?.description || 'Transaction'}</p>
                           <p className="text-sm text-gray-500">
                             {transaction?.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'Unknown date'}
                           </p>
+                          {/* Enhanced transfer details */}
+                          {transaction?.transferMode && (
+                            <div className="mt-1 text-xs text-gray-400">
+                              <p>Mode: {transaction.transferMode.replace('_', ' ')}</p>
+                              {transaction.sourceAccountNumber && (
+                                <p>From: {transaction.sourceAccountNumber}</p>
+                              )}
+                              {transaction.destinationAccountNumber && (
+                                <p>To: {transaction.destinationAccountNumber}</p>
+                              )}
+                              {transaction.transferFee && transaction.transferFee > 0 && (
+                                <p>Fee: ${transaction.transferFee}</p>
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div className="text-right">
                           <p className={`font-semibold ${
@@ -557,6 +585,9 @@ export default function Dashboard() {
                             {transaction?.type === 'CREDIT' ? '+' : '-'}${transaction?.amount || 0}
                           </p>
                           <p className="text-xs text-gray-500">{transaction?.status || 'Unknown'}</p>
+                          {transaction?.reference && (
+                            <p className="text-xs text-gray-400">Ref: {transaction.reference}</p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -863,6 +894,13 @@ export default function Dashboard() {
         onSuccess={fetchDashboardData}
       />
 
+      <TransferModal
+        isOpen={transferModalOpen}
+        onClose={() => setTransferModalOpen(false)}
+        accounts={accounts}
+        onSuccess={fetchDashboardData}
+      />
+
       {/* Account Details Modal */}
       {accountDetailsModalOpen && selectedAccount && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -947,6 +985,22 @@ export default function Dashboard() {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Export Account Details */}
+            <div className="mt-6 flex justify-end space-x-2">
+              <button
+                onClick={() => exportAccountDetails(selectedAccount, 'pdf')}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Export Account Details (PDF)
+              </button>
+              <button
+                onClick={() => exportAccountDetails(selectedAccount, 'csv')}
+                className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Export Account Details (CSV)
+              </button>
             </div>
           </div>
         </div>
