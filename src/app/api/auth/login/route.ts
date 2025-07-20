@@ -63,17 +63,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (user.kycStatus === 'REVIEW') {
-      return NextResponse.json(
-        { 
-          error: 'KYC verification under review',
-          kycReview: true,
-          message: 'Your KYC verification is under review. You will be notified once it\'s completed.'
-        },
-        { status: 403 }
-      );
-    }
-
     // Generate JWT token
     const token = generateToken({
       userId: user.id,
@@ -108,4 +97,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

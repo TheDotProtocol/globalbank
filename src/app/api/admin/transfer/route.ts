@@ -84,12 +84,12 @@ export async function POST(request: NextRequest) {
       // Update account balances
       await tx.account.update({
         where: { id: fromAccount.id },
-        data: { balance: fromAccount.balance - amount }
+        data: { balance: Number(fromAccount.balance) - amount }
       });
 
       await tx.account.update({
         where: { id: toAccount.id },
-        data: { balance: toAccount.balance + amount }
+        data: { balance: Number(toAccount.balance) + amount }
       });
 
       return { debitTransaction, creditTransaction };

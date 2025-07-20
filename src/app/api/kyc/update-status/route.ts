@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate KYC status
-    const validStatuses = ['PENDING', 'VERIFIED', 'REJECTED', 'REVIEW'];
+    const validStatuses = ['PENDING', 'VERIFIED', 'REJECTED'];
     if (!validStatuses.includes(kycStatus)) {
       return NextResponse.json(
         { error: 'Invalid KYC status' },
