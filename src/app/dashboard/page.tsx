@@ -300,7 +300,10 @@ export default function Dashboard() {
     );
   }
 
-  const totalBalance = accounts.reduce((sum, account) => sum + (account?.balance || 0), 0);
+  const totalBalance = accounts.reduce((sum, account) => {
+    const balance = typeof account?.balance === 'string' ? parseFloat(account.balance) : (account?.balance || 0);
+    return sum + balance;
+  }, 0);
 
   const getAccountIcon = (accountType: string) => {
     switch (accountType.toLowerCase()) {
@@ -518,7 +521,7 @@ export default function Dashboard() {
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-gray-900 dark:text-white">
-                          ${account.balance.toLocaleString()}
+                          ${(typeof account.balance === 'string' ? parseFloat(account.balance) : account.balance).toLocaleString()}
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-300">
                           {account.currency}
@@ -556,7 +559,7 @@ export default function Dashboard() {
                           ? 'text-green-600 dark:text-green-400' 
                           : 'text-red-600 dark:text-red-400'
                       }`}>
-                        {transaction.type === 'CREDIT' ? '+' : '-'}${Math.abs(transaction.amount).toLocaleString()}
+                        {transaction.type === 'CREDIT' ? '+' : '-'}${Math.abs(typeof transaction.amount === 'string' ? parseFloat(transaction.amount) : transaction.amount).toLocaleString()}
                       </div>
                     </div>
                   ))}
@@ -593,7 +596,7 @@ export default function Dashboard() {
                       </div>
                       <div className="space-y-2">
                         <div className="font-bold text-gray-900 dark:text-white">
-                          ${deposit.amount.toLocaleString()}
+                          ${(typeof deposit.amount === 'string' ? parseFloat(deposit.amount) : deposit.amount).toLocaleString()}
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-300">
                           {deposit.interestRate}% for {deposit.duration} months
