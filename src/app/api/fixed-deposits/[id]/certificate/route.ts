@@ -142,7 +142,7 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
       certificate
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error generating certificate:', error);
     console.error('❌ Error stack:', error.stack);
     return NextResponse.json(
