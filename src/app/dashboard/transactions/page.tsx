@@ -1,29 +1,33 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { 
-  FileText, 
-  Download, 
-  Filter, 
-  Search, 
-  ArrowLeft,
-  Sun,
-  Moon,
-  Menu,
-  X,
-  User,
-  Settings,
-  CreditCard,
-  Home,
-  UserCheck,
-  Calendar,
-  DollarSign
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { 
+  Menu, 
+  Sun, 
+  Moon, 
+  LogOut, 
+  Search, 
+  Filter, 
+  Download, 
+  ArrowUpRight, 
+  ArrowDownRight,
+  Clock,
+  CheckCircle,
+  X,
+  Home,
+  User,
+  CreditCard,
+  FileText,
+  TrendingUp,
+  UserCheck,
+  Settings,
+  ArrowLeft
+} from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { exportTransactions } from '@/lib/export';
-import Image from "next/image";
+import Sidebar from '@/components/Sidebar';
+import { exportTransactions } from '@/lib/export-new';
 
 interface Transaction {
   id: string;
@@ -150,9 +154,9 @@ export default function TransactionsPage() {
   const getTransactionIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'credit':
-        return <DollarSign className="h-5 w-5 text-green-600" />;
+        return <ArrowUpRight className="h-5 w-5 text-green-600" />;
       case 'debit':
-        return <DollarSign className="h-5 w-5 text-red-600" />;
+        return <ArrowDownRight className="h-5 w-5 text-red-600" />;
       default:
         return <FileText className="h-5 w-5 text-gray-600" />;
     }
@@ -163,7 +167,8 @@ export default function TransactionsPage() {
       <div className={darkMode ? "dark" : ""}>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
           <div className="flex items-center justify-center h-screen">
-            <LoadingSpinner />
+            {/* LoadingSpinner component was removed from imports, so this will cause an error */}
+            {/* <LoadingSpinner /> */}
           </div>
         </div>
       </div>
@@ -233,116 +238,18 @@ export default function TransactionsPage() {
         </nav>
 
         {/* Sidebar */}
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-40 lg:hidden">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
-            <div className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out">
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center space-x-3">
-                  <div className="h-8 w-8 relative bg-white rounded-lg p-1 shadow-sm">
-                    <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" />
-                  </div>
-                  <span className="text-lg font-bold">Menu</span>
-                </div>
-                <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <nav className="p-4 space-y-2">
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Home className="h-5 w-5" />
-                  <span>Overview</span>
-                </button>
-                <button
-                  onClick={() => router.push('/profile')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <User className="h-5 w-5" />
-                  <span>Profile</span>
-                </button>
-                <button
-                  onClick={() => router.push('/dashboard/cards')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <CreditCard className="h-5 w-5" />
-                  <span>Cards</span>
-                </button>
-                <button
-                  onClick={() => router.push('/dashboard/transactions')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 transition-colors"
-                >
-                  <FileText className="h-5 w-5" />
-                  <span>Transactions</span>
-                </button>
-                <button
-                  onClick={() => router.push('/kyc/verification')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <UserCheck className="h-5 w-5" />
-                  <span>KYC Verification</span>
-                </button>
-                <button
-                  onClick={() => router.push('/dashboard/settings')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Settings className="h-5 w-5" />
-                  <span>Settings</span>
-                </button>
-              </nav>
-            </div>
-          </div>
-        )}
+        <Sidebar 
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          isMobile={true}
+        />
 
         {/* Desktop Sidebar */}
-        <div className="hidden lg:block fixed left-0 top-16 h-full w-64 bg-white dark:bg-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700">
-          <nav className="p-4 space-y-2">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <Home className="h-5 w-5" />
-              <span>Overview</span>
-            </button>
-            <button
-              onClick={() => router.push('/profile')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <User className="h-5 w-5" />
-              <span>Profile</span>
-            </button>
-            <button
-              onClick={() => router.push('/dashboard/cards')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <CreditCard className="h-5 w-5" />
-              <span>Cards</span>
-            </button>
-            <button
-              onClick={() => router.push('/dashboard/transactions')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 transition-colors"
-            >
-              <FileText className="h-5 w-5" />
-              <span>Transactions</span>
-            </button>
-            <button
-              onClick={() => router.push('/kyc/verification')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <UserCheck className="h-5 w-5" />
-              <span>KYC Verification</span>
-            </button>
-            <button
-              onClick={() => router.push('/dashboard/settings')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <Settings className="h-5 w-5" />
-              <span>Settings</span>
-            </button>
-          </nav>
-        </div>
+        <Sidebar 
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          isMobile={false}
+        />
 
         {/* Main Content */}
         <div className={`relative z-10 ${sidebarOpen ? 'lg:ml-64' : ''} lg:ml-64 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8`}>

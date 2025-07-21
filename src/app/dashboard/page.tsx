@@ -40,6 +40,7 @@ import BankBuggerAI from '@/components/BankBuggerAI';
 import { exportStatement, exportTransactions, exportFixedDeposits, exportFixedDepositCertificate } from '@/lib/export-new';
 import TransferModal from '@/components/modals/TransferModal';
 import Image from "next/image";
+import Sidebar from '@/components/Sidebar';
 
 interface User {
   id: string;
@@ -425,146 +426,22 @@ export default function Dashboard() {
         </nav>
 
         {/* Sidebar */}
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-40 lg:hidden">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
-            <div className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out">
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center space-x-3">
-                  <div className="h-8 w-8 relative bg-white rounded-lg p-1 shadow-sm">
-                    <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" />
-                  </div>
-                  <span className="text-lg font-bold">Menu</span>
-                </div>
-                <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <nav className="p-4 space-y-2">
-                <button
-                  onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                    activeTab === 'overview' 
-                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' 
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <Home className="h-5 w-5" />
-                  <span>Overview</span>
-                </button>
-                <button
-                  onClick={() => router.push('/profile')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <User className="h-5 w-5" />
-                  <span>Profile</span>
-                </button>
-                <button
-                  onClick={() => router.push('/dashboard/cards')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <CreditCard className="h-5 w-5" />
-                  <span>Cards</span>
-                </button>
-                <button
-                  onClick={() => router.push('/dashboard/transactions')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <FileText className="h-5 w-5" />
-                  <span>Transactions</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('fixed-deposits')}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                    activeTab === 'fixed-deposits' 
-                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' 
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  <TrendingUp className="h-5 w-5" />
-                  <span>Fixed Deposits</span>
-                </button>
-                <button
-                  onClick={() => router.push('/kyc/verification')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <UserCheck className="h-5 w-5" />
-                  <span>KYC Verification</span>
-                </button>
-                <button
-                  onClick={() => router.push('/dashboard/settings')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <Settings className="h-5 w-5" />
-                  <span>Settings</span>
-                </button>
-              </nav>
-            </div>
-          </div>
-        )}
+        <Sidebar 
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isMobile={true}
+        />
 
         {/* Desktop Sidebar */}
-        <div className="hidden lg:block fixed left-0 top-16 h-full w-64 bg-white dark:bg-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700">
-          <nav className="p-4 space-y-2">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                activeTab === 'overview' 
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' 
-                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              <Home className="h-5 w-5" />
-              <span>Overview</span>
-            </button>
-            <button
-              onClick={() => router.push('/profile')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <User className="h-5 w-5" />
-              <span>Profile</span>
-            </button>
-            <button
-              onClick={() => router.push('/dashboard/cards')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <CreditCard className="h-5 w-5" />
-              <span>Cards</span>
-            </button>
-            <button
-              onClick={() => router.push('/dashboard/transactions')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <FileText className="h-5 w-5" />
-              <span>Transactions</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('fixed-deposits')}
-              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                activeTab === 'fixed-deposits' 
-                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' 
-                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-              }`}
-            >
-              <TrendingUp className="h-5 w-5" />
-              <span>Fixed Deposits</span>
-            </button>
-            <button
-              onClick={() => router.push('/kyc/verification')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <UserCheck className="h-5 w-5" />
-              <span>KYC Verification</span>
-            </button>
-            <button
-              onClick={() => router.push('/dashboard/settings')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <Settings className="h-5 w-5" />
-              <span>Settings</span>
-            </button>
-          </nav>
-        </div>
+        <Sidebar 
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isMobile={false}
+        />
 
         {/* Main Content */}
         <div className={`relative z-10 ${sidebarOpen ? 'lg:ml-64' : ''} lg:ml-64 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8`}>
