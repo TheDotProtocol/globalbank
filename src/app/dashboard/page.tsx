@@ -37,7 +37,7 @@ import FixedDepositModal from '@/components/modals/FixedDepositModal';
 import FixedDepositCertificate from '@/components/FixedDepositCertificate';
 import MultiCurrencyDisplay, { CurrencyConverter } from '@/components/MultiCurrencyDisplay';
 import BankBuggerAI from '@/components/BankBuggerAI';
-import { exportStatement, exportTransactions, exportFixedDeposits } from '@/lib/export-new';
+import { exportStatement, exportTransactions, exportFixedDeposits, exportFixedDepositCertificate } from '@/lib/export-new';
 import TransferModal from '@/components/modals/TransferModal';
 import Image from "next/image";
 
@@ -264,8 +264,9 @@ export default function Dashboard() {
 
       if (response.ok) {
         const certificateData = await response.json();
-        setSelectedCertificate(certificateData.certificate);
-        setCertificateModalOpen(true);
+        // Export the certificate directly
+        await exportFixedDepositCertificate(certificateData.certificate, 'pdf');
+        showToast('Fixed Deposit Certificate generated successfully', 'success');
       }
     } catch (error) {
       console.error('Error generating certificate:', error);
@@ -742,6 +743,12 @@ export default function Dashboard() {
                         <div className="text-sm text-gray-600 dark:text-gray-300">
                           Matures: {new Date(deposit.maturityDate).toLocaleDateString()}
                         </div>
+                        <button
+                          onClick={() => handleCertificateGeneration(deposit.id)}
+                          className="mt-2 w-full bg-purple-600 text-white py-1 px-3 rounded-lg text-xs hover:bg-purple-700 transition-colors"
+                        >
+                          Generate Certificate
+                        </button>
                       </div>
                     </div>
                   ))}

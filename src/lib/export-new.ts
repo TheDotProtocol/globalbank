@@ -27,6 +27,21 @@ interface StatementOptions {
   openingBalance: number;
 }
 
+interface FixedDepositCertificateOptions {
+  certificateNumber: string;
+  customerName: string;
+  accountNumber: string;
+  customerAddress: string;
+  depositDate: Date;
+  maturityDate: Date;
+  depositAmount: number;
+  interestRate: number;
+  interestPayoutMode: string;
+  maturityAmount: number;
+  tenure: number;
+  tenureUnit: 'months' | 'years';
+}
+
 export class ExportManager {
   static async loadLogo(): Promise<string | null> {
     try {
@@ -263,6 +278,135 @@ export class ExportManager {
     return doc.output('blob');
   }
 
+  static async exportFixedDepositCertificateToPDF(options: FixedDepositCertificateOptions): Promise<Blob> {
+    const doc = new jsPDF('portrait');
+    
+    // Add watermark logo in background for authenticity
+    const logoData = await ExportManager.loadLogo();
+    if (logoData) {
+      try {
+        // Add watermark
+        doc.addImage(logoData, 'PNG', 80, 120, 50, 50, undefined, 'FAST', 0.1);
+      } catch (error) {
+        console.log('Error adding watermark:', error);
+      }
+    }
+
+    // 1. Header Section (Top of the PDF)
+    if (logoData) {
+      try {
+        doc.addImage(logoData, 'PNG', 14, 10, 20, 20);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Global Dot Bank', 40, 20);
+      } catch (error) {
+        console.log('Error adding logo image:', error);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('🏦', 14, 20);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Global Dot Bank', 40, 20);
+      }
+    } else {
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('🏦', 14, 20);
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Global Dot Bank', 40, 20);
+    }
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('A Dot Protocol Company', 40, 28);
+    doc.text('Address: 1075 Terra Bella Ave, Mountain View CA, 94043', 14, 38);
+    doc.text('Website: https://globaldotbank.org', 14, 44);
+    doc.text('Email: banking@globaldotbank.org', 14, 50);
+    
+    // Document Title - Center aligned
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    const titleText = 'FIXED DEPOSIT CERTIFICATE';
+    const titleWidth = doc.getTextWidth(titleText);
+    doc.text(titleText, (doc.internal.pageSize.width - titleWidth) / 2, 70);
+    
+    // 2. Certificate Body Content - Bordered box
+    const startY = 85;
+    const boxWidth = 180;
+    const boxHeight = 80;
+    
+    // Draw border around certificate details
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.rect(14, startY, boxWidth, boxHeight);
+    
+    // Certificate details inside the box
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Certificate Details:', 20, startY + 10);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Certificate No.: ${options.certificateNumber}`, 20, startY + 20);
+    doc.text(`Customer Name: ${options.customerName}`, 20, startY + 27);
+    doc.text(`Account Number: ${options.accountNumber}`, 20, startY + 34);
+    doc.text(`Customer Address: ${options.customerAddress}`, 20, startY + 41);
+    doc.text(`Deposit Date: ${options.depositDate.toLocaleDateString()}`, 20, startY + 48);
+    doc.text(`Maturity Date: ${options.maturityDate.toLocaleDateString()}`, 20, startY + 55);
+    
+    // Deposit details
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Deposit Information:', 20, startY + 65);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Deposit Amount: $${options.depositAmount.toLocaleString()}`, 20, startY + 75);
+    doc.text(`Interest Rate: ${options.interestRate}% per annum`, 110, startY + 75);
+    doc.text(`Interest Payout Mode: ${options.interestPayoutMode}`, 20, startY + 82);
+    doc.text(`Tenure: ${options.tenure} ${options.tenureUnit}`, 110, startY + 82);
+    
+    // Maturity amount in a highlighted box
+    const maturityY = startY + boxHeight + 20;
+    doc.setFillColor(240, 248, 255);
+    doc.rect(14, maturityY - 10, boxWidth, 15, 'F');
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Maturity Amount: $${options.maturityAmount.toLocaleString()}`, 20, maturityY);
+    
+    // 3. Terms and Conditions Section
+    const termsY = maturityY + 25;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Terms and Conditions:', 14, termsY);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    const terms = [
+      '• This deposit is non-transferable and non-negotiable.',
+      '• Premature withdrawal may be subject to penalty or reduced interest.',
+      '• This certificate is system-generated and does not require a physical signature.',
+      '• In case of loss, please contact banking@globaldotbank.org immediately.',
+      '• Interest will be calculated on the basis of actual days and paid as per the payout mode.',
+      '• The bank reserves the right to modify terms and conditions as per regulatory requirements.'
+    ];
+    
+    terms.forEach((term, index) => {
+      doc.text(term, 14, termsY + 10 + (index * 6));
+    });
+    
+    // 4. Footer Section
+    const footerY = termsY + 60;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('This is a system-generated FD Certificate. No signature is required.', 14, footerY);
+    doc.text(`Issued on ${new Date().toLocaleDateString()}, ${new Date().toLocaleTimeString()} UTC`, 14, footerY + 6);
+    doc.text(`Document ID: FD-${options.certificateNumber}-${Date.now()}`, 14, footerY + 12);
+    
+    return doc.output('blob');
+  }
+
   static exportToCSV(options: ExportOptions): Blob {
     const headers = options.headers.join(',');
     const rows = options.data.map(item => 
@@ -377,4 +521,39 @@ export async function exportFixedDeposits(deposits: any[], format: 'pdf' | 'csv'
     : ExportManager.exportToCSV(options);
     
   ExportManager.downloadFile(blob, options.filename);
+}
+
+export async function exportFixedDepositCertificate(
+  certificate: any, 
+  format: 'pdf' | 'csv'
+) {
+  if (format === 'pdf') {
+    const certificateOptions: FixedDepositCertificateOptions = {
+      certificateNumber: certificate.certificateNumber || `FD-${Date.now()}`,
+      customerName: certificate.customerName || `${certificate.firstName} ${certificate.lastName}`,
+      accountNumber: certificate.accountNumber,
+      customerAddress: certificate.customerAddress || 'Address not provided',
+      depositDate: new Date(certificate.startDate || certificate.depositDate),
+      maturityDate: new Date(certificate.maturityDate),
+      depositAmount: parseFloat(certificate.depositAmount || certificate.amount),
+      interestRate: parseFloat(certificate.interestRate),
+      interestPayoutMode: certificate.interestPayoutMode || 'On Maturity',
+      maturityAmount: parseFloat(certificate.maturityAmount || certificate.amount),
+      tenure: parseInt(certificate.duration || certificate.tenure),
+      tenureUnit: (certificate.duration || certificate.tenure) > 12 ? 'years' : 'months'
+    };
+    
+    const blob = await ExportManager.exportFixedDepositCertificateToPDF(certificateOptions);
+    const filename = `fd-certificate-${certificateOptions.certificateNumber}-${new Date().toISOString().split('T')[0]}.pdf`;
+    ExportManager.downloadFile(blob, filename);
+  } else {
+    const csvContent = [
+      'Certificate Number,Customer Name,Account Number,Deposit Amount,Interest Rate,Duration,Maturity Date,Maturity Amount,Status',
+      `${certificate.certificateNumber || 'FD-' + Date.now()},${certificate.customerName || certificate.firstName + ' ' + certificate.lastName},${certificate.accountNumber},${certificate.depositAmount || certificate.amount},${certificate.interestRate},${certificate.duration || certificate.tenure},${new Date(certificate.maturityDate).toLocaleDateString()},${certificate.maturityAmount || certificate.amount},${certificate.status}`
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const filename = `fd-certificate-${certificate.certificateNumber || 'FD-' + Date.now()}-${new Date().toISOString().split('T')[0]}.csv`;
+    ExportManager.downloadFile(blob, filename);
+  }
 } 
