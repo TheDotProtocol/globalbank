@@ -451,18 +451,137 @@ export const exportTemplates = {
 };
 
 export async function exportTransactions(transactions: any[], format: 'pdf' | 'csv') {
-  const options: ExportOptions = {
-    format,
-    data: transactions,
-    filename: `transactions-${new Date().toISOString().split('T')[0]}.${format}`,
-    ...exportTemplates.transactions
-  };
-  
-  const blob = format === 'pdf' 
-    ? await ExportManager.exportToPDF(options)
-    : ExportManager.exportToCSV(options);
+  if (format === 'pdf') {
+    const doc = new jsPDF('portrait');
     
-  ExportManager.downloadFile(blob, options.filename);
+    // Add watermark logo in background for authenticity
+    const logoData = await ExportManager.loadLogo();
+    if (logoData) {
+      try {
+        // Add watermark
+        doc.addImage(logoData, 'PNG', 80, 120, 50, 50, undefined, 'FAST', 0.1);
+      } catch (error) {
+        console.log('Error adding watermark:', error);
+      }
+    }
+
+    // Header Section
+    if (logoData) {
+      try {
+        doc.addImage(logoData, 'PNG', 14, 10, 20, 20);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Global Dot Bank', 40, 20);
+      } catch (error) {
+        console.log('Error adding logo image:', error);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('🏦', 14, 20);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Global Dot Bank', 40, 20);
+      }
+    } else {
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('🏦', 14, 20);
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Global Dot Bank', 40, 20);
+    }
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('A Dot Protocol Company', 40, 28);
+    doc.text('Address: 1075 Terra Bella Ave, Mountain View CA, 94043', 14, 38);
+    doc.text('Website: https://globaldotbank.org', 14, 44);
+    doc.text('Email: banking@globaldotbank.org', 14, 50);
+    
+    // Document Title
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    const titleText = 'TRANSACTION HISTORY';
+    const titleWidth = doc.getTextWidth(titleText);
+    doc.text(titleText, (doc.internal.pageSize.width - titleWidth) / 2, 70);
+    
+    // Generation Date
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 80);
+    
+    // Transaction Table
+    const headers = ['Date', 'Type', 'Amount', 'Description', 'Status', 'Reference'];
+    const tableData = transactions.map(tx => [
+      new Date(tx.createdAt).toLocaleDateString(),
+      tx.type,
+      `$${Number(tx.amount).toLocaleString()}`,
+      tx.description,
+      tx.status,
+      tx.reference || 'N/A'
+    ]);
+    
+    autoTable(doc, {
+      head: [headers],
+      body: tableData,
+      startY: 90,
+      styles: {
+        fontSize: 9,
+        cellPadding: 3
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [248, 249, 250]
+      },
+      columnStyles: {
+        0: { cellWidth: 25 }, // Date
+        1: { cellWidth: 20 }, // Type
+        2: { cellWidth: 25 }, // Amount
+        3: { cellWidth: 50 }, // Description
+        4: { cellWidth: 20 }, // Status
+        5: { cellWidth: 30 }  // Reference
+      }
+    });
+    
+    // Summary
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const totalCredits = transactions.filter(tx => tx.type === 'CREDIT').reduce((sum, tx) => sum + Number(tx.amount), 0);
+    const totalDebits = transactions.filter(tx => tx.type === 'DEBIT').reduce((sum, tx) => sum + Number(tx.amount), 0);
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Summary:', 14, finalY);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Total Credits: $${totalCredits.toLocaleString()}`, 14, finalY + 8);
+    doc.text(`Total Debits: $${totalDebits.toLocaleString()}`, 14, finalY + 16);
+    doc.text(`Net Balance: $${(totalCredits - totalDebits).toLocaleString()}`, 14, finalY + 24);
+    
+    // Footer
+    const footerY = finalY + 40;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('This is a system-generated transaction history. No signature required.', 14, footerY);
+    doc.text(`Generated on ${new Date().toLocaleDateString()}, ${new Date().toLocaleTimeString()} UTC`, 14, footerY + 6);
+    doc.text(`Document ID: TXN-${Date.now()}`, 14, footerY + 12);
+    
+    const blob = doc.output('blob');
+    const filename = `transaction-history-${new Date().toISOString().split('T')[0]}.pdf`;
+    ExportManager.downloadFile(blob, filename);
+  } else {
+    const options: ExportOptions = {
+      format,
+      data: transactions,
+      filename: `transactions-${new Date().toISOString().split('T')[0]}.${format}`,
+      ...exportTemplates.transactions
+    };
+    
+    const blob = ExportManager.exportToCSV(options);
+    ExportManager.downloadFile(blob, options.filename);
+  }
 }
 
 export async function exportStatement(

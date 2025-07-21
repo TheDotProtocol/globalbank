@@ -474,6 +474,17 @@ export default function Dashboard() {
                   <span>Transactions</span>
                 </button>
                 <button
+                  onClick={() => setActiveTab('fixed-deposits')}
+                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                    activeTab === 'fixed-deposits' 
+                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' 
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <TrendingUp className="h-5 w-5" />
+                  <span>Fixed Deposits</span>
+                </button>
+                <button
                   onClick={() => router.push('/kyc/verification')}
                   className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
@@ -526,6 +537,17 @@ export default function Dashboard() {
             >
               <FileText className="h-5 w-5" />
               <span>Transactions</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('fixed-deposits')}
+              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                activeTab === 'fixed-deposits' 
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' 
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <TrendingUp className="h-5 w-5" />
+              <span>Fixed Deposits</span>
             </button>
             <button
               onClick={() => router.push('/kyc/verification')}
