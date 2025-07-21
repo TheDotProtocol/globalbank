@@ -17,7 +17,12 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
           select: {
             firstName: true,
             lastName: true,
-            email: true
+            email: true,
+            address: true,
+            city: true,
+            state: true,
+            country: true,
+            postalCode: true
           }
         }
       }
@@ -61,31 +66,50 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
 
     const maturityAmount = Number(fixedDeposit.amount) + interestEarned;
 
-    // Generate certificate data
+    // Build customer address
+    const addressParts = [
+      fixedDeposit.user.address,
+      fixedDeposit.user.city,
+      fixedDeposit.user.state,
+      fixedDeposit.user.postalCode,
+      fixedDeposit.user.country
+    ].filter(Boolean);
+    
+    const customerAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Address not provided';
+
+    // Generate certificate data with all required fields for beautiful format
     const certificate = {
-      certificateNumber: `FD-${fixedDeposit.id.slice(-8).toUpperCase()}`,
+      certificateNumber: `FD-${fixedDeposit.id.slice(-8).toUpperCase()}-${Date.now().toString().slice(-6)}`,
       customerName: `${fixedDeposit.user.firstName} ${fixedDeposit.user.lastName}`,
       customerEmail: fixedDeposit.user.email,
+      customerAddress: customerAddress,
       accountNumber: account.accountNumber,
+      accountType: account.accountType,
       depositAmount: Number(fixedDeposit.amount),
       interestRate: Number(fixedDeposit.interestRate),
       duration: fixedDeposit.duration,
+      tenureUnit: fixedDeposit.duration > 12 ? 'years' : 'months',
       startDate: fixedDeposit.createdAt,
       maturityDate: fixedDeposit.maturityDate,
       interestEarned: interestEarned.toFixed(2),
       maturityAmount: maturityAmount.toFixed(2),
+      interestPayoutMode: 'On Maturity', // Default mode
       status: fixedDeposit.status,
       isMatured,
       daysElapsed,
       totalDays,
       generatedAt: new Date(),
       bankName: 'Global Dot Bank',
-      bankAddress: 'Global HQ, USA',
+      bankAddress: '1075 Terra Bella Ave, Mountain View CA, 94043',
+      bankWebsite: 'https://globaldotbank.org',
+      bankEmail: 'banking@globaldotbank.org',
       terms: [
-        'This certificate is valid for the specified fixed deposit period.',
-        'Early withdrawal may incur penalties.',
-        'Interest is calculated on a daily basis.',
-        'This is a digital certificate and serves as proof of deposit.'
+        'This deposit is non-transferable and non-negotiable.',
+        'Premature withdrawal may be subject to penalty or reduced interest.',
+        'This certificate is system-generated and does not require a physical signature.',
+        'In case of loss, please contact banking@globaldotbank.org immediately.',
+        'Interest will be calculated on the basis of actual days and paid as per the payout mode.',
+        'The bank reserves the right to modify terms and conditions as per regulatory requirements.'
       ]
     };
 

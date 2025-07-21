@@ -533,14 +533,14 @@ export async function exportFixedDepositCertificate(
       customerName: certificate.customerName || `${certificate.firstName} ${certificate.lastName}`,
       accountNumber: certificate.accountNumber,
       customerAddress: certificate.customerAddress || 'Address not provided',
-      depositDate: new Date(certificate.startDate || certificate.depositDate),
+      depositDate: new Date(certificate.startDate || certificate.depositDate || certificate.createdAt),
       maturityDate: new Date(certificate.maturityDate),
       depositAmount: parseFloat(certificate.depositAmount || certificate.amount),
       interestRate: parseFloat(certificate.interestRate),
       interestPayoutMode: certificate.interestPayoutMode || 'On Maturity',
       maturityAmount: parseFloat(certificate.maturityAmount || certificate.amount),
       tenure: parseInt(certificate.duration || certificate.tenure),
-      tenureUnit: (certificate.duration || certificate.tenure) > 12 ? 'years' : 'months'
+      tenureUnit: certificate.tenureUnit || ((certificate.duration || certificate.tenure) > 12 ? 'years' : 'months')
     };
     
     const blob = await ExportManager.exportFixedDepositCertificateToPDF(certificateOptions);

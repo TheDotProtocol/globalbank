@@ -267,10 +267,31 @@ export default function Dashboard() {
         // Export the certificate directly
         await exportFixedDepositCertificate(certificateData.certificate, 'pdf');
         showToast('Fixed Deposit Certificate generated successfully', 'success');
+      } else {
+        const errorData = await response.json();
+        console.error('Certificate generation error:', errorData);
+        showToast(`Error generating certificate: ${errorData.error}`, 'error');
       }
     } catch (error) {
       console.error('Error generating certificate:', error);
       showToast('Error generating certificate', 'error');
+    }
+  };
+
+  const handleGenerateAllCertificates = async () => {
+    try {
+      showToast('Generating certificates for all fixed deposits...', 'info');
+      
+      for (const deposit of fixedDeposits) {
+        await handleCertificateGeneration(deposit.id);
+        // Small delay between generations
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
+      showToast('All certificates generated successfully!', 'success');
+    } catch (error) {
+      console.error('Error generating all certificates:', error);
+      showToast('Error generating certificates', 'error');
     }
   };
 
@@ -753,6 +774,16 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
+                {fixedDeposits.length > 0 && (
+                  <div className="mt-4 flex justify-end">
+                    <button
+                      onClick={handleGenerateAllCertificates}
+                      className="bg-purple-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-purple-700 transition-colors"
+                    >
+                      Generate All Certificates
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
