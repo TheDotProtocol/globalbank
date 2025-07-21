@@ -615,6 +615,7 @@ export default function Dashboard() {
           <AddMoneyModal
             isOpen={addMoneyModalOpen}
             onClose={() => setAddMoneyModalOpen(false)}
+            accounts={accounts}
             onSuccess={() => {
               setAddMoneyModalOpen(false);
               fetchDashboardData();
@@ -626,6 +627,7 @@ export default function Dashboard() {
           <NewCardModal
             isOpen={newCardModalOpen}
             onClose={() => setNewCardModalOpen(false)}
+            accounts={accounts}
             onSuccess={() => {
               setNewCardModalOpen(false);
               showToast('Card request submitted successfully', 'success');
@@ -637,6 +639,8 @@ export default function Dashboard() {
           <FixedDepositModal
             isOpen={fixedDepositModalOpen}
             onClose={() => setFixedDepositModalOpen(false)}
+            accounts={accounts}
+            userId={user?.id || ''}
             onSuccess={() => {
               setFixedDepositModalOpen(false);
               fetchDashboardData();
@@ -648,6 +652,7 @@ export default function Dashboard() {
           <TransferModal
             isOpen={transferModalOpen}
             onClose={() => setTransferModalOpen(false)}
+            accounts={accounts}
             onSuccess={() => {
               setTransferModalOpen(false);
               fetchDashboardData();
