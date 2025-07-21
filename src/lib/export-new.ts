@@ -362,4 +362,19 @@ export async function exportStatement(
   } else {
     await exportTransactions(transactions, 'csv');
   }
+}
+
+export async function exportFixedDeposits(deposits: any[], format: 'pdf' | 'csv') {
+  const options: ExportOptions = {
+    format,
+    data: deposits,
+    filename: `fixed-deposits-${new Date().toISOString().split('T')[0]}.${format}`,
+    ...exportTemplates.fixedDeposits
+  };
+  
+  const blob = format === 'pdf' 
+    ? await ExportManager.exportToPDF(options)
+    : ExportManager.exportToCSV(options);
+    
+  ExportManager.downloadFile(blob, options.filename);
 } 
