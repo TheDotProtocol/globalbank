@@ -18,11 +18,6 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
             firstName: true,
             lastName: true,
             email: true,
-            address: true,
-            city: true,
-            state: true,
-            country: true,
-            postalCode: true
           }
         }
       }
@@ -66,23 +61,13 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
 
     const maturityAmount = Number(fixedDeposit.amount) + interestEarned;
 
-    // Build customer address
-    const addressParts = [
-      fixedDeposit.user.address,
-      fixedDeposit.user.city,
-      fixedDeposit.user.state,
-      fixedDeposit.user.postalCode,
-      fixedDeposit.user.country
-    ].filter(Boolean);
-    
-    const customerAddress = addressParts.length > 0 ? addressParts.join(', ') : 'Address not provided';
 
     // Generate certificate data with all required fields for beautiful format
     const certificate = {
       certificateNumber: `FD-${fixedDeposit.id.slice(-8).toUpperCase()}-${Date.now().toString().slice(-6)}`,
       customerName: `${fixedDeposit.user.firstName} ${fixedDeposit.user.lastName}`,
       customerEmail: fixedDeposit.user.email,
-      customerAddress: customerAddress,
+      customerAddress: "Address not provided",
       accountNumber: account.accountNumber,
       accountType: account.accountType,
       depositAmount: Number(fixedDeposit.amount),
