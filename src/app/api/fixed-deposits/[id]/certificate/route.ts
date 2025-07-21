@@ -32,13 +32,25 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
           select: {
             firstName: true,
             lastName: true,
-            email: true,
+            email: true
           }
         }
       }
     });
 
+    console.log('🔍 Fixed deposit found:', fixedDeposit ? '✅ Yes' : '❌ No');
+    if (fixedDeposit) {
+      console.log('📋 Fixed deposit details:', {
+        id: fixedDeposit.id,
+        amount: fixedDeposit.amount,
+        interestRate: fixedDeposit.interestRate,
+        duration: fixedDeposit.duration,
+        status: fixedDeposit.status
+      });
+    }
+
     if (!fixedDeposit) {
+      console.log('❌ Fixed deposit not found for ID:', id);
       return NextResponse.json(
         { error: 'Fixed deposit not found' },
         { status: 404 }
@@ -54,7 +66,10 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
       }
     });
 
+    console.log('🔍 Account found:', account ? '✅ Yes' : '❌ No');
+
     if (!account) {
+      console.log('❌ Account not found for ID:', fixedDeposit.accountId);
       return NextResponse.json(
         { error: 'Account not found' },
         { status: 404 }
@@ -76,13 +91,20 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
 
     const maturityAmount = Number(fixedDeposit.amount) + interestEarned;
 
+    console.log('💰 Interest calculation:', {
+      daysElapsed,
+      totalDays,
+      interestEarned: interestEarned.toFixed(2),
+      maturityAmount: maturityAmount.toFixed(2),
+      isMatured
+    });
 
     // Generate certificate data with all required fields for beautiful format
     const certificate = {
       certificateNumber: `FD-${fixedDeposit.id.slice(-8).toUpperCase()}-${Date.now().toString().slice(-6)}`,
       customerName: `${fixedDeposit.user.firstName} ${fixedDeposit.user.lastName}`,
       customerEmail: fixedDeposit.user.email,
-      customerAddress: "Address not provided",
+      customerAddress: "Address not provided", // Since address fields don't exist in schema
       accountNumber: account.accountNumber,
       accountType: account.accountType,
       depositAmount: Number(fixedDeposit.amount),
@@ -113,16 +135,23 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
       ]
     };
 
+    console.log('✅ Certificate generated successfully:', certificate.certificateNumber);
+
     return NextResponse.json({
       success: true,
       certificate
     });
 
   } catch (error) {
-    console.error('Error generating certificate:', error);
+    console.error('❌ Error generating certificate:', error);
+    console.error('❌ Error stack:', error.stack);
     return NextResponse.json(
-      { error: 'Failed to generate certificate' },
+      { 
+        error: 'Failed to generate certificate', 
+        details: error.message,
+        stack: error.stack 
+      },
       { status: 500 }
     );
   }
-}); 
+});
