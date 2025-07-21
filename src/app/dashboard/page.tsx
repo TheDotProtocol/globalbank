@@ -23,7 +23,8 @@ import {
   PiggyBank,
   Building,
   GraduationCap,
-  Heart
+  Heart,
+  UserCheck
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/useToast';
@@ -358,6 +359,12 @@ export default function Dashboard() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors lg:hidden"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
                 <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm">
                   <Image
                     src="/logo.png"
@@ -372,7 +379,7 @@ export default function Dashboard() {
                 </span>
               </div>
               <div className="flex items-center space-x-4">
-                <span className="text-gray-600 dark:text-gray-300">
+                <span className="text-gray-600 dark:text-gray-300 hidden md:block">
                   Welcome, {user?.firstName || 'User'} {user?.lastName || ''}
                 </span>
                 <NotificationCenter />
@@ -388,15 +395,135 @@ export default function Dashboard() {
                   className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <LogOut className="w-4 h-4" />
-                  <span>Logout</span>
+                  <span className="hidden md:block">Logout</span>
                 </button>
               </div>
             </div>
           </div>
         </nav>
 
+        {/* Sidebar */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-40 lg:hidden">
+            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
+            <div className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out">
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center space-x-3">
+                  <div className="h-8 w-8 relative bg-white rounded-lg p-1 shadow-sm">
+                    <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" />
+                  </div>
+                  <span className="text-lg font-bold">Menu</span>
+                </div>
+                <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <nav className="p-4 space-y-2">
+                <button
+                  onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
+                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                    activeTab === 'overview' 
+                      ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' 
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <Home className="h-5 w-5" />
+                  <span>Overview</span>
+                </button>
+                <button
+                  onClick={() => router.push('/profile')}
+                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <User className="h-5 w-5" />
+                  <span>Profile</span>
+                </button>
+                <button
+                  onClick={() => router.push('/dashboard/cards')}
+                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <CreditCard className="h-5 w-5" />
+                  <span>Cards</span>
+                </button>
+                <button
+                  onClick={() => router.push('/dashboard/transactions')}
+                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <FileText className="h-5 w-5" />
+                  <span>Transactions</span>
+                </button>
+                <button
+                  onClick={() => router.push('/kyc/verification')}
+                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <UserCheck className="h-5 w-5" />
+                  <span>KYC Verification</span>
+                </button>
+                <button
+                  onClick={() => router.push('/dashboard/settings')}
+                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Settings</span>
+                </button>
+              </nav>
+            </div>
+          </div>
+        )}
+
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block fixed left-0 top-16 h-full w-64 bg-white dark:bg-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700">
+          <nav className="p-4 space-y-2">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                activeTab === 'overview' 
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' 
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <Home className="h-5 w-5" />
+              <span>Overview</span>
+            </button>
+            <button
+              onClick={() => router.push('/profile')}
+              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <User className="h-5 w-5" />
+              <span>Profile</span>
+            </button>
+            <button
+              onClick={() => router.push('/dashboard/cards')}
+              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <CreditCard className="h-5 w-5" />
+              <span>Cards</span>
+            </button>
+            <button
+              onClick={() => router.push('/dashboard/transactions')}
+              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <FileText className="h-5 w-5" />
+              <span>Transactions</span>
+            </button>
+            <button
+              onClick={() => router.push('/kyc/verification')}
+              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <UserCheck className="h-5 w-5" />
+              <span>KYC Verification</span>
+            </button>
+            <button
+              onClick={() => router.push('/dashboard/settings')}
+              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Settings className="h-5 w-5" />
+              <span>Settings</span>
+            </button>
+          </nav>
+        </div>
+
         {/* Main Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className={`relative z-10 ${sidebarOpen ? 'lg:ml-64' : ''} lg:ml-64 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8`}>
           {/* Welcome Section */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -405,6 +532,11 @@ export default function Dashboard() {
             <p className="text-gray-600 dark:text-gray-300">
               Here's your financial overview for today
             </p>
+          </div>
+
+          {/* Bank Bugger AI */}
+          <div className="mb-8">
+            <BankBuggerAI userId={user?.id || ''} className="w-full" />
           </div>
 
           {/* Total Balance Card */}

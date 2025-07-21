@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  CreditCard, 
-  Plus, 
-  Eye, 
-  EyeOff, 
+  FileText, 
   Download, 
+  Filter, 
+  Search, 
   ArrowLeft,
   Sun,
   Moon,
@@ -14,24 +13,30 @@ import {
   X,
   User,
   Settings,
-  FileText,
+  CreditCard,
   Home,
-  UserCheck
+  UserCheck,
+  Calendar,
+  DollarSign
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/useToast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { exportTransactions } from '@/lib/export';
 import Image from "next/image";
 
-interface Card {
+interface Transaction {
   id: string;
-  cardNumber: string;
-  cardType: string;
-  expiryDate: string;
-  cvv: string;
+  type: string;
+  amount: number;
+  description: string;
   status: string;
-  isActive: boolean;
   createdAt: string;
+  reference?: string;
+  transferMode?: string;
+  sourceAccountNumber?: string;
+  destinationAccountNumber?: string;
+  transferFee?: number;
 }
 
 interface User {
@@ -41,19 +46,21 @@ interface User {
   email: string;
 }
 
-export default function CardsPage() {
-  const [cards, setCards] = useState<Card[]>([]);
+export default function TransactionsPage() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showCardDetails, setShowCardDetails] = useState<{[key: string]: boolean}>({});
   const [user, setUser] = useState<User | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [dateRange, setDateRange] = useState('all');
   
   const router = useRouter();
   const { showToast } = useToast();
 
   useEffect(() => {
-    fetchCards();
+    fetchTransactions();
     fetchUser();
   }, []);
 
@@ -81,7 +88,7 @@ export default function CardsPage() {
     }
   };
 
-  const fetchCards = async () => {
+  const fetchTransactions = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -91,7 +98,7 @@ export default function CardsPage() {
         return;
       }
 
-      const response = await fetch('/api/cards', {
+      const response = await fetch('/api/transactions?limit=100', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -100,23 +107,26 @@ export default function CardsPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setCards(data.cards || []);
+        setTransactions(data.transactions || []);
       } else {
-        showToast('Error loading cards', 'error');
+        showToast('Error loading transactions', 'error');
       }
     } catch (error) {
-      console.error('Error fetching cards:', error);
-      showToast('Error loading cards', 'error');
+      console.error('Error fetching transactions:', error);
+      showToast('Error loading transactions', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleCardDetails = (cardId: string) => {
-    setShowCardDetails(prev => ({
-      ...prev,
-      [cardId]: !prev[cardId]
-    }));
+  const handleExport = async (format: 'pdf' | 'csv') => {
+    try {
+      await exportTransactions(transactions, format);
+      showToast(`${format.toUpperCase()} export completed`, 'success');
+    } catch (error) {
+      console.error('Export error:', error);
+      showToast('Export failed', 'error');
+    }
   };
 
   const handleLogout = async () => {
@@ -128,11 +138,24 @@ export default function CardsPage() {
     }
   };
 
-  const formatCardNumber = (cardNumber: string, showFull: boolean = false) => {
-    if (showFull) {
-      return cardNumber.replace(/(\d{4})/g, '$1 ').trim();
+  const filteredTransactions = transactions.filter(transaction => {
+    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         transaction.reference?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = filterType === 'all' || transaction.type === filterType.toUpperCase();
+    
+    return matchesSearch && matchesType;
+  });
+
+  const getTransactionIcon = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'credit':
+        return <DollarSign className="h-5 w-5 text-green-600" />;
+      case 'debit':
+        return <DollarSign className="h-5 w-5 text-red-600" />;
+      default:
+        return <FileText className="h-5 w-5 text-gray-600" />;
     }
-    return `**** **** **** ${cardNumber.slice(-4)}`;
   };
 
   if (loading) {
@@ -184,7 +207,7 @@ export default function CardsPage() {
                   />
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                  Cards
+                  Transactions
                 </span>
               </div>
               <div className="flex items-center space-x-4">
@@ -242,14 +265,14 @@ export default function CardsPage() {
                 </button>
                 <button
                   onClick={() => router.push('/dashboard/cards')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 transition-colors"
+                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <CreditCard className="h-5 w-5" />
                   <span>Cards</span>
                 </button>
                 <button
                   onClick={() => router.push('/dashboard/transactions')}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center space-x-3 p-3 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 transition-colors"
                 >
                   <FileText className="h-5 w-5" />
                   <span>Transactions</span>
@@ -292,14 +315,14 @@ export default function CardsPage() {
             </button>
             <button
               onClick={() => router.push('/dashboard/cards')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 transition-colors"
+              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <CreditCard className="h-5 w-5" />
               <span>Cards</span>
             </button>
             <button
               onClick={() => router.push('/dashboard/transactions')}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="w-full flex items-center space-x-3 p-3 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 transition-colors"
             >
               <FileText className="h-5 w-5" />
               <span>Transactions</span>
@@ -326,123 +349,137 @@ export default function CardsPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Your Cards
+              Transaction History
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              Manage your debit and credit cards
+              View and manage your transaction history
             </p>
           </div>
 
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cards.map((card) => (
-              <div key={card.id} className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                      <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900 dark:text-white">
-                        {card.cardType} Card
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">
-                        {card.status}
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => toggleCardDetails(card.id)}
-                    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    {showCardDetails[card.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Card Number</div>
-                    <div className="font-mono text-lg font-semibold text-gray-900 dark:text-white">
-                      {formatCardNumber(card.cardNumber, showCardDetails[card.id])}
-                    </div>
-                  </div>
-
-                  {showCardDetails[card.id] && (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">Expiry Date</div>
-                          <div className="font-semibold text-gray-900 dark:text-white">
-                            {card.expiryDate}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">CVV</div>
-                          <div className="font-semibold text-gray-900 dark:text-white">
-                            {card.cvv}
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">Status</div>
-                        <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                          card.isActive 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'
-                        }`}>
-                          {card.isActive ? 'Active' : 'Inactive'}
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="flex space-x-2 pt-2">
-                    <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                      Block Card
-                    </button>
-                    <button className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm">
-                      Report Lost
-                    </button>
-                  </div>
-                </div>
+          {/* Filters and Search */}
+          <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search transactions..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
-            ))}
+              
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Types</option>
+                <option value="credit">Credits</option>
+                <option value="debit">Debits</option>
+              </select>
 
-            {/* Add New Card */}
-            <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-400 transition-colors cursor-pointer">
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <div className="p-4 bg-blue-100 dark:bg-blue-900/50 rounded-full mb-4">
-                  <Plus className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  Request New Card
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  Apply for a new debit or credit card
-                </p>
-                <button className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors">
-                  Apply Now
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
+
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="flex-1 flex items-center justify-center space-x-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>CSV</span>
+                </button>
+                <button
+                  onClick={() => handleExport('pdf')}
+                  className="flex-1 flex items-center justify-center space-x-2 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>PDF</span>
                 </button>
               </div>
             </div>
           </div>
 
-          {cards.length === 0 && (
-            <div className="text-center py-12">
-              <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <CreditCard className="h-8 w-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                No Cards Yet
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-6">
-                You haven't requested any cards yet. Start by requesting your first card.
-              </p>
-              <button className="bg-blue-600 text-white py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors">
-                Request Your First Card
-              </button>
+          {/* Transactions List */}
+          <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Transactions ({filteredTransactions.length})
+              </h2>
             </div>
-          )}
+            
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredTransactions.length === 0 ? (
+                <div className="p-8 text-center">
+                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    No transactions found
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    {searchTerm || filterType !== 'all' ? 'Try adjusting your search or filters.' : 'You haven\'t made any transactions yet.'}
+                  </p>
+                </div>
+              ) : (
+                filteredTransactions.map((transaction) => (
+                  <div key={transaction.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className={`p-2 rounded-lg ${
+                          transaction.type === 'CREDIT' 
+                            ? 'bg-green-100 dark:bg-green-900/50' 
+                            : 'bg-red-100 dark:bg-red-900/50'
+                        }`}>
+                          {getTransactionIcon(transaction.type)}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900 dark:text-white">
+                            {transaction.description}
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-300">
+                            {new Date(transaction.createdAt).toLocaleDateString()} • {new Date(transaction.createdAt).toLocaleTimeString()}
+                          </div>
+                          {transaction.reference && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Ref: {transaction.reference}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-bold text-lg ${
+                          transaction.type === 'CREDIT' 
+                            ? 'text-green-600 dark:text-green-400' 
+                            : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {transaction.type === 'CREDIT' ? '+' : '-'}${(typeof transaction.amount === 'string' ? parseFloat(transaction.amount) : transaction.amount).toLocaleString()}
+                        </div>
+                        <div className={`text-sm px-2 py-1 rounded-full inline-block ${
+                          transaction.status === 'COMPLETED' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
+                            : transaction.status === 'PENDING'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300'
+                        }`}>
+                          {transaction.status}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
