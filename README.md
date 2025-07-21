@@ -1,295 +1,233 @@
-# Global Dot Bank - Digital Banking Platform
+# Global Dot Bank - Next-Generation Banking Platform
 
-A modern, secure digital banking platform built with Next.js, Prisma, and PostgreSQL. Features comprehensive KYC verification, secure transactions, and AI-powered banking assistance.
+A modern, borderless fiat-only banking platform built with Next.js 15, featuring a beautiful UI design and comprehensive banking functionality.
 
 ## 🚀 Features
 
-### Core Banking
-- **Account Management**: Personal, Premium, and Business accounts
-- **Secure Transactions**: Internal transfers, external payments, and e-checks
-- **Virtual Cards**: Generate and manage virtual debit/credit cards
-- **Fixed Deposits**: High-yield investment options
-- **Real-time Balance**: Live account balance updates
+### Core Banking Features
+- **Multi-Account Types**: Savings, Current, Fixed Deposit, Corporate, Junior, and Pension accounts
+- **Real-time Transactions**: Instant transfers and payment processing
+- **KYC Verification**: Integrated Sumsub KYC system for user verification
+- **Fixed Deposits**: Transparent FD management with digital certificates
+- **Multi-Currency Support**: Global banking with currency conversion
+- **Security**: Bank-grade encryption and 2FA authentication
 
-### Security & Compliance
-- **KYC Verification**: Integrated Sumsub SDK for identity verification
-- **Two-Factor Authentication**: Enhanced account security
-- **Bank-Grade Encryption**: 256-bit encryption for all data
-- **Fraud Detection**: Advanced monitoring and dispute resolution
-- **Regulatory Compliance**: Full banking regulation compliance
+### UI/UX Features
+- **Modern Design**: Beautiful gradient backgrounds with animated elements
+- **Dark Mode**: Complete dark/light theme support across all pages
+- **Responsive Design**: Mobile-first approach with perfect desktop experience
+- **Professional Navigation**: Consistent navigation bars with logo and controls
+- **Interactive Components**: Hover effects, animations, and smooth transitions
 
-### AI-Powered Features
-- **BankBugger AI**: Intelligent banking assistant
-- **Financial Literacy**: Educational content and guidance
-- **Investment Advice**: Personalized investment recommendations
-- **Security Education**: Proactive security awareness
+### Technical Features
+- **Next.js 15**: Latest App Router with React 18
+- **TypeScript**: Full type safety throughout the application
+- **Tailwind CSS**: Utility-first styling with custom design system
+- **Prisma ORM**: Type-safe database operations
+- **PostgreSQL**: Robust database with proper indexing
+- **JWT Authentication**: Secure token-based authentication
+- **API Routes**: RESTful API endpoints for all banking operations
 
-## 🏗️ Architecture
+## 🎨 UI Design System
 
-### Tech Stack
-- **Frontend**: Next.js 14 with App Router, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes, Prisma ORM
-- **Database**: PostgreSQL (Supabase)
-- **Authentication**: JWT tokens with bcrypt password hashing
-- **Email**: Nodemailer with Resend integration
-- **KYC**: Sumsub SDK integration
-- **Deployment**: Vercel-ready
+The application features a consistent design system across all pages:
 
-### Database Schema
-- **Users**: Account management with KYC status tracking
-- **Accounts**: Multi-currency account support
-- **Transactions**: Comprehensive transaction history
-- **Cards**: Virtual card management
-- **Fixed Deposits**: Investment tracking
-- **KYC Documents**: Identity verification storage
+### Color Palette
+- **Primary**: Blue gradient (`from-blue-500 to-indigo-500`)
+- **Background**: Light gradient (`from-blue-50 via-indigo-50 to-purple-50`)
+- **Dark Mode**: Dark gradient (`from-gray-900 via-gray-800 to-gray-900`)
 
-## 📋 Registration Flow
+### Components
+- **Cards**: Backdrop blur with subtle shadows and borders
+- **Navigation**: Semi-transparent with blur effects
+- **Buttons**: Gradient backgrounds with hover animations
+- **Forms**: Clean design with proper spacing and validation
 
-1. **Account Selection**: Choose Personal, Premium, or Business account
-2. **Registration Form**: Complete personal information
-3. **KYC Verification**: Identity verification via Sumsub SDK
-4. **Admin Review**: Manual verification by bank staff
-5. **Account Activation**: Full access to banking features
+### Animations
+- **Background Elements**: Pulsing gradient orbs with blur effects
+- **Page Transitions**: Smooth fade-in animations
+- **Hover Effects**: Scale and shadow transitions
+- **Loading States**: Spinning indicators and skeleton screens
 
-## 🔧 Setup & Installation
+## 📱 Pages Overview
+
+### 1. Homepage (`/`)
+- Hero section with animated background
+- Account type selection with expandable details
+- Feature showcase with interactive cards
+- Trust indicators and statistics
+
+### 2. Login (`/login`)
+- Professional login form with validation
+- Benefits section highlighting key features
+- Dark mode toggle and navigation
+- Success/error message handling
+
+### 3. Dashboard (`/dashboard`)
+- Total balance overview with multi-currency support
+- Quick action buttons for common tasks
+- Account list with type-specific icons
+- Recent transactions with detailed information
+- Fixed deposits management
+- Export functionality for statements
+
+### 4. Profile (`/profile`)
+- Tabbed interface for personal info and security
+- KYC status display with appropriate indicators
+- Password change functionality
+- Account management overview
+
+### 5. KYC Verification (`/kyc/verification`)
+- Status-based UI for verification process
+- Integrated Sumsub SDK
+- Professional information cards
+- Error handling and retry functionality
+
+### 6. Registration (`/register`)
+- Account type selection interface
+- Multi-step registration process
+- Form validation and error handling
+- Professional design with benefits showcase
+
+## 🛠️ Technical Stack
+
+### Frontend
+- **Next.js 15**: React framework with App Router
+- **React 18**: Latest React with hooks and concurrent features
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Utility-first CSS framework
+- **Lucide React**: Beautiful icon library
+
+### Backend
+- **Next.js API Routes**: Server-side API endpoints
+- **Prisma ORM**: Database toolkit and ORM
+- **PostgreSQL**: Primary database
+- **JWT**: Authentication tokens
+- **bcrypt**: Password hashing
+
+### External Services
+- **Sumsub**: KYC verification system
+- **Resend**: Email service for notifications
+- **Vercel**: Deployment platform
+
+## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 18+ 
 - PostgreSQL database
-- Sumsub API credentials
-- Resend API key (for emails)
+- Sumsub account (for KYC)
+- Resend account (for emails)
 
-### Environment Variables
-```env
-# Database
-DATABASE_URL="postgresql://..."
+### Installation
 
-# Authentication
-JWT_SECRET="your-jwt-secret"
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd globalbank
+   ```
 
-# Email (Resend)
-RESEND_API_KEY="your-resend-api-key"
-SMTP_FROM="noreply@yourdomain.com"
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-# KYC (Sumsub)
-NEXT_PUBLIC_SUMSUB_APP_TOKEN="your-sumsub-token"
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Configure the following variables:
+   - `DATABASE_URL`: PostgreSQL connection string
+   - `JWT_SECRET`: Secret for JWT tokens
+   - `NEXT_PUBLIC_SUMSUB_APP_TOKEN`: Sumsub API token
+   - `RESEND_API_KEY`: Resend email API key
 
-# App
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
+4. **Set up the database**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   Navigate to `http://localhost:3000`
+
+## 📁 Project Structure
+
+```
+globalbank/
+├── src/
+│   ├── app/                    # Next.js App Router pages
+│   │   ├── api/               # API routes
+│   │   ├── dashboard/         # Dashboard page
+│   │   ├── login/            # Login page
+│   │   ├── profile/          # Profile page
+│   │   ├── register/         # Registration pages
+│   │   ├── kyc/              # KYC verification
+│   │   └── globals.css       # Global styles
+│   ├── components/           # Reusable React components
+│   ├── hooks/               # Custom React hooks
+│   ├── lib/                 # Utility functions
+│   └── types/               # TypeScript type definitions
+├── prisma/                  # Database schema and migrations
+├── public/                  # Static assets
+├── docs/                    # Documentation
+└── README.md               # This file
 ```
 
-### Installation Steps
-```bash
-# Clone repository
-git clone <repository-url>
-cd globalbank
+## 🎯 Key Features Implemented
 
-# Install dependencies
-npm install
+### ✅ Completed Features
+- [x] Modern UI design system with dark mode
+- [x] Responsive navigation with logo and controls
+- [x] User authentication and authorization
+- [x] Multi-account type management
+- [x] Real-time transaction processing
+- [x] KYC verification integration
+- [x] Fixed deposit management
+- [x] Profile management with security settings
+- [x] Export functionality for statements
+- [x] Multi-currency support
+- [x] Professional error handling
+- [x] Loading states and animations
 
-# Setup database
-npx prisma generate
-npx prisma db push
+### 🔄 In Progress
+- [ ] Advanced analytics dashboard
+- [ ] Mobile app development
+- [ ] Additional payment methods
+- [ ] Advanced security features
 
-# Run development server
-npm run dev
-```
+## 📚 Documentation
 
-## 🚀 Deployment
-
-### Vercel Deployment
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
-
-### Environment Setup
-- Set all required environment variables
-- Configure database connection
-- Setup Sumsub webhook endpoints
-- Configure email service
-
-## 🔐 Security Features
-
-### Authentication
-- JWT-based authentication
-- Password hashing with bcrypt
-- Session management
-- Rate limiting on API endpoints
-
-### Data Protection
-- Encrypted data transmission (HTTPS)
-- Database encryption at rest
-- Secure API endpoints
-- Input validation and sanitization
-
-### KYC Compliance
-- Government ID verification
-- Address proof validation
-- Face verification
-- Document authenticity checks
-
-## 📊 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-
-### KYC Management
-- `POST /api/kyc/update-status` - Update KYC status
-- `GET /api/kyc/status` - Get KYC status
-
-### Transactions
-- `POST /api/transactions/transfer` - Make transfers
-- `GET /api/transactions` - Get transaction history
-- `POST /api/admin/transfer` - Admin transfers
-
-### Accounts
-- `GET /api/accounts` - Get user accounts
-- `POST /api/accounts` - Create new account
-
-## 🤖 AI Integration
-
-### BankBugger AI Features
-- Financial literacy education
-- Investment guidance
-- Security awareness
-- Transaction analysis
-- Personalized recommendations
-
-### AI Categories
-- Financial Literacy
-- Investment Guidance
-- Security Education
-- Automation Assistance
-- General Queries
-
-## 📱 User Interface
-
-### Modern Design
-- Responsive design for all devices
-- Intuitive navigation
-- Real-time updates
-- Accessibility compliant
-
-### Key Pages
-- **Dashboard**: Account overview and quick actions
-- **Registration**: Multi-step account creation
-- **KYC Verification**: Identity verification interface
-- **Transactions**: Detailed transaction history
-- **Cards**: Virtual card management
-- **Investments**: Fixed deposit management
-
-## 🔄 Development Workflow
-
-### Code Structure
-```
-src/
-├── app/                 # Next.js App Router
-│   ├── api/            # API routes
-│   ├── dashboard/      # Dashboard pages
-│   ├── register/       # Registration flow
-│   └── kyc/           # KYC verification
-├── components/         # Reusable components
-├── lib/               # Utility functions
-└── types/             # TypeScript definitions
-```
-
-### Development Commands
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run type-check   # TypeScript type checking
-```
-
-## 🧪 Testing
-
-### Test Coverage
-- API endpoint testing
-- Component testing
-- Integration testing
-- Security testing
-
-### Test Commands
-```bash
-npm run test         # Run all tests
-npm run test:watch   # Run tests in watch mode
-npm run test:coverage # Generate coverage report
-```
-
-## 📈 Performance
-
-### Optimization
-- Server-side rendering (SSR)
-- Static generation where possible
-- Image optimization
-- Code splitting
-- Database query optimization
-
-### Monitoring
-- Real-time performance metrics
-- Error tracking
-- User analytics
-- Security monitoring
-
-## 🔧 Configuration
-
-### Database Configuration
-- Connection pooling
-- Query optimization
-- Backup strategies
-- Migration management
-
-### Email Configuration
-- Transactional emails
-- KYC status notifications
-- Security alerts
-- Marketing communications
-
-## 📞 Support
-
-### Documentation
-- API documentation
-- User guides
-- Developer documentation
-- Security guidelines
-
-### Contact
-- Technical support
-- Security issues
-- Feature requests
-- Bug reports
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- [UI Fix Summary](./UI-FIX-SUMMARY.md) - Details of UI improvements
+- [Build Fixes Summary](./BUILD-FIXES-SUMMARY.md) - Technical fixes applied
+- [Deployment Guide](./deployment-guide.md) - Deployment instructions
+- [Environment Variables](./ENVIRONMENT-VARIABLES.md) - Configuration guide
+- [Features Overview](./features.md) - Detailed feature documentation
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 🔄 Changelog
+## 📄 License
 
-### Version 2.0.0 (Latest)
-- ✅ Integrated Sumsub KYC verification
-- ✅ Updated registration flow with KYC
-- ✅ Fixed email verification system
-- ✅ Enhanced security features
-- ✅ Improved user experience
-- ✅ Added comprehensive documentation
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### Version 1.0.0
-- Initial release with basic banking features
-- Account management
-- Transaction processing
-- Virtual card system
+## 🆘 Support
+
+For support and questions:
+- Check the documentation in the `docs/` folder
+- Review the deployment guides
+- Open an issue on GitHub
 
 ---
 
-**Global Dot Bank** - Modern Banking for the Digital Age 🏦
+**Global Dot Bank** - The World's First Next-Generation Bank 🚀

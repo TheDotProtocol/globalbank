@@ -15,7 +15,11 @@ import {
   Zap,
   Lock,
   Sun,
-  Moon
+  Moon,
+  DollarSign,
+  PiggyBank,
+  GraduationCap,
+  Heart
 } from 'lucide-react';
 import Image from "next/image";
 
@@ -25,51 +29,99 @@ export default function AccountSelection() {
 
   const accountTypes = [
     {
-      id: 'personal',
-      name: 'Personal Account',
-      description: 'Perfect for individuals and daily banking needs',
+      id: 'savings',
+      name: 'Savings Account',
+      description: 'Secure, seamless, and suited for your everyday needs',
       features: [
-        'Free online banking',
-        'Virtual debit cards',
-        'International transfers',
-        'Mobile banking app',
-        '24/7 customer support',
-        'No monthly fees'
+        'Higher-than-average interest rates',
+        'No minimum balance required',
+        'Instant e-KYC onboarding',
+        'Auto-sweep to FD for idle balances',
+        'Real-time mobile control of your money',
+        'Smart spend tracking & budgeting tools'
       ],
-      icon: <Users className="h-8 w-8" />,
+      icon: <PiggyBank className="h-8 w-8" />,
       color: 'blue',
       popular: false
     },
     {
-      id: 'premium',
-      name: 'Premium Account',
-      description: 'Enhanced features for high-value customers',
+      id: 'current',
+      name: 'Current Account',
+      description: 'Built for businesses and professionals who move fast',
       features: [
-        'All Personal features',
-        'Higher transaction limits',
-        'Priority customer support',
-        'Investment advisory',
-        'Travel insurance',
-        'Concierge services'
+        'Instant payments & global transfers',
+        'Zero hidden fees on monthly transactions',
+        'Dedicated relationship manager for business accounts',
+        'Free virtual business debit cards',
+        'API access for automation-ready businesses',
+        'Multi-currency support & automated invoicing'
       ],
-      icon: <Star className="h-8 w-8" />,
+      icon: <TrendingUp className="h-8 w-8" />,
+      color: 'green',
+      popular: false
+    },
+    {
+      id: 'fixed-deposit',
+      name: 'Fixed Deposit Account',
+      description: 'Lock in your funds. Watch your money grow faster, smarter',
+      features: [
+        'Market-leading interest rates',
+        'Transparent, downloadable contracts',
+        'Auto-renew or break FD with no penalties (select tenures)',
+        'Secure digital certificates for every deposit',
+        'Start with as little as $100',
+        'Real-time deposit tracking & auto-reminders'
+      ],
+      icon: <DollarSign className="h-8 w-8" />,
       color: 'purple',
       popular: true
     },
     {
-      id: 'business',
-      name: 'Business Account',
-      description: 'Complete banking solution for businesses',
+      id: 'corporate',
+      name: 'Corporate Account',
+      description: 'Enterprise-grade banking for companies of all sizes',
       features: [
-        'Multi-user access',
-        'Business expense tracking',
-        'Invoice management',
-        'Corporate cards',
-        'Business analytics',
-        'Dedicated account manager'
+        'Multi-user access with secure permissions',
+        'Built-in FX hedging tools',
+        'Real-time global transfers at low cost',
+        'Custom onboarding for regulated businesses',
+        '24/7 support with assigned corporate success manager',
+        'Payroll automation & treasury services'
       ],
       icon: <Building className="h-8 w-8" />,
-      color: 'green',
+      color: 'indigo',
+      popular: false
+    },
+    {
+      id: 'junior',
+      name: 'Junior Account',
+      description: 'Banking for the next generation – safe, guided, and fun',
+      features: [
+        'Parental controls & joint oversight',
+        'Prepaid cards with spending limits',
+        'Goal tracking: Save for school, birthdays, more',
+        'Reward system for good saving habits',
+        'Safe & secure: zero online exposure',
+        'Financial literacy learning platform'
+      ],
+      icon: <GraduationCap className="h-8 w-8" />,
+      color: 'yellow',
+      popular: false
+    },
+    {
+      id: 'pension',
+      name: 'Pension Account',
+      description: 'Retire with dignity. Bank with peace of mind',
+      features: [
+        'Monthly interest payout options',
+        'Priority support for senior citizens',
+        'Medical emergency access fund',
+        'Simplified onboarding, even offline',
+        'Retirement planning dashboard',
+        'Auto-deposit of pensions & FD-linked savings'
+      ],
+      icon: <Heart className="h-8 w-8" />,
+      color: 'red',
       popular: false
     }
   ];
@@ -82,6 +134,12 @@ export default function AccountSelection() {
         return 'border-purple-200 bg-purple-50 hover:border-purple-300 dark:border-purple-700 dark:bg-purple-900/20 dark:hover:border-purple-600';
       case 'green':
         return 'border-green-200 bg-green-50 hover:border-green-300 dark:border-green-700 dark:bg-green-900/20 dark:hover:border-green-600';
+      case 'indigo':
+        return 'border-indigo-200 bg-indigo-50 hover:border-indigo-300 dark:border-indigo-700 dark:bg-indigo-900/20 dark:hover:border-indigo-600';
+      case 'yellow':
+        return 'border-yellow-200 bg-yellow-50 hover:border-yellow-300 dark:border-yellow-700 dark:bg-yellow-900/20 dark:hover:border-yellow-600';
+      case 'red':
+        return 'border-red-200 bg-red-50 hover:border-red-300 dark:border-red-700 dark:bg-red-900/20 dark:hover:border-red-600';
       default:
         return 'border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600';
     }
@@ -95,6 +153,12 @@ export default function AccountSelection() {
         return 'text-purple-600 dark:text-purple-400';
       case 'green':
         return 'text-green-600 dark:text-green-400';
+      case 'indigo':
+        return 'text-indigo-600 dark:text-indigo-400';
+      case 'yellow':
+        return 'text-yellow-600 dark:text-yellow-400';
+      case 'red':
+        return 'text-red-600 dark:text-red-400';
       default:
         return 'text-gray-600 dark:text-gray-400';
     }
@@ -102,32 +166,31 @@ export default function AccountSelection() {
 
   const handleContinue = () => {
     if (selectedAccount) {
-      // Redirect to registration with selected account type
       window.location.href = `/register/form?type=${selectedAccount}`;
     }
   };
 
   return (
     <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
         {/* Background Elements */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse delay-1000"></div>
-          <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-gradient-to-r from-indigo-400 to-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse delay-2000"></div>
+          <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-300 to-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse"></div>
+          <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-300 to-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-1000"></div>
+          <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-gradient-to-r from-indigo-300 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-2000"></div>
         </div>
 
         {/* Navigation */}
-        <nav className="relative z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0">
+        <nav className="relative z-50 bg-white/90 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-3">
-                <div className="h-8 w-8 relative">
+                <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm">
                   <Image
                     src="/logo.png"
                     alt="Global Dot Bank Logo"
-                    width={32}
-                    height={32}
+                    width={40}
+                    height={40}
                     className="object-contain"
                   />
                 </div>
@@ -168,7 +231,7 @@ export default function AccountSelection() {
           </div>
 
           {/* Account Options */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {accountTypes.map((account) => (
               <div
                 key={account.id}
@@ -207,7 +270,7 @@ export default function AccountSelection() {
                     {account.features.map((feature, index) => (
                       <div key={index} className="flex items-center space-x-3">
                         <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                        <span className="text-gray-700 dark:text-gray-300 text-sm">{feature}</span>
                       </div>
                     ))}
                   </div>
@@ -273,4 +336,4 @@ export default function AccountSelection() {
       </div>
     </div>
   );
-} 
+}

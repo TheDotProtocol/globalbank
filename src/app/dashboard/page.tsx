@@ -15,7 +15,15 @@ import {
   Upload,
   Plus,
   Eye,
-  Globe
+  Globe,
+  Sun,
+  Moon,
+  ArrowRight,
+  DollarSign,
+  PiggyBank,
+  Building,
+  GraduationCap,
+  Heart
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/useToast';
@@ -30,6 +38,7 @@ import MultiCurrencyDisplay, { CurrencyConverter } from '@/components/MultiCurre
 import BankBuggerAI from '@/components/BankBuggerAI';
 import { exportTransactions, exportFixedDeposits, exportStatement, exportFixedDepositCertificate, exportAccountDetails } from '@/lib/export';
 import TransferModal from '@/components/modals/TransferModal';
+import Image from "next/image";
 
 interface User {
   id: string;
@@ -95,6 +104,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   
   // Modal states
   const [addMoneyModalOpen, setAddMoneyModalOpen] = useState(false);
@@ -206,7 +216,7 @@ export default function Dashboard() {
       case 'add-money':
         setAddMoneyModalOpen(true);
         break;
-      case 'send-money':
+      case 'transfer':
         setTransferModalOpen(true);
         break;
       case 'new-card':
@@ -214,9 +224,6 @@ export default function Dashboard() {
         break;
       case 'fixed-deposit':
         setFixedDepositModalOpen(true);
-        break;
-      case 'kyc':
-        router.push('/profile?tab=kyc');
         break;
       default:
         break;
@@ -226,12 +233,7 @@ export default function Dashboard() {
   const handleAccountClick = async (accountId: string) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch(`/api/user/accounts/${accountId}`, {
+      const response = await fetch(`/api/accounts/${accountId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -239,13 +241,9 @@ export default function Dashboard() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setSelectedAccount(data.account);
+        const accountData = await response.json();
+        setSelectedAccount(accountData.account);
         setAccountDetailsModalOpen(true);
-      } else {
-        const errorData = await response.json();
-        console.error('Account details error:', errorData);
-        showToast('Failed to load account details', 'error');
       }
     } catch (error) {
       console.error('Error fetching account details:', error);
@@ -256,11 +254,6 @@ export default function Dashboard() {
   const handleCertificateGeneration = async (depositId: string) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
       const response = await fetch(`/api/fixed-deposits/${depositId}/certificate`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -269,13 +262,9 @@ export default function Dashboard() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setSelectedCertificate(data.certificate);
+        const certificateData = await response.json();
+        setSelectedCertificate(certificateData.certificate);
         setCertificateModalOpen(true);
-      } else {
-        const errorData = await response.json();
-        console.error('Certificate generation error:', errorData);
-        showToast('Failed to generate certificate', 'error');
       }
     } catch (error) {
       console.error('Error generating certificate:', error);
@@ -285,24 +274,25 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex items-center justify-between p-4 bg-white shadow-sm">
-          <Skeleton className="h-8 w-32" />
-          <div className="flex items-center space-x-4">
-            <Skeleton className="h-6 w-6" />
-            <Skeleton className="h-8 w-20" />
+      <div className={darkMode ? "dark" : ""}>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
+          {/* Background Elements */}
+          <div className="absolute inset-0">
+            <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-300 to-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse"></div>
+            <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-300 to-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-1000"></div>
+            <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-gradient-to-r from-indigo-300 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-2000"></div>
           </div>
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-3">
-              <Skeleton className="h-64 w-full mb-6" />
-              <Skeleton className="h-48 w-full" />
-            </div>
-            <div>
-              <Skeleton className="h-48 w-full mb-6" />
-              <Skeleton className="h-32 w-full" />
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <Skeleton className="h-64 w-full mb-6" />
+                <Skeleton className="h-48 w-full" />
+              </div>
+              <div>
+                <Skeleton className="h-48 w-full mb-6" />
+                <Skeleton className="h-32 w-full" />
+              </div>
             </div>
           </div>
         </div>
@@ -312,713 +302,395 @@ export default function Dashboard() {
 
   const totalBalance = accounts.reduce((sum, account) => sum + (account?.balance || 0), 0);
 
+  const getAccountIcon = (accountType: string) => {
+    switch (accountType.toLowerCase()) {
+      case 'savings':
+        return <PiggyBank className="h-6 w-6" />;
+      case 'current':
+        return <TrendingUp className="h-6 w-6" />;
+      case 'fixed-deposit':
+        return <DollarSign className="h-6 w-6" />;
+      case 'corporate':
+        return <Building className="h-6 w-6" />;
+      case 'junior':
+        return <GraduationCap className="h-6 w-6" />;
+      case 'pension':
+        return <Heart className="h-6 w-6" />;
+      default:
+        return <CreditCard className="h-6 w-6" />;
+    }
+  };
+
+  const getAccountColor = (accountType: string) => {
+    switch (accountType.toLowerCase()) {
+      case 'savings':
+        return 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400';
+      case 'current':
+        return 'bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400';
+      case 'fixed-deposit':
+        return 'bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400';
+      case 'corporate':
+        return 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400';
+      case 'junior':
+        return 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/50 dark:text-yellow-400';
+      case 'pension':
+        return 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400';
+      default:
+        return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-white shadow-sm border-b">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 text-gray-600 hover:text-gray-900"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">Global Dot Bank</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <NotificationCenter />
-            <button
-              onClick={handleLogout}
-              className="p-2 text-gray-600 hover:text-gray-900"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
-          </div>
+    <div className={darkMode ? "dark" : ""}>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-300 to-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse"></div>
+          <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-300 to-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-1000"></div>
+          <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-gradient-to-r from-indigo-300 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-2000"></div>
         </div>
-      </div>
 
-      {/* Desktop Header */}
-      <div className="hidden lg:block bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Global Dot Bank</h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-600">
-                Welcome, {user?.firstName || 'User'} {user?.lastName || ''}
-              </span>
-              <NotificationCenter />
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex">
-        {/* Mobile Sidebar */}
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setSidebarOpen(false)} />
-            <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg">
-              <div className="flex items-center justify-between p-4 border-b">
-                <h2 className="text-lg font-semibold">Menu</h2>
+        {/* Navigation */}
+        <nav className="relative z-50 bg-white/90 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm">
+                  <Image
+                    src="/logo.png"
+                    alt="Global Dot Bank Logo"
+                    width={40}
+                    height={40}
+                    className="object-contain"
+                  />
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                  Global Dot Bank
+                </span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <span className="text-gray-600 dark:text-gray-300">
+                  Welcome, {user?.firstName || 'User'} {user?.lastName || ''}
+                </span>
+                <NotificationCenter />
                 <button
-                  onClick={() => setSidebarOpen(false)}
-                  className="p-2 text-gray-600 hover:text-gray-900"
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  aria-label="Toggle Dark Mode"
                 >
-                  <X className="w-5 h-5" />
+                  {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
                 </button>
               </div>
-              <nav className="p-4">
-                {[
-                  { id: 'overview', label: 'Overview', icon: Home },
-                  { id: 'accounts', label: 'Accounts', icon: CreditCard },
-                  { id: 'cards', label: 'Cards', icon: CreditCard },
-                  { id: 'transactions', label: 'Transactions', icon: TrendingUp },
-                  { id: 'deposits', label: 'Fixed Deposits', icon: TrendingUp },
-                  { id: 'documents', label: 'Documents', icon: FileText },
-                  { id: 'profile', label: 'Profile', icon: User },
-                  { id: 'settings', label: 'Settings', icon: Settings }
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      if (item.id === 'cards') {
-                        window.location.href = '/dashboard/cards';
-                      } else {
-                        setActiveTab(item.id);
-                      }
-                      setSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === item.id
-                        ? 'bg-blue-50 text-blue-600'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.label}</span>
+            </div>
+          </div>
+        </nav>
+
+        {/* Main Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Welcome Section */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Welcome back, {user?.firstName || 'User'}! 👋
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Here's your financial overview for today
+            </p>
+          </div>
+
+          {/* Total Balance Card */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Total Balance</h2>
+                <p className="text-blue-100 mb-4">Across all your accounts</p>
+                <div className="text-4xl font-bold">
+                  ${totalBalance.toLocaleString()}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-blue-100 text-sm">Active Accounts</div>
+                <div className="text-2xl font-bold">{accounts.length}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <button
+              onClick={() => handleQuickAction('add-money')}
+              className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                  <Upload className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">Add Money</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">Deposit funds</div>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleQuickAction('transfer')}
+              className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                  <ArrowRight className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">Transfer</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">Send money</div>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleQuickAction('new-card')}
+              className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                  <Plus className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">New Card</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">Request card</div>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleQuickAction('fixed-deposit')}
+              className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg">
+                  <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">Fixed Deposit</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-300">Invest money</div>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Accounts and Transactions Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Accounts Section */}
+            <div className="lg:col-span-2">
+              <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Accounts</h2>
+                  <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                    View All
                   </button>
-                ))}
-              </nav>
+                </div>
+                
+                <div className="space-y-4">
+                  {accounts.map((account) => (
+                    <div
+                      key={account.id}
+                      onClick={() => handleAccountClick(account.id)}
+                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-2 rounded-lg ${getAccountColor(account.accountType)}`}>
+                          {getAccountIcon(account.accountType)}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900 dark:text-white">
+                            {account.accountType} Account
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-300">
+                            ****{account.accountNumber.slice(-4)}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-gray-900 dark:text-white">
+                          ${account.balance.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          {account.currency}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Transactions */}
+            <div>
+              <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Transactions</h2>
+                  <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                    View All
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  {transactions.slice(0, 5).map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <div>
+                        <div className="font-medium text-gray-900 dark:text-white">
+                          {transaction.description}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          {new Date(transaction.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className={`font-semibold ${
+                        transaction.type === 'CREDIT' 
+                          ? 'text-green-600 dark:text-green-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {transaction.type === 'CREDIT' ? '+' : '-'}${Math.abs(transaction.amount).toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fixed Deposits Section */}
+          {fixedDeposits.length > 0 && (
+            <div className="mt-8">
+              <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Fixed Deposits</h2>
+                  <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                    View All
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {fixedDeposits.map((deposit) => (
+                    <div key={deposit.id} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-700">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                          <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          deposit.status === 'ACTIVE' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                        }`}>
+                          {deposit.status}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="font-bold text-gray-900 dark:text-white">
+                          ${deposit.amount.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          {deposit.interestRate}% for {deposit.duration} months
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
+                          Matures: {new Date(deposit.maturityDate).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Modals */}
+        {addMoneyModalOpen && (
+          <AddMoneyModal
+            isOpen={addMoneyModalOpen}
+            onClose={() => setAddMoneyModalOpen(false)}
+            onSuccess={() => {
+              setAddMoneyModalOpen(false);
+              fetchDashboardData();
+            }}
+          />
+        )}
+
+        {newCardModalOpen && (
+          <NewCardModal
+            isOpen={newCardModalOpen}
+            onClose={() => setNewCardModalOpen(false)}
+            onSuccess={() => {
+              setNewCardModalOpen(false);
+              showToast('Card request submitted successfully', 'success');
+            }}
+          />
+        )}
+
+        {fixedDepositModalOpen && (
+          <FixedDepositModal
+            isOpen={fixedDepositModalOpen}
+            onClose={() => setFixedDepositModalOpen(false)}
+            onSuccess={() => {
+              setFixedDepositModalOpen(false);
+              fetchDashboardData();
+            }}
+          />
+        )}
+
+        {transferModalOpen && (
+          <TransferModal
+            isOpen={transferModalOpen}
+            onClose={() => setTransferModalOpen(false)}
+            onSuccess={() => {
+              setTransferModalOpen(false);
+              fetchDashboardData();
+            }}
+          />
+        )}
+
+        {accountDetailsModalOpen && selectedAccount && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setAccountDetailsModalOpen(false)} />
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-bold mb-4">Account Details</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Account Number</label>
+                  <p className="text-lg font-semibold">{selectedAccount.accountNumber}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Balance</label>
+                  <p className="text-lg font-semibold">${selectedAccount.balance.toLocaleString()}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Status</label>
+                  <p className="text-lg font-semibold">{selectedAccount.isActive ? 'Active' : 'Inactive'}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAccountDetailsModalOpen(false)}
+                className="mt-6 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         )}
 
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block w-64 bg-white shadow-sm min-h-screen">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Navigation</h2>
-            <nav className="space-y-2">
-              {[
-                { id: 'overview', label: 'Overview', icon: Home },
-                { id: 'accounts', label: 'Accounts', icon: CreditCard },
-                { id: 'cards', label: 'Cards', icon: CreditCard },
-                { id: 'transactions', label: 'Transactions', icon: TrendingUp },
-                { id: 'deposits', label: 'Fixed Deposits', icon: TrendingUp },
-                { id: 'documents', label: 'Documents', icon: FileText },
-                { id: 'profile', label: 'Profile', icon: User },
-                { id: 'settings', label: 'Settings', icon: Settings }
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    if (item.id === 'cards') {
-                      window.location.href = '/dashboard/cards';
-                    } else {
-                      setActiveTab(item.id);
-                    }
-                  }}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                    activeTab === item.id
-                      ? 'bg-blue-50 text-blue-600'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            {activeTab === 'overview' && (
-              <div className="space-y-6">
-                {/* Balance Overview */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Account Overview</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <p className="text-sm font-medium text-blue-600">Total Balance</p>
-                      <MultiCurrencyDisplay 
-                        usdAmount={totalBalance}
-                        className="mt-2"
-                      />
-                    </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <p className="text-sm font-medium text-green-600">Active Accounts</p>
-                      <p className="text-2xl font-bold text-green-900">
-                        {accounts.length}
-                      </p>
-                    </div>
-                    <div className="bg-purple-50 rounded-lg p-4">
-                      <p className="text-sm font-medium text-purple-600">Fixed Deposits</p>
-                      <p className="text-2xl font-bold text-purple-900">
-                        {fixedDeposits.length}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Currency Converter Tool */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <Globe className="w-5 h-5 text-blue-600" />
-                    <h2 className="text-xl font-semibold text-gray-900">Currency Converter</h2>
-                  </div>
-                  <CurrencyConverter 
-                    amount={100}
-                    fromCurrency="USD"
-                    toCurrency="EUR"
-                  />
-                </div>
-
-                {/* Quick Actions */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                    <button 
-                      onClick={() => handleQuickAction('add-money')}
-                      className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                    >
-                      <Upload className="w-5 h-5 text-blue-600" />
-                      <span className="text-sm font-medium">Add Money</span>
-                    </button>
-                    <button 
-                      onClick={() => handleQuickAction('send-money')}
-                      className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                    >
-                      <Download className="w-5 h-5 text-green-600" />
-                      <span className="text-sm font-medium">Send Money</span>
-                    </button>
-                    <button 
-                      onClick={() => handleQuickAction('new-card')}
-                      className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                    >
-                      <Plus className="w-5 h-5 text-purple-600" />
-                      <span className="text-sm font-medium">New Card</span>
-                    </button>
-                    <button 
-                      onClick={() => handleQuickAction('fixed-deposit')}
-                      className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                    >
-                      <TrendingUp className="w-5 h-5 text-orange-600" />
-                      <span className="text-sm font-medium">Fixed Deposit</span>
-                    </button>
-                    <button 
-                      onClick={() => handleQuickAction('kyc')}
-                      className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                    >
-                      <FileText className="w-5 h-5 text-indigo-600" />
-                      <span className="text-sm font-medium">KYC Documents</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Recent Transactions</h2>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleExport('transactions', 'pdf')}
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        Export PDF
-                      </button>
-                      <button
-                        onClick={() => handleExport('transactions', 'csv')}
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        Export CSV
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {(transactions || []).slice(0, 5).map((transaction) => (
-                      <div key={transaction?.id || Math.random()} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900">{transaction?.description || 'Transaction'}</p>
-                          <p className="text-sm text-gray-500">
-                            {transaction?.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'Unknown date'}
-                          </p>
-                          {/* Enhanced transfer details */}
-                          {transaction?.transferMode && (
-                            <div className="mt-1 text-xs text-gray-400">
-                              <p>Mode: {transaction.transferMode.replace('_', ' ')}</p>
-                              {transaction.sourceAccountNumber && (
-                                <p>From: {transaction.sourceAccountNumber}</p>
-                              )}
-                              {transaction.destinationAccountNumber && (
-                                <p>To: {transaction.destinationAccountNumber}</p>
-                              )}
-                              {transaction.transferFee && transaction.transferFee > 0 && (
-                                <p>Fee: ${transaction.transferFee}</p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className={`font-semibold ${
-                            transaction?.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {transaction?.type === 'CREDIT' ? '+' : '-'}${transaction?.amount || 0}
-                          </p>
-                          <p className="text-xs text-gray-500">{transaction?.status || 'Unknown'}</p>
-                          {transaction?.reference && (
-                            <p className="text-xs text-gray-400">Ref: {transaction.reference}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'accounts' && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Accounts</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {(accounts || []).map((account) => (
-                      <div key={account?.id || Math.random()} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-gray-900">{account?.accountType || 'Account'}</h3>
-                          <span className="text-sm text-gray-500">{account?.currency || 'USD'}</span>
-                        </div>
-                        <MultiCurrencyDisplay 
-                          usdAmount={account?.balance || 0}
-                          className="mb-2"
-                          showSettings={false}
-                        />
-                        <p className="text-sm text-gray-500 mt-1">
-                          Account: {account?.accountNumber || 'N/A'}
-                        </p>
-                        <button
-                          onClick={() => handleAccountClick(account?.id || '')}
-                          className="mt-3 w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span>View Details</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'transactions' && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Transaction History</h2>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleExport('transactions', 'pdf')}
-                        className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        Export PDF
-                      </button>
-                      <button
-                        onClick={() => handleExport('transactions', 'csv')}
-                        className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        Export CSV
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {(transactions || []).map((transaction) => (
-                      <div key={transaction?.id || Math.random()} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900">{transaction?.description || 'Transaction'}</p>
-                          <p className="text-sm text-gray-500">
-                            {transaction?.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'Unknown date'}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className={`font-semibold ${
-                            transaction?.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {transaction?.type === 'CREDIT' ? '+' : '-'}${transaction?.amount || 0}
-                          </p>
-                          <p className="text-xs text-gray-500">{transaction?.status || 'Unknown'}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'deposits' && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Fixed Deposits</h2>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleExport('deposits', 'pdf')}
-                        className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        Export PDF
-                      </button>
-                      <button
-                        onClick={() => handleExport('deposits', 'csv')}
-                        className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        Export CSV
-                      </button>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {(fixedDeposits || []).map((deposit) => (
-                      <div key={deposit?.id || Math.random()} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-gray-900">Fixed Deposit</h3>
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            deposit?.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {deposit?.status || 'UNKNOWN'}
-                          </span>
-                        </div>
-                        <p className="text-2xl font-bold text-gray-900">
-                          ${(deposit?.amount || 0).toLocaleString()}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {deposit?.interestRate || 0}% for {deposit?.duration || 0} months
-                        </p>
-                        <p className="text-xs text-gray-400 mt-2">
-                          Matures: {deposit?.maturityDate ? new Date(deposit.maturityDate).toLocaleDateString() : 'Unknown'}
-                        </p>
-                        {deposit?.status === 'ACTIVE' && (
-                          <button
-                            onClick={() => handleCertificateGeneration(deposit?.id || '')}
-                            className="mt-3 w-full flex items-center justify-center space-x-2 px-3 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-                          >
-                            <FileText className="w-4 h-4" />
-                            <span>Generate Certificate</span>
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'documents' && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Documents</h2>
-                  <p className="text-gray-600">Document generation and management features will be implemented here.</p>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'profile' && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Profile Management</h2>
-                  <div className="space-y-4">
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h3 className="font-medium text-gray-900 mb-2">Personal Information</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">First Name</label>
-                          <input
-                            type="text"
-                            defaultValue={user?.firstName}
-                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Last Name</label>
-                          <input
-                            type="text"
-                            defaultValue={user?.lastName}
-                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Email</label>
-                          <input
-                            type="email"
-                            defaultValue={user?.email}
-                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Phone</label>
-                          <input
-                            type="tel"
-                            placeholder="+1 (555) 123-4567"
-                            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                      </div>
-                      <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                        Update Profile
-                      </button>
-                    </div>
-
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h3 className="font-medium text-gray-900 mb-2">Security Settings</h3>
-                      <div className="space-y-3">
-                        <button className="w-full text-left px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                          Change Password
-                        </button>
-                        <button className="w-full text-left px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                          Enable Two-Factor Authentication
-                        </button>
-                        <button className="w-full text-left px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                          Manage Login Sessions
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h3 className="font-medium text-gray-900 mb-2">KYC Status</h3>
-                      <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          user?.kycStatus === 'APPROVED' 
-                            ? 'bg-green-100 text-green-800'
-                            : user?.kycStatus === 'PENDING'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {user?.kycStatus}
-                        </span>
-                        {user?.kycStatus !== 'APPROVED' && (
-                          <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                            Complete KYC
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'settings' && (
-              <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Settings</h2>
-                  <div className="space-y-4">
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h3 className="font-medium text-gray-900 mb-2">Notifications</h3>
-                      <div className="space-y-3">
-                        <label className="flex items-center">
-                          <input type="checkbox" defaultChecked className="mr-2" />
-                          <span>Email notifications</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input type="checkbox" defaultChecked className="mr-2" />
-                          <span>SMS notifications</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input type="checkbox" className="mr-2" />
-                          <span>Push notifications</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h3 className="font-medium text-gray-900 mb-2">Privacy</h3>
-                      <div className="space-y-3">
-                        <label className="flex items-center">
-                          <input type="checkbox" defaultChecked className="mr-2" />
-                          <span>Share data for analytics</span>
-                        </label>
-                        <label className="flex items-center">
-                          <input type="checkbox" className="mr-2" />
-                          <span>Marketing communications</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                      Save Settings
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        {certificateModalOpen && selectedCertificate && (
+          <FixedDepositCertificate
+            certificate={selectedCertificate}
+            onClose={() => setCertificateModalOpen(false)}
+          />
+        )}
       </div>
-
-      {/* Modals */}
-      <AddMoneyModal
-        isOpen={addMoneyModalOpen}
-        onClose={() => setAddMoneyModalOpen(false)}
-        accounts={accounts}
-        onSuccess={fetchDashboardData}
-      />
-
-      <NewCardModal
-        isOpen={newCardModalOpen}
-        onClose={() => setNewCardModalOpen(false)}
-        accounts={accounts}
-        onSuccess={fetchDashboardData}
-      />
-
-      <FixedDepositModal
-        isOpen={fixedDepositModalOpen}
-        onClose={() => setFixedDepositModalOpen(false)}
-        accounts={accounts}
-        userId={user?.id || ''}
-        onSuccess={fetchDashboardData}
-      />
-
-      <TransferModal
-        isOpen={transferModalOpen}
-        onClose={() => setTransferModalOpen(false)}
-        accounts={accounts}
-        onSuccess={fetchDashboardData}
-      />
-
-      {/* Account Details Modal */}
-      {accountDetailsModalOpen && selectedAccount && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {selectedAccount.accountType} Account Details
-              </h2>
-              <button
-                onClick={() => setAccountDetailsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* Account Information */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-blue-600">Account Number</p>
-                <p className="text-lg font-bold text-blue-900">{selectedAccount.accountNumber}</p>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-green-600">Current Balance</p>
-                <p className="text-lg font-bold text-green-900">${selectedAccount.balance.toLocaleString()}</p>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-purple-600">Currency</p>
-                <p className="text-lg font-bold text-purple-900">{selectedAccount.currency}</p>
-              </div>
-            </div>
-
-            {/* Account Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-gray-600">Total Transactions</p>
-                <p className="text-lg font-bold text-gray-900">{selectedAccount?.statistics?.totalTransactions || 0}</p>
-              </div>
-              <div className="bg-green-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-green-600">Total Credits</p>
-                <p className="text-lg font-bold text-green-900">${(selectedAccount?.statistics?.totalCredits || 0).toLocaleString()}</p>
-              </div>
-              <div className="bg-red-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-red-600">Total Debits</p>
-                <p className="text-lg font-bold text-red-900">${(selectedAccount?.statistics?.totalDebits || 0).toLocaleString()}</p>
-              </div>
-              <div className="bg-blue-50 rounded-lg p-4">
-                <p className="text-sm font-medium text-blue-600">Avg Transaction</p>
-                <p className="text-lg font-bold text-blue-900">${(selectedAccount?.statistics?.averageTransactionAmount || 0).toLocaleString()}</p>
-              </div>
-            </div>
-
-            {/* Transaction History */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Transaction History</h3>
-              <div className="space-y-3">
-                {(selectedAccount?.transactions || []).length > 0 ? (
-                  selectedAccount.transactions.map((transaction) => (
-                    <div key={transaction?.id || Math.random()} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">{transaction?.description || 'Transaction'}</p>
-                        <p className="text-sm text-gray-500">
-                          {transaction?.createdAt ? new Date(transaction.createdAt).toLocaleDateString() : 'Unknown date'} at {transaction?.createdAt ? new Date(transaction.createdAt).toLocaleTimeString() : 'Unknown time'}
-                        </p>
-                        {transaction?.reference && (
-                          <p className="text-xs text-gray-400">Ref: {transaction.reference}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className={`font-semibold ${
-                          transaction?.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {transaction?.type === 'CREDIT' ? '+' : '-'}${transaction?.amount || 0}
-                        </p>
-                        <p className="text-xs text-gray-500">{transaction?.status || 'Unknown'}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No transactions found for this account.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Export Account Details */}
-            <div className="mt-6 flex justify-end space-x-2">
-              <button
-                onClick={() => exportAccountDetails(selectedAccount, 'pdf')}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Export Account Details (PDF)
-              </button>
-              <button
-                onClick={() => exportAccountDetails(selectedAccount, 'csv')}
-                className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Export Account Details (CSV)
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Bank Bugger AI */}
-      <BankBuggerAI userId={user?.id || ''} />
-
-      {/* Certificate Modal */}
-      {certificateModalOpen && selectedCertificate && (
-        <FixedDepositCertificate
-          certificate={selectedCertificate}
-          onClose={() => {
-            setCertificateModalOpen(false);
-            setSelectedCertificate(null);
-          }}
-        />
-      )}
     </div>
   );
 } 
