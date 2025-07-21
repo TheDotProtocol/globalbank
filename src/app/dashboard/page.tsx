@@ -37,7 +37,7 @@ import FixedDepositModal from '@/components/modals/FixedDepositModal';
 import FixedDepositCertificate from '@/components/FixedDepositCertificate';
 import MultiCurrencyDisplay, { CurrencyConverter } from '@/components/MultiCurrencyDisplay';
 import BankBuggerAI from '@/components/BankBuggerAI';
-import { exportTransactions, exportFixedDeposits, exportStatement, exportFixedDepositCertificate, exportAccountDetails } from '@/lib/export';
+import { exportStatement, exportTransactions, exportFixedDeposits } from '@/lib/export-new';
 import TransferModal from '@/components/modals/TransferModal';
 import Image from "next/image";
 
@@ -626,7 +626,10 @@ export default function Dashboard() {
               <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Accounts</h2>
-                  <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                  <button 
+                    onClick={() => router.push('/profile')}
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+                  >
                     View All
                   </button>
                 </div>
@@ -670,7 +673,10 @@ export default function Dashboard() {
               <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Transactions</h2>
-                  <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                  <button 
+                    onClick={() => router.push('/dashboard/transactions')}
+                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+                  >
                     View All
                   </button>
                 </div>
