@@ -42,9 +42,10 @@ export const GET = requireAuth(async (request: NextRequest) => {
       }
     }
 
-    // Calculate total balance
+    // Calculate total balance with proper number conversion
     const totalBalance = accounts.reduce((sum, account) => {
-      return sum + Number(account.balance);
+      const balance = typeof account.balance === 'string' ? parseFloat(account.balance) : Number(account.balance || 0);
+      return sum + balance;
     }, 0);
 
     return NextResponse.json({
@@ -52,16 +53,15 @@ export const GET = requireAuth(async (request: NextRequest) => {
         id: account.id,
         accountNumber: account.accountNumber,
         accountType: account.accountType,
-        balance: account.balance,
+        balance: typeof account.balance === 'string' ? parseFloat(account.balance) : Number(account.balance || 0),
         currency: account.currency,
         isActive: account.isActive,
         createdAt: account.createdAt,
         
         recentTransactions: account.transactions.map((transaction: any) => ({
-          
           id: transaction.id,
           type: transaction.type,
-          amount: transaction.amount,
+          amount: typeof transaction.amount === 'string' ? parseFloat(transaction.amount) : Number(transaction.amount || 0),
           description: transaction.description,
           status: transaction.status,
           createdAt: transaction.createdAt
