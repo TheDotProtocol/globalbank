@@ -7,6 +7,21 @@ export const GET = requireAuth(async (request: NextRequest, { params }: { params
     const user = (request as any).user;
     const { id } = await params;
 
+    console.log('🔍 Certificate generation request:', { 
+      userId: user.id, 
+      fixedDepositId: id,
+      userEmail: user.email 
+    });
+
+    // Validate input
+    if (!id) {
+      console.error('❌ No fixed deposit ID provided');
+      return NextResponse.json(
+        { error: 'Fixed deposit ID is required' },
+        { status: 400 }
+      );
+    }
+
     const fixedDeposit = await prisma.fixedDeposit.findFirst({
       where: {
         id: id,
