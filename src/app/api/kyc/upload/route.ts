@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { uploadFileToS3 } from '@/lib/s3';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
@@ -86,78 +87,34 @@ export const POST = requireAuth(async (request: NextRequest) => {
       );
     }
 
-    console.log('✅ File validation passed, converting to base64...');
+    console.log('✅ File validation passed, processing files...');
 
-    // Convert files to base64 with better error handling
-    let governmentIdBase64: string;
-    let proofOfAddressBase64: string;
-    let selfieBase64: string;
-
-    try {
-      governmentIdBase64 = await fileToBase64(governmentId);
-      console.log('✅ Government ID converted to base64');
-    } catch (error) {
-      console.error('❌ Error converting government ID:', error);
-      return NextResponse.json(
-        { error: 'Failed to process government ID file' },
-        { status: 500 }
-      );
-    }
-
-    try {
-      proofOfAddressBase64 = await fileToBase64(proofOfAddress);
-      console.log('✅ Proof of address converted to base64');
-    } catch (error) {
-      console.error('❌ Error converting proof of address:', error);
-      return NextResponse.json(
-        { error: 'Failed to process proof of address file' },
-        { status: 500 }
-      );
-    }
-
-    try {
-      selfieBase64 = await fileToBase64(selfie);
-      console.log('✅ Selfie converted to base64');
-    } catch (error) {
-      console.error('❌ Error converting selfie:', error);
-      return NextResponse.json(
-        { error: 'Failed to process selfie file' },
-        { status: 500 }
-      );
-    }
-
-    console.log('📝 Creating KYC documents in database...');
-    
-    // Create KYC documents
+    // Process files with S3 upload and Base64 fallback
     const documents = await Promise.all([
-      // Government ID
-      prisma.kycDocument.create({
-        data: {
-          userId: user.id,
-          documentType: 'ID_PROOF',
-          fileUrl: `data:${governmentId.type};base64,${governmentIdBase64}`,
-          status: 'PENDING'
-        }
-      }),
-      // Proof of Address
-      prisma.kycDocument.create({
-        data: {
-          userId: user.id,
-          documentType: 'ADDRESS_PROOF',
-          fileUrl: `data:${proofOfAddress.type};base64,${proofOfAddressBase64}`,
-          status: 'PENDING'
-        }
-      }),
-      // Selfie
-      prisma.kycDocument.create({
-        data: {
-          userId: user.id,
-          documentType: 'SELFIE_PHOTO',
-          fileUrl: `data:${selfie.type};base64,${selfieBase64}`,
-          status: 'PENDING'
-        }
-      })
+      processDocument(governmentId, user.id, 'ID_PROOF'),
+      processDocument(proofOfAddress, user.id, 'ADDRESS_PROOF'),
+      processDocument(selfie, user.id, 'SELFIE_PHOTO')
     ]);
+
+    console.log('✅ All documents processed successfully');
+
+    // Create KYC documents in database
+    const createdDocuments = await Promise.all(
+      documents.map(doc => 
+        prisma.kycDocument.create({
+          data: {
+            userId: user.id,
+            documentType: doc.documentType as any,
+            fileUrl: doc.fileUrl,
+            s3Key: doc.s3Key,
+            fileName: doc.fileName,
+            fileSize: doc.fileSize,
+            mimeType: doc.mimeType,
+            status: 'PENDING'
+          }
+        })
+      )
+    );
 
     console.log('✅ KYC documents created in database');
 
@@ -172,7 +129,8 @@ export const POST = requireAuth(async (request: NextRequest) => {
     return NextResponse.json({
       success: true,
       message: 'KYC documents submitted successfully',
-      documentsCount: documents.length
+      documentsCount: createdDocuments.length,
+      storageMethod: 'S3 with Base64 fallback'
     });
 
   } catch (error: any) {
@@ -187,6 +145,55 @@ export const POST = requireAuth(async (request: NextRequest) => {
     );
   }
 });
+
+// Helper function to process document with S3 upload and Base64 fallback
+async function processDocument(file: File, userId: string, documentType: string) {
+  try {
+    console.log(`📤 Attempting S3 upload for ${documentType}...`);
+    
+    // Convert file to buffer for S3 upload
+    const buffer = await file.arrayBuffer();
+    const fileBuffer = Buffer.from(buffer);
+    
+    // Try S3 upload first
+    const s3Result = await uploadFileToS3(fileBuffer, file.name, userId, documentType);
+    
+    console.log(`✅ S3 upload successful for ${documentType}:`, s3Result.key);
+    
+    return {
+      documentType,
+      fileUrl: s3Result.url,
+      s3Key: s3Result.key,
+      fileName: file.name,
+      fileSize: file.size,
+      mimeType: file.type,
+      storageMethod: 'S3'
+    };
+    
+  } catch (s3Error) {
+    console.warn(`⚠️ S3 upload failed for ${documentType}, falling back to Base64:`, s3Error);
+    
+    // Fallback to Base64
+    try {
+      const base64 = await fileToBase64(file);
+      console.log(`✅ Base64 fallback successful for ${documentType}`);
+      
+      return {
+        documentType,
+        fileUrl: `data:${file.type};base64,${base64}`,
+        s3Key: null,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        storageMethod: 'Base64'
+      };
+      
+    } catch (base64Error: any) {
+      console.error(`❌ Both S3 and Base64 failed for ${documentType}:`, base64Error);
+      throw new Error(`Failed to process ${documentType}: ${base64Error.message}`);
+    }
+  }
+}
 
 // Helper function to convert file to base64 with better error handling
 async function fileToBase64(file: File): Promise<string> {

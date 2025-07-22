@@ -53,9 +53,18 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
         userId: doc.userId,
         documentType: doc.documentType,
         fileUrl: doc.fileUrl,
+        s3Key: doc.s3Key,
+        fileName: doc.fileName,
+        fileSize: doc.fileSize,
+        mimeType: doc.mimeType,
         status: doc.status,
         uploadedAt: doc.uploadedAt,
         verifiedAt: doc.verifiedAt,
+        verifiedBy: doc.verifiedBy,
+        rejectionReason: doc.rejectionReason,
+        notes: doc.notes,
+        isActive: doc.isActive,
+        version: doc.version,
         user: doc.user
       })),
       pagination: {
@@ -85,7 +94,9 @@ export const PUT = requireAdminAuth(async (request: NextRequest) => {
       where: { id: documentId },
       data: {
         status: status,
-        verifiedAt: status === 'VERIFIED' ? new Date() : null
+        verifiedAt: status === 'VERIFIED' ? new Date() : null,
+        verifiedBy: status === 'VERIFIED' ? admin.username : null,
+        notes: comments || null
       },
       include: {
         user: {
@@ -100,7 +111,7 @@ export const PUT = requireAdminAuth(async (request: NextRequest) => {
       }
     });
 
-    // Check if all user documents are verified
+    // If document is verified, check if all user documents are verified
     if (status === 'VERIFIED') {
       const userDocuments = await prisma.kycDocument.findMany({
         where: { userId: updatedDocument.userId }
@@ -109,7 +120,7 @@ export const PUT = requireAdminAuth(async (request: NextRequest) => {
       const allVerified = userDocuments.every(doc => doc.status === 'VERIFIED');
       
       if (allVerified) {
-        // Update user KYC status to verified
+        // Update user KYC status to VERIFIED
         await prisma.user.update({
           where: { id: updatedDocument.userId },
           data: { kycStatus: 'VERIFIED' }
@@ -117,22 +128,15 @@ export const PUT = requireAdminAuth(async (request: NextRequest) => {
       }
     }
 
-    // Send notification to user (if notification system is implemented)
-    // await notificationManager.sendNotification(updatedDocument.userId, {
-    //   type: 'kyc',
-    //   title: 'KYC Update',
-    //   message: `Your ${updatedDocument.documentType} document has been ${status.toLowerCase()}`,
-    //   data: { status, documentType: updatedDocument.documentType }
-    // });
-
     return NextResponse.json({
-      message: 'KYC document reviewed successfully',
+      success: true,
+      message: 'Document status updated successfully',
       document: updatedDocument
     });
   } catch (error) {
-    console.error('Admin KYC review error:', error);
+    console.error('Admin KYC update error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to update document status' },
       { status: 500 }
     );
   }
