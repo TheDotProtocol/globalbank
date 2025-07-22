@@ -228,6 +228,23 @@ export default function KYCVerificationPage() {
 
       console.log('📤 Submitting KYC documents to API...');
 
+      // First, test with debug endpoint
+      console.log('🔍 Testing with debug endpoint first...');
+      const testResponse = await fetch('/api/test-kyc-upload', {
+        method: 'POST',
+        body: formDataToSend
+      });
+
+      console.log('🔍 Test response status:', testResponse.status);
+      if (testResponse.ok) {
+        const testResult = await testResponse.json();
+        console.log('✅ Test successful:', testResult);
+      } else {
+        const testError = await testResponse.json();
+        console.error('❌ Test failed:', testError);
+      }
+
+      // Now try the real KYC upload
       const response = await fetch('/api/kyc/upload', {
         method: 'POST',
         headers: {
