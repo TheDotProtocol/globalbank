@@ -14,7 +14,8 @@ import {
   Eye,
   EyeOff,
   Smartphone,
-  Tablet
+  Tablet,
+  Image as ImageIcon
 } from 'lucide-react';
 
 interface KYCFormData {
@@ -210,6 +211,12 @@ export default function KYCVerificationPage() {
         return;
       }
 
+      console.log('📤 Starting KYC submission...', {
+        governmentId: formData.governmentId?.name,
+        proofOfAddress: formData.proofOfAddress?.name,
+        selfie: formData.selfie?.name
+      });
+
       const formDataToSend = new FormData();
       formDataToSend.append('governmentId', formData.governmentId);
       formDataToSend.append('proofOfAddress', formData.proofOfAddress);
@@ -219,7 +226,7 @@ export default function KYCVerificationPage() {
         formDataToSend.append(`additionalDocuments`, doc);
       });
 
-      console.log('📤 Submitting KYC documents...');
+      console.log('📤 Submitting KYC documents to API...');
 
       const response = await fetch('/api/kyc/upload', {
         method: 'POST',
@@ -229,17 +236,23 @@ export default function KYCVerificationPage() {
         body: formDataToSend
       });
 
+      console.log('📤 API Response status:', response.status);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ KYC submission successful:', result);
         alert('KYC documents submitted successfully! Please wait for admin approval.');
         router.push('/dashboard');
       } else {
         const errorData = await response.json();
-        const errorMessage = errorData.error || errorData.message || 'Failed to submit KYC documents';
+        console.error('❌ KYC submission failed:', errorData);
+        const errorMessage = errorData.error || errorData.message || errorData.details || 'Failed to submit KYC documents';
         alert(`Error: ${errorMessage}`);
       }
-    } catch (error) {
-      console.error('Error submitting KYC:', error);
-      alert('Error submitting KYC documents. Please try again.');
+    } catch (error: any) {
+      console.error('❌ Error submitting KYC:', error);
+      const errorMessage = error.message || 'Network error occurred. Please check your connection and try again.';
+      alert(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -344,21 +357,58 @@ export default function KYCVerificationPage() {
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Accepted formats: Passport, Driver's License, National ID Card, Voter's License
                 </p>
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  capture={isMobile ? "environment" : undefined}
-                  onChange={(e) => e.target.files?.[0] && handleFileUpload('governmentId', e.target.files[0])}
-                  className="hidden"
-                  id="governmentId"
-                />
-                <label
-                  htmlFor="governmentId"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
-                >
-                  <Upload className="h-5 w-5 mr-2" />
-                  {isMobile ? 'Take Photo or Choose File' : 'Choose File'}
-                </label>
+                
+                {isMobile ? (
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      capture="environment"
+                      onChange={(e) => e.target.files?.[0] && handleFileUpload('governmentId', e.target.files[0])}
+                      className="hidden"
+                      id="governmentId-camera"
+                    />
+                    <label
+                      htmlFor="governmentId-camera"
+                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 cursor-pointer"
+                    >
+                      <Camera className="h-5 w-5 mr-2" />
+                      Take Photo
+                    </label>
+                    
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => e.target.files?.[0] && handleFileUpload('governmentId', e.target.files[0])}
+                      className="hidden"
+                      id="governmentId-gallery"
+                    />
+                    <label
+                      htmlFor="governmentId-gallery"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
+                    >
+                      <ImageIcon className="h-5 w-5 mr-2" />
+                      Choose from Gallery
+                    </label>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => e.target.files?.[0] && handleFileUpload('governmentId', e.target.files[0])}
+                      className="hidden"
+                      id="governmentId"
+                    />
+                    <label
+                      htmlFor="governmentId"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
+                    >
+                      <Upload className="h-5 w-5 mr-2" />
+                      Choose File
+                    </label>
+                  </>
+                )}
               </div>
 
               {formData.governmentId && (
@@ -391,21 +441,58 @@ export default function KYCVerificationPage() {
                 <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Recent utility bill (electricity, water, gas, internet, etc.)
                 </p>
-                <input
-                  type="file"
-                  accept="image/*,.pdf"
-                  capture={isMobile ? "environment" : undefined}
-                  onChange={(e) => e.target.files?.[0] && handleFileUpload('proofOfAddress', e.target.files[0])}
-                  className="hidden"
-                  id="proofOfAddress"
-                />
-                <label
-                  htmlFor="proofOfAddress"
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
-                >
-                  <Upload className="h-5 w-5 mr-2" />
-                  {isMobile ? 'Take Photo or Choose File' : 'Choose File'}
-                </label>
+                
+                {isMobile ? (
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      capture="environment"
+                      onChange={(e) => e.target.files?.[0] && handleFileUpload('proofOfAddress', e.target.files[0])}
+                      className="hidden"
+                      id="proofOfAddress-camera"
+                    />
+                    <label
+                      htmlFor="proofOfAddress-camera"
+                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 cursor-pointer"
+                    >
+                      <Camera className="h-5 w-5 mr-2" />
+                      Take Photo
+                    </label>
+                    
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => e.target.files?.[0] && handleFileUpload('proofOfAddress', e.target.files[0])}
+                      className="hidden"
+                      id="proofOfAddress-gallery"
+                    />
+                    <label
+                      htmlFor="proofOfAddress-gallery"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
+                    >
+                      <ImageIcon className="h-5 w-5 mr-2" />
+                      Choose from Gallery
+                    </label>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => e.target.files?.[0] && handleFileUpload('proofOfAddress', e.target.files[0])}
+                      className="hidden"
+                      id="proofOfAddress"
+                    />
+                    <label
+                      htmlFor="proofOfAddress"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
+                    >
+                      <Upload className="h-5 w-5 mr-2" />
+                      Choose File
+                    </label>
+                  </>
+                )}
               </div>
 
               {formData.proofOfAddress && (
