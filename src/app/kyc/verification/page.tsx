@@ -12,7 +12,9 @@ import {
   ArrowRight,
   Loader2,
   Eye,
-  EyeOff
+  EyeOff,
+  Smartphone,
+  Tablet
 } from 'lucide-react';
 
 interface KYCFormData {
@@ -35,10 +37,30 @@ export default function KYCVerificationPage() {
   const [showSelfie, setShowSelfie] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     checkAuthAndKYCStatus();
+    detectMobileDevice();
   }, []);
+
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
+
+  const detectMobileDevice = () => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    setIsMobile(isMobileDevice);
+    console.log('📱 Device detected:', isMobileDevice ? 'Mobile/Tablet' : 'Desktop');
+  };
 
   const checkAuthAndKYCStatus = async () => {
     try {
@@ -69,6 +91,12 @@ export default function KYCVerificationPage() {
   };
 
   const handleFileUpload = (field: keyof KYCFormData, file: File) => {
+    console.log(`📁 File selected for ${field}:`, {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+    
     setFormData(prev => ({
       ...prev,
       [field]: file
@@ -85,6 +113,7 @@ export default function KYCVerificationPage() {
 
   const captureSelfie = () => {
     setShowSelfie(true);
+    setCameraError(null);
   };
 
   const takePhoto = () => {
@@ -93,32 +122,77 @@ export default function KYCVerificationPage() {
     const context = canvas.getContext('2d');
 
     if (video && canvas && context) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Use video dimensions for better quality on mobile
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+      
+      canvas.width = videoWidth;
+      canvas.height = videoHeight;
+      context.drawImage(video, 0, 0, videoWidth, videoHeight);
       
       canvas.toBlob((blob) => {
         if (blob) {
           const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
           setFormData(prev => ({ ...prev, selfie: file }));
           setCapturedImage(canvas.toDataURL('image/jpeg'));
+          console.log('📸 Selfie captured:', {
+            size: blob.size,
+            type: blob.type
+          });
         }
-      }, 'image/jpeg');
+      }, 'image/jpeg', 0.9); // Higher quality for mobile
     }
     setShowSelfie(false);
+    
+    // Stop camera stream
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
   };
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setCameraError(null);
+      
+      // Stop any existing stream
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
+      // Mobile-optimized camera constraints
+      const constraints = {
+        video: {
+          facingMode: 'user', // Use front camera on mobile
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          aspectRatio: { ideal: 1.7777777778 }
+        }
+      };
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      setStream(mediaStream);
+      
       const video = document.getElementById('video') as HTMLVideoElement;
       if (video) {
-        video.srcObject = stream;
-        video.play();
+        video.srcObject = mediaStream;
+        await video.play();
+        console.log('📹 Camera started successfully');
       }
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      alert('Unable to access camera. Please ensure camera permissions are granted.');
+    } catch (error: any) {
+      console.error('❌ Error accessing camera:', error);
+      let errorMessage = 'Unable to access camera. Please ensure camera permissions are granted.';
+      
+      if (error.name === 'NotAllowedError') {
+        errorMessage = 'Camera access denied. Please allow camera permissions in your browser settings.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage = 'No camera found on this device.';
+      } else if (error.name === 'NotSupportedError') {
+        errorMessage = 'Camera not supported on this device.';
+      }
+      
+      setCameraError(errorMessage);
+      alert(errorMessage);
     }
   };
 
@@ -144,6 +218,8 @@ export default function KYCVerificationPage() {
       formData.additionalDocuments.forEach((doc, index) => {
         formDataToSend.append(`additionalDocuments`, doc);
       });
+
+      console.log('📤 Submitting KYC documents...');
 
       const response = await fetch('/api/kyc/upload', {
         method: 'POST',
@@ -198,23 +274,33 @@ export default function KYCVerificationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
+        {/* Mobile Device Indicator */}
+        {isMobile && (
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+            <div className="flex items-center justify-center space-x-2 text-blue-800 dark:text-blue-200">
+              <Smartphone className="h-4 w-4" />
+              <span className="text-sm font-medium">Mobile Optimized Experience</span>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             KYC Verification
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             Complete your identity verification to access all banking features
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="max-w-2xl mx-auto mb-8">
+        <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
           <div className="flex items-center justify-between mb-4">
             {[1, 2, 3, 4].map((step) => (
               <div key={step} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
                   currentStep >= step 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
@@ -222,14 +308,14 @@ export default function KYCVerificationPage() {
                   {step}
                 </div>
                 {step < 4 && (
-                  <div className={`w-16 h-1 mx-2 ${
+                  <div className={`w-8 sm:w-16 h-1 mx-1 sm:mx-2 ${
                     currentStep > step ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
                   }`} />
                 )}
               </div>
             ))}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400 text-center">
+          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center">
             Step {currentStep} of 4: {
               currentStep === 1 ? 'Government ID' :
               currentStep === 2 ? 'Proof of Address' :
@@ -240,27 +326,28 @@ export default function KYCVerificationPage() {
         </div>
 
         {/* Form Content */}
-        <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+        <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-8">
           {currentStep === 1 && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="text-center">
-                <FileText className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+                <FileText className="h-12 w-12 sm:h-16 sm:w-16 text-blue-600 mx-auto mb-4" />
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-2">
                   Government ID Upload
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   Please upload a clear photo of your government-issued ID
                 </p>
               </div>
               
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 sm:p-8 text-center">
+                <Upload className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Accepted formats: Passport, Driver's License, National ID Card, Voter's License
                 </p>
                 <input
                   type="file"
                   accept="image/*,.pdf"
+                  capture={isMobile ? "environment" : undefined}
                   onChange={(e) => e.target.files?.[0] && handleFileUpload('governmentId', e.target.files[0])}
                   className="hidden"
                   id="governmentId"
@@ -270,15 +357,15 @@ export default function KYCVerificationPage() {
                   className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
                 >
                   <Upload className="h-5 w-5 mr-2" />
-                  Choose File
+                  {isMobile ? 'Take Photo or Choose File' : 'Choose File'}
                 </label>
               </div>
 
               {formData.governmentId && (
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                   <div className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                    <span className="text-green-800 dark:text-green-200">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mr-2" />
+                    <span className="text-xs sm:text-sm text-green-800 dark:text-green-200">
                       {formData.governmentId.name} uploaded successfully
                     </span>
                   </div>
@@ -288,25 +375,26 @@ export default function KYCVerificationPage() {
           )}
 
           {currentStep === 2 && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="text-center">
-                <Home className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+                <Home className="h-12 w-12 sm:h-16 sm:w-16 text-blue-600 mx-auto mb-4" />
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-2">
                   Proof of Address
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   Upload a recent utility bill (within 2 months)
                 </p>
               </div>
               
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 sm:p-8 text-center">
+                <Upload className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Recent utility bill (electricity, water, gas, internet, etc.)
                 </p>
                 <input
                   type="file"
                   accept="image/*,.pdf"
+                  capture={isMobile ? "environment" : undefined}
                   onChange={(e) => e.target.files?.[0] && handleFileUpload('proofOfAddress', e.target.files[0])}
                   className="hidden"
                   id="proofOfAddress"
@@ -316,15 +404,15 @@ export default function KYCVerificationPage() {
                   className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
                 >
                   <Upload className="h-5 w-5 mr-2" />
-                  Choose File
+                  {isMobile ? 'Take Photo or Choose File' : 'Choose File'}
                 </label>
               </div>
 
               {formData.proofOfAddress && (
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                   <div className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                    <span className="text-green-800 dark:text-green-200">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mr-2" />
+                    <span className="text-xs sm:text-sm text-green-800 dark:text-green-200">
                       {formData.proofOfAddress.name} uploaded successfully
                     </span>
                   </div>
@@ -334,28 +422,28 @@ export default function KYCVerificationPage() {
           )}
 
           {currentStep === 3 && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="text-center">
-                <Camera className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+                <Camera className="h-12 w-12 sm:h-16 sm:w-16 text-blue-600 mx-auto mb-4" />
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-2">
                   Selfie Verification
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   Take a clear selfie for identity verification
                 </p>
               </div>
 
               {!showSelfie && !capturedImage && (
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-                  <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 sm:p-8 text-center">
+                  <Camera className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Click below to start camera and take a selfie
                   </p>
                   <button
                     onClick={captureSelfie}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base"
                   >
-                    <Camera className="h-5 w-5 mr-2" />
+                    <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                     Start Camera
                   </button>
                 </div>
@@ -368,17 +456,23 @@ export default function KYCVerificationPage() {
                     className="w-full rounded-lg"
                     autoPlay
                     playsInline
+                    muted
                   />
+                  {cameraError && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-3">
+                      <p className="text-xs sm:text-sm text-red-800 dark:text-red-200">{cameraError}</p>
+                    </div>
+                  )}
                   <div className="flex justify-center space-x-4">
                     <button
                       onClick={startCamera}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm sm:text-base"
                     >
                       Start Camera
                     </button>
                     <button
                       onClick={takePhoto}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base"
                     >
                       Take Photo
                     </button>
@@ -396,15 +490,15 @@ export default function KYCVerificationPage() {
                   />
                   <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                     <div className="flex items-center">
-                      <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                      <span className="text-green-800 dark:text-green-200">
+                      <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mr-2" />
+                      <span className="text-xs sm:text-sm text-green-800 dark:text-green-200">
                         Selfie captured successfully
                       </span>
                     </div>
                   </div>
                   <button
                     onClick={captureSelfie}
-                    className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm sm:text-base"
                   >
                     Retake Photo
                   </button>
@@ -414,36 +508,36 @@ export default function KYCVerificationPage() {
           )}
 
           {currentStep === 4 && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="text-center">
-                <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+                <CheckCircle className="h-12 w-12 sm:h-16 sm:w-16 text-green-600 mx-auto mb-4" />
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-2">
                   Review & Submit
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
                   Please review your uploaded documents before submission
                 </p>
               </div>
 
               <div className="space-y-4">
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Uploaded Documents:</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2 text-sm sm:text-base">Uploaded Documents:</h3>
                   <ul className="space-y-2">
                     <li className="flex items-center">
                       <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                      <span className="text-gray-700 dark:text-gray-300">
+                      <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                         Government ID: {formData.governmentId?.name}
                       </span>
                     </li>
                     <li className="flex items-center">
                       <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                      <span className="text-gray-700 dark:text-gray-300">
+                      <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                         Proof of Address: {formData.proofOfAddress?.name}
                       </span>
                     </li>
                     <li className="flex items-center">
                       <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                      <span className="text-gray-700 dark:text-gray-300">
+                      <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                         Selfie: Captured successfully
                       </span>
                     </li>
@@ -451,8 +545,8 @@ export default function KYCVerificationPage() {
                 </div>
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Important Notes:</h3>
-                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 text-sm sm:text-base">Important Notes:</h3>
+                  <ul className="text-xs sm:text-sm text-blue-800 dark:text-blue-200 space-y-1">
                     <li>• Your documents will be reviewed by our admin team</li>
                     <li>• Processing time: 24-48 hours</li>
                     <li>• You'll receive email notifications on status updates</li>
@@ -464,11 +558,11 @@ export default function KYCVerificationPage() {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
+          <div className="flex justify-between mt-6 sm:mt-8">
             <button
               onClick={prevStep}
               disabled={currentStep === 1}
-              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 sm:px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
               Previous
             </button>
@@ -477,7 +571,7 @@ export default function KYCVerificationPage() {
               <button
                 onClick={nextStep}
                 disabled={!isStepValid(currentStep)}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm sm:text-base"
               >
                 Next
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -486,7 +580,7 @@ export default function KYCVerificationPage() {
               <button
                 onClick={submitKYC}
                 disabled={loading}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                className="px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center text-sm sm:text-base"
               >
                 {loading ? (
                   <>
