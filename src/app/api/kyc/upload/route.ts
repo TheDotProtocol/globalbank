@@ -8,9 +8,12 @@ export const POST = requireAuth(async (request: NextRequest) => {
     const user = (request as any).user;
     
     console.log('🔍 KYC upload request for user:', user.email);
+    console.log('🔍 User KYC status:', user.kycStatus);
 
     // Parse the multipart form data
     const formData = await request.formData();
+    
+    console.log('📋 FormData keys:', Array.from(formData.keys()));
     
     const governmentId = formData.get('governmentId') as File;
     const proofOfAddress = formData.get('proofOfAddress') as File;
@@ -19,14 +22,24 @@ export const POST = requireAuth(async (request: NextRequest) => {
 
     console.log('📁 Files received:', {
       governmentId: governmentId?.name,
+      governmentIdType: governmentId?.type,
+      governmentIdSize: governmentId?.size,
       proofOfAddress: proofOfAddress?.name,
+      proofOfAddressType: proofOfAddress?.type,
+      proofOfAddressSize: proofOfAddress?.size,
       selfie: selfie?.name,
+      selfieType: selfie?.type,
+      selfieSize: selfie?.size,
       additionalCount: additionalDocuments.length
     });
 
     // Validate required documents
     if (!governmentId || !proofOfAddress || !selfie) {
-      console.log('❌ Missing required documents');
+      console.log('❌ Missing required documents:', {
+        hasGovernmentId: !!governmentId,
+        hasProofOfAddress: !!proofOfAddress,
+        hasSelfie: !!selfie
+      });
       return NextResponse.json(
         { error: 'All required documents must be uploaded' },
         { status: 400 }
@@ -36,10 +49,12 @@ export const POST = requireAuth(async (request: NextRequest) => {
     // Validate file types
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
     
+    console.log('🔍 Validating file types...');
+    
     if (!allowedTypes.includes(governmentId.type)) {
       console.log('❌ Invalid government ID type:', governmentId.type);
       return NextResponse.json(
-        { error: 'Government ID must be an image (JPEG, PNG) or PDF' },
+        { error: `Government ID must be an image (JPEG, PNG) or PDF. Received: ${governmentId.type}` },
         { status: 400 }
       );
     }
@@ -47,7 +62,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     if (!allowedTypes.includes(proofOfAddress.type)) {
       console.log('❌ Invalid proof of address type:', proofOfAddress.type);
       return NextResponse.json(
-        { error: 'Proof of address must be an image (JPEG, PNG) or PDF' },
+        { error: `Proof of address must be an image (JPEG, PNG) or PDF. Received: ${proofOfAddress.type}` },
         { status: 400 }
       );
     }
@@ -55,7 +70,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     if (!['image/jpeg', 'image/png', 'image/jpg'].includes(selfie.type)) {
       console.log('❌ Invalid selfie type:', selfie.type);
       return NextResponse.json(
-        { error: 'Selfie must be an image (JPEG, PNG)' },
+        { error: `Selfie must be an image (JPEG, PNG). Received: ${selfie.type}` },
         { status: 400 }
       );
     }
@@ -63,10 +78,12 @@ export const POST = requireAuth(async (request: NextRequest) => {
     // Validate file sizes (max 10MB per file)
     const maxSize = 10 * 1024 * 1024; // 10MB
     
+    console.log('🔍 Validating file sizes...');
+    
     if (governmentId.size > maxSize) {
       console.log('❌ Government ID too large:', governmentId.size);
       return NextResponse.json(
-        { error: 'Government ID file size must be less than 10MB' },
+        { error: `Government ID file size must be less than 10MB. Received: ${(governmentId.size / 1024 / 1024).toFixed(2)}MB` },
         { status: 400 }
       );
     }
@@ -74,7 +91,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     if (proofOfAddress.size > maxSize) {
       console.log('❌ Proof of address too large:', proofOfAddress.size);
       return NextResponse.json(
-        { error: 'Proof of address file size must be less than 10MB' },
+        { error: `Proof of address file size must be less than 10MB. Received: ${(proofOfAddress.size / 1024 / 1024).toFixed(2)}MB` },
         { status: 400 }
       );
     }
@@ -82,7 +99,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     if (selfie.size > maxSize) {
       console.log('❌ Selfie too large:', selfie.size);
       return NextResponse.json(
-        { error: 'Selfie file size must be less than 10MB' },
+        { error: `Selfie file size must be less than 10MB. Received: ${(selfie.size / 1024 / 1024).toFixed(2)}MB` },
         { status: 400 }
       );
     }
