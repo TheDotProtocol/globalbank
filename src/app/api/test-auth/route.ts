@@ -1,25 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
 
-export const GET = requireAuth(async (request: NextRequest) => {
+export const GET = async (request: NextRequest) => {
   try {
-    const user = (request as any).user;
+    const authHeader = request.headers.get('authorization');
     
+    console.log('🔍 Test Auth - Headers received:', {
+      authorization: authHeader ? 'Present' : 'Missing',
+      userAgent: request.headers.get('user-agent'),
+      contentType: request.headers.get('content-type')
+    });
+
     return NextResponse.json({
       success: true,
-      message: 'Authentication successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName
+      message: 'Test auth endpoint working',
+      headers: {
+        authorization: authHeader ? 'Present' : 'Missing',
+        userAgent: request.headers.get('user-agent')?.substring(0, 50) + '...',
+        contentType: request.headers.get('content-type')
       }
     });
+
   } catch (error: any) {
-    console.error('Test auth error:', error);
+    console.error('❌ Test auth error:', error);
     return NextResponse.json(
-      { error: 'Authentication test failed' },
+      { error: 'Test failed', details: error.message },
       { status: 500 }
     );
   }
-}); 
+}; 
