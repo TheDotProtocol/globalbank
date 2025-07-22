@@ -157,8 +157,9 @@ export default function KYCVerificationPage() {
         alert('KYC documents submitted successfully! Please wait for admin approval.');
         router.push('/dashboard');
       } else {
-        const error = await response.json();
-        alert(`Error: ${error.message}`);
+        const errorData = await response.json();
+        const errorMessage = errorData.error || errorData.message || 'Failed to submit KYC documents';
+        alert(`Error: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error submitting KYC:', error);

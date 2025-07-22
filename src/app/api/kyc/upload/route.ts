@@ -84,9 +84,6 @@ export const POST = requireAuth(async (request: NextRequest) => {
           userId: user.id,
           documentType: 'ID_PROOF',
           fileUrl: `data:${governmentId.type};base64,${await fileToBase64(governmentId)}`,
-          fileName: governmentId.name,
-          fileSize: governmentId.size,
-          mimeType: governmentId.type,
           status: 'PENDING'
         }
       }),
@@ -96,9 +93,6 @@ export const POST = requireAuth(async (request: NextRequest) => {
           userId: user.id,
           documentType: 'ADDRESS_PROOF',
           fileUrl: `data:${proofOfAddress.type};base64,${await fileToBase64(proofOfAddress)}`,
-          fileName: proofOfAddress.name,
-          fileSize: proofOfAddress.size,
-          mimeType: proofOfAddress.type,
           status: 'PENDING'
         }
       }),
@@ -108,9 +102,6 @@ export const POST = requireAuth(async (request: NextRequest) => {
           userId: user.id,
           documentType: 'SELFIE_PHOTO',
           fileUrl: `data:${selfie.type};base64,${await fileToBase64(selfie)}`,
-          fileName: selfie.name,
-          fileSize: selfie.size,
-          mimeType: selfie.type,
           status: 'PENDING'
         }
       })
