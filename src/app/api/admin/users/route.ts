@@ -77,11 +77,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
               documentType: true,
               status: true,
               uploadedAt: true,
-              verifiedAt: true,
-              fileName: true,
-              fileSize: true,
-              rejectionReason: true,
-              notes: true
+              verifiedAt: true
             }
           },
           fixedDeposits: {

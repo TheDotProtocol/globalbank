@@ -745,8 +745,6 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                             <div className="text-xs text-gray-500 space-y-1">
-                              {doc.fileName && <div>File: {doc.fileName}</div>}
-                              {doc.fileSize && <div>Size: {(doc.fileSize / 1024 / 1024).toFixed(2)} MB</div>}
                               <div>Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}</div>
                               {doc.verifiedAt && <div>Verified: {new Date(doc.verifiedAt).toLocaleDateString()}</div>}
                             </div>
