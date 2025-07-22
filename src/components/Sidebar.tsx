@@ -76,11 +76,16 @@ export default function Sidebar({
       label: 'Fixed Deposits',
       icon: TrendingUp,
       onClick: () => {
-        if (setActiveTab) {
-          setActiveTab('fixed-deposits');
-        } else {
-          router.push('/dashboard');
-        }
+        router.push('/dashboard/fixed-deposits');
+        if (isMobile) setSidebarOpen(false);
+      }
+    },
+    {
+      id: 'e-checks',
+      label: 'E-Checks',
+      icon: FileText,
+      onClick: () => {
+        router.push('/dashboard/e-checks');
         if (isMobile) setSidebarOpen(false);
       }
     },
@@ -107,6 +112,7 @@ export default function Sidebar({
   const getActiveState = (itemId: string) => {
     if (itemId === 'overview' && activeTab === 'overview') return true;
     if (itemId === 'fixed-deposits' && activeTab === 'fixed-deposits') return true;
+    if (itemId === 'e-checks' && activeTab === 'e-checks') return true;
     if (itemId === 'transactions' && window.location.pathname.includes('/transactions')) return true;
     if (itemId === 'cards' && window.location.pathname.includes('/cards')) return true;
     if (itemId === 'profile' && window.location.pathname.includes('/profile')) return true;

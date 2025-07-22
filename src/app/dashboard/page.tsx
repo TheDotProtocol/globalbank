@@ -118,12 +118,45 @@ export default function Dashboard() {
   const [certificateModalOpen, setCertificateModalOpen] = useState(false);
   const [selectedCertificate, setSelectedCertificate] = useState<any>(null);
   
+  // AI Chat states
+  const [aiInput, setAiInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiMessages, setAiMessages] = useState<Array<{
+    id: number;
+    type: 'ai' | 'user';
+    content: string;
+    timestamp: Date;
+  }>>([
+    {
+      id: 1,
+      type: 'ai',
+      content: 'Hey there! 👋 I\'m your virtual banker, how\'s it going? I\'m here to help you with anything banking-related - from checking your account details to investment advice, or even just chatting about your financial goals. What can I help you with today?',
+      timestamp: new Date()
+    }
+  ]);
+  
   const router = useRouter();
   const { showToast } = useToast();
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
+
+  // Update AI message when user data is loaded
+  useEffect(() => {
+    if (user?.firstName) {
+      setAiMessages(prev => {
+        const updatedMessages = [...prev];
+        if (updatedMessages[0] && updatedMessages[0].type === 'ai') {
+          updatedMessages[0] = {
+            ...updatedMessages[0],
+            content: `Hey ${user.firstName}! 👋 I'm your virtual banker, how's it going? I'm here to help you with anything banking-related - from checking your account details to investment advice, or even just chatting about your financial goals. What can I help you with today?`
+          };
+        }
+        return updatedMessages;
+      });
+    }
+  }, [user?.firstName]);
 
   const fetchDashboardData = async () => {
     try {
@@ -253,28 +286,106 @@ export default function Dashboard() {
     }
   };
 
-  const handleCertificateGeneration = async (depositId: string) => {
+  const testAuthentication = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/fixed-deposits/${depositId}/certificate`, {
+      
+      if (!token) {
+        console.log('❌ No token found in localStorage');
+        return false;
+      }
+
+      console.log('🔍 Testing authentication...');
+      
+      const response = await fetch('/api/test-auth', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
+      console.log('🔍 Test auth response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Authentication test successful:', data);
+        return true;
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Authentication test failed:', errorText);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Authentication test error:', error);
+      return false;
+    }
+  };
+
+  const handleCertificateGeneration = async (depositId: string) => {
+    try {
+      // First test authentication
+      const isAuthenticated = await testAuthentication();
+      
+      if (!isAuthenticated) {
+        showToast('Authentication failed. Please log in again.', 'error');
+        router.push('/login');
+        return;
+      }
+
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        showToast('Please log in to generate certificates', 'error');
+        router.push('/login');
+        return;
+      }
+
+      console.log('🔍 Generating certificate for deposit:', depositId);
+      console.log('🔍 Token exists:', !!token);
+      console.log('🔍 Token length:', token.length);
+      console.log('🔍 Token starts with:', token.substring(0, 20) + '...');
+
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      console.log('🔍 Request headers:', headers);
+
+      const response = await fetch(`/api/fixed-deposits/${depositId}/certificate`, {
+        method: 'GET',
+        headers: headers
+      });
+
+      console.log('🔍 Certificate API response status:', response.status);
+      console.log('🔍 Certificate API response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
         const certificateData = await response.json();
+        console.log('✅ Certificate data received:', certificateData);
         // Export the certificate directly
         await exportFixedDepositCertificate(certificateData.certificate, 'pdf');
         showToast('Fixed Deposit Certificate generated successfully', 'success');
       } else {
-        const errorData = await response.json();
-        console.error('Certificate generation error:', errorData);
-        showToast(`Error generating certificate: ${errorData.error}`, 'error');
+        const errorText = await response.text();
+        console.error('❌ Certificate generation error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText: errorText
+        });
+        
+        let errorMessage = 'Error generating certificate';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `HTTP ${response.status}: ${errorText}`;
+        }
+        
+        showToast(errorMessage, 'error');
       }
     } catch (error) {
-      console.error('Error generating certificate:', error);
+      console.error('❌ Error generating certificate:', error);
       showToast('Error generating certificate', 'error');
     }
   };
@@ -364,6 +475,68 @@ export default function Dashboard() {
         return 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400';
       default:
         return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
+    }
+  };
+
+  const handleAISubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aiInput.trim()) return;
+
+    const userMessage = {
+      id: Date.now(),
+      type: 'user' as const,
+      content: aiInput,
+      timestamp: new Date()
+    };
+
+    setAiMessages(prev => [...prev, userMessage]);
+    setAiInput('');
+    setAiLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          message: aiInput,
+          userContext: {
+            firstName: user?.firstName,
+            lastName: user?.lastName,
+            email: user?.email,
+            accounts: accounts,
+            fixedDeposits: fixedDeposits,
+            recentTransactions: transactions
+          }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const aiResponse = {
+          id: Date.now() + 1,
+          type: 'ai' as const,
+          content: data.response,
+          timestamp: new Date()
+        };
+        setAiMessages(prev => [...prev, aiResponse]);
+      } else {
+        throw new Error('Failed to get AI response');
+      }
+    } catch (error) {
+      console.error('AI chat error:', error);
+      const errorResponse = {
+        id: Date.now() + 1,
+        type: 'ai' as const,
+        content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment, or feel free to contact our support team if you need immediate assistance.",
+        timestamp: new Date()
+      };
+      setAiMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setAiLoading(false);
     }
   };
 

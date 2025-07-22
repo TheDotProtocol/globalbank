@@ -143,6 +143,7 @@ model KycDocument {
   userId      String
   documentType DocumentType
   fileUrl     String
+  s3Key       String?   // S3 object key for the file
   fileName    String?
   fileSize    Int?
   mimeType    String?

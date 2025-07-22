@@ -28,7 +28,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
       where.kycStatus = kycStatus.toUpperCase();
     }
 
-    // Get users with basic data - avoid cards table for now
+    // Get users with complete data including cards
     const [users, totalCount] = await Promise.all([
       prisma.user.findMany({
         where,
@@ -53,7 +53,22 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
               balance: true,
               currency: true,
               isActive: true,
-              createdAt: true
+              createdAt: true,
+              cards: {
+                select: {
+                  id: true,
+                  cardNumber: true,
+                  cardType: true,
+                  status: true,
+                  expiryDate: true,
+                  cvv: true,
+                  isVirtual: true,
+                  isActive: true,
+                  dailyLimit: true,
+                  monthlyLimit: true,
+                  createdAt: true
+                }
+              }
             }
           },
           kycDocuments: {
@@ -62,7 +77,11 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
               documentType: true,
               status: true,
               uploadedAt: true,
-              verifiedAt: true
+              verifiedAt: true,
+              fileName: true,
+              fileSize: true,
+              rejectionReason: true,
+              notes: true
             }
           },
           fixedDeposits: {
@@ -102,7 +121,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
     const usersWithData = users.map(user => {
       const userTransactions = transactions.filter(tx => tx.userId === user.id);
       const totalBalance = user.accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
-      const totalCards = 0; // Skip cards for now due to schema issues
+      const totalCards = user.accounts.reduce((sum, acc) => sum + acc.cards.length, 0);
       const totalTransactions = userTransactions.length;
 
       return {
@@ -117,7 +136,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
         updatedAt: user.updatedAt,
         accounts: user.accounts.map(account => ({
           ...account,
-          cards: [], // Empty array for now
+          cards: account.cards,
           transactions: userTransactions.filter(tx => tx.userId === user.id)
         })),
         kycDocuments: user.kycDocuments,

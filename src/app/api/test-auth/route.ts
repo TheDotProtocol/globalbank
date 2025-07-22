@@ -7,7 +7,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
     
     return NextResponse.json({
       success: true,
-      message: 'Authentication working',
+      message: 'Authentication successful',
       user: {
         id: user.id,
         email: user.email,
@@ -15,7 +15,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
         lastName: user.lastName
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Test auth error:', error);
     return NextResponse.json(
       { error: 'Authentication test failed' },

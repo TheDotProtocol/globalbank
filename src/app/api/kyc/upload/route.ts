@@ -1,113 +1,158 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
     const user = (request as any).user;
+    
+    console.log('🔍 KYC upload request for user:', user.email);
+
+    // Parse the multipart form data
     const formData = await request.formData();
     
-    const documentType = formData.get('documentType') as string;
-    const file = formData.get('file') as File;
+    const governmentId = formData.get('governmentId') as File;
+    const proofOfAddress = formData.get('proofOfAddress') as File;
+    const selfie = formData.get('selfie') as File;
+    const additionalDocuments = formData.getAll('additionalDocuments') as File[];
 
-    // Validate input
-    if (!documentType || !file) {
+    // Validate required documents
+    if (!governmentId || !proofOfAddress || !selfie) {
+      console.log('❌ Missing required documents');
       return NextResponse.json(
-        { error: 'Document type and file are required' },
+        { error: 'All required documents must be uploaded' },
         { status: 400 }
       );
     }
 
-    // Validate document type
-    const validDocumentTypes = ['ID_PROOF', 'ADDRESS_PROOF', 'INCOME_PROOF', 'BANK_STATEMENT'];
-    if (!validDocumentTypes.includes(documentType)) {
-      return NextResponse.json(
-        { error: 'Invalid document type' },
-        { status: 400 }
-      );
-    }
-
-    // Validate file size (max 10MB)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: 'File size must be less than 10MB' },
-        { status: 400 }
-      );
-    }
-
-    // Validate file type
+    // Validate file types
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
-    if (!allowedTypes.includes(file.type)) {
+    
+    if (!allowedTypes.includes(governmentId.type)) {
       return NextResponse.json(
-        { error: 'Only JPEG, PNG, and PDF files are allowed' },
+        { error: 'Government ID must be an image (JPEG, PNG) or PDF' },
         { status: 400 }
       );
     }
 
-    // In a real implementation, you would:
-    // 1. Upload file to cloud storage (AWS S3, Google Cloud Storage, etc.)
-    // 2. Get the file URL
-    // 3. Store the URL in the database
+    if (!allowedTypes.includes(proofOfAddress.type)) {
+      return NextResponse.json(
+        { error: 'Proof of address must be an image (JPEG, PNG) or PDF' },
+        { status: 400 }
+      );
+    }
+
+    if (!['image/jpeg', 'image/png', 'image/jpg'].includes(selfie.type)) {
+      return NextResponse.json(
+        { error: 'Selfie must be an image (JPEG, PNG)' },
+        { status: 400 }
+      );
+    }
+
+    // Validate file sizes (max 10MB per file)
+    const maxSize = 10 * 1024 * 1024; // 10MB
     
-    // For now, we'll simulate file upload
-    const fileName = `${user.id}_${documentType}_${Date.now()}.${file.type.split('/')[1]}`;
-    const fileUrl = `https://storage.globaldotbank.org/kyc/${fileName}`;
+    if (governmentId.size > maxSize) {
+      return NextResponse.json(
+        { error: 'Government ID file size must be less than 10MB' },
+        { status: 400 }
+      );
+    }
 
-    // Check if document type already exists for this user
-    const existingDocument = await prisma.kycDocument.findFirst({
-      where: {
-        userId: user.id,
-        documentType: documentType as any
-      }
-    });
+    if (proofOfAddress.size > maxSize) {
+      return NextResponse.json(
+        { error: 'Proof of address file size must be less than 10MB' },
+        { status: 400 }
+      );
+    }
 
-    if (existingDocument) {
-      // Update existing document
-      const updatedDocument = await prisma.kycDocument.update({
-        where: { id: existingDocument.id },
-        data: {
-          fileUrl,
-          status: 'PENDING',
-          uploadedAt: new Date()
-        }
-      });
+    if (selfie.size > maxSize) {
+      return NextResponse.json(
+        { error: 'Selfie file size must be less than 10MB' },
+        { status: 400 }
+      );
+    }
 
-      return NextResponse.json({
-        message: 'Document updated successfully',
-        document: {
-          id: updatedDocument.id,
-          documentType: updatedDocument.documentType,
-          status: updatedDocument.status,
-          uploadedAt: updatedDocument.uploadedAt
-        }
-      });
-    } else {
-      // Create new document
-      const newDocument = await prisma.kycDocument.create({
+    // For now, we'll store file metadata in the database
+    // In production, these would be uploaded to S3 and we'd store the URLs
+    
+    // Create KYC documents
+    const documents = await Promise.all([
+      // Government ID
+      prisma.kycDocument.create({
         data: {
           userId: user.id,
-          documentType: documentType as any,
-          fileUrl,
+          documentType: 'ID_PROOF',
+          fileUrl: `data:${governmentId.type};base64,${await fileToBase64(governmentId)}`,
+          fileName: governmentId.name,
+          fileSize: governmentId.size,
+          mimeType: governmentId.type,
           status: 'PENDING'
         }
-      });
-
-      return NextResponse.json({
-        message: 'Document uploaded successfully',
-        document: {
-          id: newDocument.id,
-          documentType: newDocument.documentType,
-          status: newDocument.status,
-          uploadedAt: newDocument.uploadedAt
+      }),
+      // Proof of Address
+      prisma.kycDocument.create({
+        data: {
+          userId: user.id,
+          documentType: 'ADDRESS_PROOF',
+          fileUrl: `data:${proofOfAddress.type};base64,${await fileToBase64(proofOfAddress)}`,
+          fileName: proofOfAddress.name,
+          fileSize: proofOfAddress.size,
+          mimeType: proofOfAddress.type,
+          status: 'PENDING'
         }
-      }, { status: 201 });
-    }
-  } catch (error) {
-    console.error('KYC upload error:', error);
+      }),
+      // Selfie
+      prisma.kycDocument.create({
+        data: {
+          userId: user.id,
+          documentType: 'SELFIE_PHOTO',
+          fileUrl: `data:${selfie.type};base64,${await fileToBase64(selfie)}`,
+          fileName: selfie.name,
+          fileSize: selfie.size,
+          mimeType: selfie.type,
+          status: 'PENDING'
+        }
+      })
+    ]);
+
+    // Update user KYC status to PENDING
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { kycStatus: 'PENDING' }
+    });
+
+    console.log('✅ KYC documents created:', documents.length);
+
+    return NextResponse.json({
+      success: true,
+      message: 'KYC documents submitted successfully',
+      documentsCount: documents.length
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error in KYC upload:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Failed to upload KYC documents', 
+        details: error.message 
+      },
       { status: 500 }
     );
   }
-}); 
+});
+
+// Helper function to convert file to base64
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = error => reject(error);
+  });
+} 

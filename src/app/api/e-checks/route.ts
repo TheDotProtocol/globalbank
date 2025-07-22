@@ -1,83 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-// Generate unique check number
-function generateCheckNumber(): string {
-  const timestamp = Date.now().toString();
-  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `EC${timestamp.slice(-6)}${random}`;
-}
-
-// Get all user e-checks
-export const GET = requireAuth(async (request: NextRequest) => {
-  try {
-    const user = (request as any).user;
-    const { searchParams } = new URL(request.url);
-    
-    const status = searchParams.get('status');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-
-    const whereClause: any = { userId: user.id };
-    if (status) {
-      whereClause.status = status;
-    }
-
-    const eChecks = await prisma.eCheck.findMany({
-      where: whereClause,
-      include: {
-        account: {
-          select: {
-            accountNumber: true,
-            accountType: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit
-    });
-
-    const totalCount = await prisma.eCheck.count({
-      where: whereClause
-    });
-
-    return NextResponse.json({
-      eChecks: eChecks.map(check => ({
-        id: check.id,
-        checkNumber: check.checkNumber,
-        payeeName: check.payeeName,
-        amount: check.amount,
-        memo: check.memo,
-        status: check.status,
-        clearedAt: check.clearedAt,
-        createdAt: check.createdAt,
-        account: check.account
-      })),
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit)
-      }
-    });
-  } catch (error) {
-    console.error('Get e-checks error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-});
-
-// Create new e-check
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
     const user = (request as any).user;
-    const { accountId, payeeName, amount, memo } = await request.json();
+    const { 
+      accountId, 
+      payeeName, 
+      amount, 
+      memo = '',
+      selfieImage = null,
+      checkType = 'ACCOUNT_ONLY' // ACCOUNT_ONLY, CASHIERS
+    } = await request.json();
 
-    // Validate input
+    console.log('🔍 E-Check creation request from user:', user.email);
+
+    // Validate required fields
     if (!accountId || !payeeName || !amount) {
       return NextResponse.json(
         { error: 'Account ID, payee name, and amount are required' },
@@ -86,62 +25,107 @@ export const POST = requireAuth(async (request: NextRequest) => {
     }
 
     // Validate amount
-    if (amount <= 0) {
+    const checkAmount = parseFloat(amount);
+    if (isNaN(checkAmount) || checkAmount <= 0) {
       return NextResponse.json(
-        { error: 'Amount must be greater than 0' },
+        { error: 'Invalid check amount' },
         { status: 400 }
       );
     }
 
-    // Verify account belongs to user
+    // Get account and verify ownership
     const account = await prisma.account.findFirst({
       where: {
         id: accountId,
-        userId: user.id,
-        isActive: true
+        userId: user.id
       }
     });
 
     if (!account) {
       return NextResponse.json(
-        { error: 'Account not found or not accessible' },
+        { error: 'Account not found or access denied' },
         { status: 404 }
       );
     }
 
     // Check sufficient balance
-    if (Number(account.balance) < Number(amount)) {
+    const currentBalance = parseFloat(account.balance.toString());
+    if (currentBalance < checkAmount) {
       return NextResponse.json(
         { error: 'Insufficient balance in account' },
         { status: 400 }
       );
     }
 
-    // Generate unique check number
-    let checkNumber: string = "";
-    let isUnique = false;
-    
-    while (!isUnique) {
-      checkNumber = generateCheckNumber();
-      const existingCheck = await prisma.eCheck.findUnique({
-        where: { checkNumber }
-      });
-      if (!existingCheck) {
-        isUnique = true;
+    // Generate unique check number (format: xxxxx050611)
+    const baseCheckNumber = '050611';
+    const randomPrefix = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+    const checkNumber = `${randomPrefix}${baseCheckNumber}`;
+
+    // Generate unique check ID
+    const checkId = `CHK_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Create check record
+    const check = await prisma.eCheck.create({
+      data: {
+        id: checkId,
+        checkNumber,
+        accountId,
+        userId: user.id,
+        payeeName,
+        amount: checkAmount.toString(),
+        memo,
+        status: 'PENDING'
       }
+    });
+
+    console.log('✅ E-Check created:', checkId);
+
+    return NextResponse.json({
+      success: true,
+      message: 'E-Check created successfully and pending admin approval',
+      check: {
+        id: check.id,
+        checkNumber: check.checkNumber,
+        amount: check.amount,
+        payeeName: check.payeeName,
+        status: check.status,
+        createdAt: check.createdAt
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ E-Check creation error:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to create E-Check', 
+        details: error.message 
+      },
+      { status: 500 }
+    );
+  }
+});
+
+export const GET = requireAuth(async (request: NextRequest) => {
+  try {
+    const user = (request as any).user;
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const offset = parseInt(searchParams.get('offset') || '0');
+    const status = searchParams.get('status');
+
+    console.log('🔍 Fetching E-Checks for user:', user.email);
+
+    const whereClause: any = { userId: user.id };
+    if (status) {
+      whereClause.status = status;
     }
 
-    // Create e-check
-    const eCheck = await prisma.eCheck.create({
-      data: {
-        userId: user.id,
-        accountId,
-        checkNumber,
-        payeeName,
-        amount,
-        memo: memo || null,
-        status: 'PENDING'
-      },
+    const checks = await prisma.eCheck.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
       include: {
         account: {
           select: {
@@ -152,42 +136,38 @@ export const POST = requireAuth(async (request: NextRequest) => {
       }
     });
 
-    // Deduct amount from account balance
-    await prisma.account.update({
-      where: { id: accountId },
-      data: { balance: Number(account.balance) - Number(amount) }
-    });
-
-    // Create transaction record
-    await prisma.transaction.create({
-      data: {
-        accountId,
-        userId: user.id,
-        type: 'DEBIT',
-        amount,
-        description: `E-Check #${checkNumber} to ${payeeName}`,
-        reference: `ECHECK${checkNumber}`,
-        status: 'COMPLETED'
-      }
+    const totalCount = await prisma.eCheck.count({
+      where: whereClause
     });
 
     return NextResponse.json({
-      message: 'E-Check created successfully',
-      eCheck: {
-        id: eCheck.id,
-        checkNumber: eCheck.checkNumber,
-        payeeName: eCheck.payeeName,
-        amount: eCheck.amount,
-        memo: eCheck.memo,
-        status: eCheck.status,
-        createdAt: eCheck.createdAt,
-        account: eCheck.account
+      success: true,
+      checks: checks.map(check => ({
+        id: check.id,
+        checkNumber: check.checkNumber,
+        accountNumber: check.account.accountNumber,
+        payeeName: check.payeeName,
+        amount: check.amount,
+        memo: check.memo,
+        status: check.status,
+        createdAt: check.createdAt,
+        clearedAt: check.clearedAt
+      })),
+      pagination: {
+        total: totalCount,
+        limit,
+        offset,
+        hasMore: offset + limit < totalCount
       }
-    }, { status: 201 });
-  } catch (error) {
-    console.error('Create e-check error:', error);
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error fetching E-Checks:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Failed to fetch E-Checks', 
+        details: error.message 
+      },
       { status: 500 }
     );
   }

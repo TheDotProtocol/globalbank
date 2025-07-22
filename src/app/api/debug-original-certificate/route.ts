@@ -5,16 +5,12 @@ import { prisma } from '@/lib/prisma';
 export const GET = requireAuth(async (request: NextRequest) => {
   try {
     const user = (request as any).user;
-    
-    // Extract the ID from the URL path
-    const pathParts = request.url.split('/');
-    const id = pathParts[pathParts.length - 2]; // Get the ID from the URL path
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id') || 'fd_baby_tau_1752943528.373871';
 
-    console.log('🔍 Certificate generation request:', { 
-      userId: user.id, 
-      fixedDepositId: id,
-      userEmail: user.email 
-    });
+    console.log('🔍 Original certificate API debug started');
+    console.log('🔍 User:', { id: user.id, email: user.email });
+    console.log('🔍 Fixed deposit ID:', id);
 
     // Validate input
     if (!id) {
@@ -26,6 +22,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
     }
 
     // First, let's check if the fixed deposit exists at all
+    console.log('🔍 Step 1: Checking if fixed deposit exists');
     const fixedDepositExists = await prisma.fixedDeposit.findFirst({
       where: { id: id }
     });
@@ -41,6 +38,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
     }
 
     // Now check if it belongs to the authenticated user
+    console.log('🔍 Step 2: Getting fixed deposit with user data');
     const fixedDeposit = await prisma.fixedDeposit.findFirst({
       where: {
         id: id,
@@ -65,7 +63,9 @@ export const GET = requireAuth(async (request: NextRequest) => {
         interestRate: fixedDeposit.interestRate,
         duration: fixedDeposit.duration,
         status: fixedDeposit.status,
-        accountId: fixedDeposit.accountId
+        accountId: fixedDeposit.accountId,
+        createdAt: fixedDeposit.createdAt,
+        maturityDate: fixedDeposit.maturityDate
       });
     }
 
@@ -78,6 +78,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
     }
 
     // Get account details separately
+    console.log('🔍 Step 3: Getting account details');
     const account = await prisma.account.findUnique({
       where: { id: fixedDeposit.accountId },
       select: {
@@ -98,6 +99,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
     }
 
     // Calculate interest earned with proper type conversion
+    console.log('🔍 Step 4: Calculating interest');
     const now = new Date();
     const startDate = fixedDeposit.createdAt;
     const maturityDate = fixedDeposit.maturityDate;
@@ -132,6 +134,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
     });
 
     // Generate certificate data with all required fields for beautiful format
+    console.log('🔍 Step 5: Creating certificate object');
     const certificate = {
       certificateNumber: `FD-${fixedDeposit.id.slice(-8).toUpperCase()}-${Date.now().toString().slice(-6)}`,
       customerName: `${fixedDeposit.user.firstName} ${fixedDeposit.user.lastName}`,
@@ -175,13 +178,14 @@ export const GET = requireAuth(async (request: NextRequest) => {
       interestRate: certificate.interestRate
     });
 
+    console.log('🔍 Step 6: Returning success response');
     return NextResponse.json({
       success: true,
       certificate
     });
 
   } catch (error: any) {
-    console.error('❌ Error generating certificate:', error);
+    console.error('❌ Error in original certificate API debug:', error);
     console.error('❌ Error stack:', error.stack);
     return NextResponse.json(
       { 
@@ -192,4 +196,4 @@ export const GET = requireAuth(async (request: NextRequest) => {
       { status: 500 }
     );
   }
-});
+}); 

@@ -226,7 +226,7 @@ export default function Page() {
                   <span className="block bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
                     Next-Generation Bank
                   </span>
-                  <span className="block text-sm text-gray-500 mt-2">🚀 Latest Version Deployed</span>
+                  <span className="block text-sm text-gray-500 mt-2">🚀 The Future of Borderless Banking is finally here</span>
                 </h1>
                 <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-2xl">
                   A modern, borderless fiat-only bank built for today's digital-first world. 

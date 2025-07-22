@@ -16,15 +16,30 @@ export function generateToken(payload: JWTPayload): string {
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+    console.log('🔍 Verifying JWT token...');
+    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
+    console.log('✅ JWT token verified successfully');
+    return decoded;
   } catch (error) {
+    console.error('❌ JWT token verification failed:', error);
     return null;
   }
 }
 
 export function extractTokenFromHeader(authHeader: string | null): string | null {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  console.log('🔍 Extracting token from header:', authHeader ? 'Header present' : 'Header missing');
+  
+  if (!authHeader) {
+    console.log('❌ No authorization header');
     return null;
   }
-  return authHeader.substring(7);
+  
+  if (!authHeader.startsWith('Bearer ')) {
+    console.log('❌ Authorization header does not start with "Bearer "');
+    return null;
+  }
+  
+  const token = authHeader.substring(7);
+  console.log('✅ Token extracted successfully');
+  return token;
 } 

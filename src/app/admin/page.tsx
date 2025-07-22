@@ -339,6 +339,25 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Navigation Tabs */}
+        <div className="bg-white rounded-lg shadow mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8 px-6">
+              <button
+                className="border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600"
+              >
+                User Management
+              </button>
+              <button
+                onClick={() => router.push('/admin/kyc')}
+                className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              >
+                KYC Management
+              </button>
+            </nav>
+          </div>
+        </div>
+
         {/* Users Management Section */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
@@ -471,16 +490,16 @@ export default function AdminDashboard() {
                                 <Copy className="w-3 h-3" />
                               </button>
                             </div>
-                            {account.cards.length > 0 && (
-                              <div className="text-xs text-gray-500">
-                                {account.cards.length} card(s)
-                              </div>
-                            )}
-                            {account.cards.length === 0 && (
-                              <div className="text-xs text-gray-400">
-                                No cards
-                              </div>
-                            )}
+                            <div className="text-xs text-gray-500 flex items-center space-x-2">
+                              <span className="flex items-center space-x-1">
+                                <CreditCard className="w-3 h-3" />
+                                <span>{account.cards.length} card(s)</span>
+                              </span>
+                              <span className="flex items-center space-x-1">
+                                <FileText className="w-3 h-3" />
+                                <span>{user.kycDocuments.length} KYC doc(s)</span>
+                              </span>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -629,25 +648,55 @@ export default function AdminDashboard() {
                       {/* Cards */}
                       {account.cards.length > 0 && (
                         <div className="mt-3">
-                          <h6 className="text-sm font-medium text-gray-700 mb-2">Cards</h6>
+                          <h6 className="text-sm font-medium text-gray-700 mb-2">Cards ({account.cards.length})</h6>
                           <div className="space-y-2">
                             {account.cards.map(card => (
-                              <div key={card.id} className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded">
-                                <div>
-                                  <div className="font-medium">{card.cardNumber}</div>
-                                  <div className="text-gray-500">{card.cardType} • Expires {card.expiryDate}</div>
-                                </div>
-                                <div className="text-right">
-                                  <div className={`px-2 py-1 text-xs rounded ${
-                                    card.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                                    card.status === 'SUSPENDED' ? 'bg-red-100 text-red-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {card.status}
+                              <div key={card.id} className="bg-gray-50 p-3 rounded-lg border">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div className="flex-1">
+                                    <div className="flex items-center space-x-2 mb-1">
+                                      <CreditCard className="h-4 w-4 text-blue-600" />
+                                      <span className="font-medium text-sm">{card.cardType} Card</span>
+                                    </div>
+                                    <div className="font-mono text-sm text-gray-900 mb-1">
+                                      {card.cardNumber.replace(/(\d{4})/g, '$1 ').trim()}
+                                    </div>
+                                    <div className="text-xs text-gray-500 space-y-1">
+                                      <div>Expires: {new Date(card.expiryDate).toLocaleDateString()}</div>
+                                      <div>CVV: {card.cvv}</div>
+                                      <div>Type: {card.isVirtual ? 'Virtual' : 'Physical'}</div>
+                                      <div>Daily Limit: ${Number(card.dailyLimit).toLocaleString()}</div>
+                                      <div>Monthly Limit: ${Number(card.monthlyLimit).toLocaleString()}</div>
+                                    </div>
                                   </div>
+                                  <div className="text-right">
+                                    <div className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                      card.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                                      card.status === 'SUSPENDED' ? 'bg-red-100 text-red-800' :
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
+                                      {card.status}
+                                    </div>
+                                    <div className={`mt-1 px-2 py-1 text-xs rounded-full ${
+                                      card.isActive ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
+                                    }`}>
+                                      {card.isActive ? 'Active' : 'Inactive'}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  Created: {new Date(card.createdAt).toLocaleDateString()}
                                 </div>
                               </div>
                             ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {account.cards.length === 0 && (
+                        <div className="mt-3">
+                          <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg text-center">
+                            No cards issued for this account
                           </div>
                         </div>
                       )}
@@ -677,6 +726,84 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               </div>
+
+              {/* KYC Documents */}
+              {selectedUser.kycDocuments.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-medium text-gray-900 mb-3">KYC Documents ({selectedUser.kycDocuments.length})</h4>
+                  <div className="space-y-3">
+                    {selectedUser.kycDocuments.map(doc => (
+                      <div key={doc.id} className="border rounded-lg p-4 bg-gray-50">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <FileText className="h-4 w-4 text-blue-600" />
+                              <span className="font-medium text-sm">
+                                {doc.documentType === 'ID_PROOF' ? 'Government ID' :
+                                 doc.documentType === 'ADDRESS_PROOF' ? 'Proof of Address' :
+                                 doc.documentType === 'SELFIE_PHOTO' ? 'Selfie' : doc.documentType}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500 space-y-1">
+                              {doc.fileName && <div>File: {doc.fileName}</div>}
+                              {doc.fileSize && <div>Size: {(doc.fileSize / 1024 / 1024).toFixed(2)} MB</div>}
+                              <div>Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}</div>
+                              {doc.verifiedAt && <div>Verified: {new Date(doc.verifiedAt).toLocaleDateString()}</div>}
+                            </div>
+                            {doc.rejectionReason && (
+                              <div className="mt-2 p-2 bg-red-50 rounded text-xs text-red-700">
+                                <strong>Rejection Reason:</strong> {doc.rejectionReason}
+                              </div>
+                            )}
+                            {doc.notes && (
+                              <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                                <strong>Notes:</strong> {doc.notes}
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <div className={`px-2 py-1 text-xs rounded-full font-medium ${
+                              doc.status === 'VERIFIED' ? 'bg-green-100 text-green-800' :
+                              doc.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {doc.status}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2 mt-3">
+                          <a
+                            href={doc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            View
+                          </a>
+                          <a
+                            href={doc.fileUrl}
+                            download
+                            className="inline-flex items-center px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                          >
+                            <Download className="h-3 w-3 mr-1" />
+                            Download
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedUser.kycDocuments.length === 0 && (
+                <div className="mt-6">
+                  <h4 className="font-medium text-gray-900 mb-3">KYC Documents</h4>
+                  <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-lg text-center">
+                    No KYC documents uploaded yet
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
