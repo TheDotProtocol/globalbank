@@ -851,24 +851,9 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                             <div className="text-xs text-gray-500 space-y-1">
-                              {doc.fileName && <div>File: {doc.fileName}</div>}
-                              {doc.fileSize && <div>Size: {(doc.fileSize / 1024 / 1024).toFixed(2)} MB</div>}
-                              {doc.mimeType && <div>Type: {doc.mimeType}</div>}
                               <div>Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}</div>
                               {doc.verifiedAt && <div>Verified: {new Date(doc.verifiedAt).toLocaleDateString()}</div>}
-                              {doc.verifiedBy && <div>Verified By: {doc.verifiedBy}</div>}
-                              {doc.version && doc.version > 1 && <div>Version: {doc.version}</div>}
                             </div>
-                            {doc.rejectionReason && (
-                              <div className="mt-2 p-2 bg-red-50 rounded text-xs text-red-700">
-                                <strong>Rejection Reason:</strong> {doc.rejectionReason}
-                              </div>
-                            )}
-                            {doc.notes && (
-                              <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
-                                <strong>Notes:</strong> {doc.notes}
-                              </div>
-                            )}
                           </div>
                           <div className="text-right">
                             <div className={`px-2 py-1 text-xs rounded-full font-medium ${
