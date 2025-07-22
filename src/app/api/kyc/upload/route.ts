@@ -261,45 +261,16 @@ async function processDocument(file: File, userId: string, documentType: string)
 
 // Helper function to convert file to base64 with better error handling
 async function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    try {
-      const reader = new FileReader();
-      
-      reader.onload = () => {
-        try {
-          const result = reader.result as string;
-          if (!result) {
-            reject(new Error('FileReader result is empty'));
-            return;
-          }
-          
-          // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-          const base64 = result.split(',')[1];
-          if (!base64) {
-            reject(new Error('Invalid data URL format'));
-            return;
-          }
-          
-          resolve(base64);
-        } catch (error) {
-          reject(new Error(`Error processing file result: ${error}`));
-        }
-      };
-      
-      reader.onerror = (error) => {
-        console.error('FileReader error:', error);
-        reject(new Error(`FileReader error: ${error}`));
-      };
-      
-      reader.onabort = () => {
-        reject(new Error('File reading was aborted'));
-      };
-      
-      // Start reading the file
-      reader.readAsDataURL(file);
-      
-    } catch (error) {
-      reject(new Error(`Error setting up FileReader: ${error}`));
-    }
-  });
+  try {
+    // Convert file to buffer first
+    const buffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    
+    // Convert to base64 using Node.js Buffer
+    const base64 = Buffer.from(bytes).toString('base64');
+    
+    return base64;
+  } catch (error: any) {
+    throw new Error(`Error converting file to base64: ${error.message}`);
+  }
 } 
