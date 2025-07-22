@@ -98,38 +98,85 @@ export const POST = requireAuth(async (request: NextRequest) => {
 
     console.log('✅ All documents processed successfully');
 
-    // Create KYC documents in database
-    const createdDocuments = await Promise.all(
-      documents.map(doc => 
-        prisma.kycDocument.create({
-          data: {
-            userId: user.id,
-            documentType: doc.documentType as any,
-            fileUrl: doc.fileUrl,
-            s3Key: doc.s3Key,
-            fileName: doc.fileName,
-            fileSize: doc.fileSize,
-            mimeType: doc.mimeType,
-            status: 'PENDING'
-          }
-        })
-      )
-    );
-
-    console.log('✅ KYC documents created in database');
-
-    // Update user KYC status to PENDING
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { kycStatus: 'PENDING' }
+    // Check if user already has KYC documents
+    const existingDocuments = await prisma.kycDocument.findMany({
+      where: { userId: user.id }
     });
 
-    console.log('✅ User KYC status updated to PENDING');
+    if (existingDocuments.length > 0) {
+      console.log('⚠️ User already has KYC documents, updating existing ones...');
+      
+      // Update existing documents instead of creating new ones
+      const updatedDocuments = await Promise.all(
+        documents.map(async (doc, index) => {
+          if (existingDocuments[index]) {
+            return prisma.kycDocument.update({
+              where: { id: existingDocuments[index].id },
+              data: {
+                fileUrl: doc.fileUrl,
+                s3Key: doc.s3Key,
+                fileName: doc.fileName,
+                fileSize: doc.fileSize,
+                mimeType: doc.mimeType,
+                status: 'PENDING',
+                version: existingDocuments[index].version + 1
+              }
+            });
+          } else {
+            return prisma.kycDocument.create({
+              data: {
+                userId: user.id,
+                documentType: doc.documentType as any,
+                fileUrl: doc.fileUrl,
+                s3Key: doc.s3Key,
+                fileName: doc.fileName,
+                fileSize: doc.fileSize,
+                mimeType: doc.mimeType,
+                status: 'PENDING'
+              }
+            });
+          }
+        })
+      );
+
+      console.log('✅ Existing KYC documents updated');
+    } else {
+      // Create new KYC documents in database
+      const createdDocuments = await Promise.all(
+        documents.map(doc => 
+          prisma.kycDocument.create({
+            data: {
+              userId: user.id,
+              documentType: doc.documentType as any,
+              fileUrl: doc.fileUrl,
+              s3Key: doc.s3Key,
+              fileName: doc.fileName,
+              fileSize: doc.fileSize,
+              mimeType: doc.mimeType,
+              status: 'PENDING'
+            }
+          })
+        )
+      );
+
+      console.log('✅ New KYC documents created in database');
+    }
+
+    // Only update user KYC status if it's not already VERIFIED
+    if (user.kycStatus !== 'VERIFIED') {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { kycStatus: 'PENDING' }
+      });
+      console.log('✅ User KYC status updated to PENDING');
+    } else {
+      console.log('ℹ️ User already VERIFIED, keeping status as VERIFIED');
+    }
 
     return NextResponse.json({
       success: true,
       message: 'KYC documents submitted successfully',
-      documentsCount: createdDocuments.length,
+      documentsCount: documents.length,
       storageMethod: 'S3 with Base64 fallback'
     });
 
