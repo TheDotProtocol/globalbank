@@ -55,6 +55,7 @@ model Account {
   transactions  Transaction[]
   cards         Card[]
   eChecks       ECheck[]
+  bankTransfers BankTransfer[]
 
   @@map("accounts")
 }
@@ -196,6 +197,59 @@ model ECheck {
   @@map("e_checks")
 }
 
+model CorporateBank {
+  id                String    @id @default(cuid())
+  bankName          String
+  accountHolderName String
+  accountNumber     String    @unique
+  routingNumber     String?   // For US banks
+  swiftCode         String?   // For international transfers
+  iban              String?   // For European banks
+  branchCode        String?   // For local banks
+  accountType       String    @default("BUSINESS") // SAVINGS, CURRENT, BUSINESS
+  currency          String    @default("USD")
+  isActive          Boolean   @default(true)
+  dailyLimit        Decimal   @default(100000) // $100k daily limit
+  monthlyLimit      Decimal   @default(1000000) // $1M monthly limit
+  transferFee       Decimal   @default(0) // Fee per transfer
+  apiEnabled        Boolean   @default(false) // Whether bank API is integrated
+  apiEndpoint       String?   // Bank API endpoint
+  apiKey            String?   // Encrypted API key
+  webhookUrl        String?   // For real-time notifications
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  bankTransfers     BankTransfer[]
+
+  @@map("corporate_banks")
+}
+
+model BankTransfer {
+  id                String            @id @default(cuid())
+  corporateBankId   String
+  fromAccountId     String?           // User's account ID
+  toAccountNumber   String
+  toAccountName     String
+  amount            Decimal
+  currency          String            @default("USD")
+  transferType      BankTransferType  @default(INBOUND) // INBOUND (to user), OUTBOUND (from user)
+  status            BankTransferStatus @default(PENDING)
+  reference         String            @unique
+  description       String?
+  fee               Decimal           @default(0)
+  netAmount         Decimal?
+  processedAt       DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // Relations
+  corporateBank     CorporateBank     @relation(fields: [corporateBankId], references: [id], onDelete: Cascade)
+  account           Account?          @relation(fields: [fromAccountId], references: [id], onDelete: SetNull)
+
+  @@map("bank_transfers")
+}
+
 // Enums
 enum AccountType {
   SAVINGS
@@ -304,4 +358,18 @@ enum TransferMode {
   CARD_TRANSFER
   MOBILE_TRANSFER
   INTERNATIONAL_TRANSFER
+}
+
+enum BankTransferType {
+  INBOUND   // Money coming into user account from corporate bank
+  OUTBOUND  // Money going out from user account to corporate bank
+}
+
+enum BankTransferStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REVERSED
 } 
