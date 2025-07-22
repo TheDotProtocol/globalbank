@@ -596,16 +596,6 @@ export const sendSecurityAlert = async (userEmail: string, userName: string, ale
   const template = emailTemplates.securityAlert(userName, alertType, details);
   return await sendEmail({
     to: userEmail,
-    subject: template.subject,
-    html: template.html,
-    text: template.text
-  });
-};
-
-export const sendKYCStatusEmail = async (userEmail: string, userName: string, status: string) => {
-  const template = emailTemplates.kycStatus(userName, status);
-  return await sendEmail({
-    to: userEmail,
     ...template
   });
 };
@@ -624,4 +614,180 @@ export const sendVerificationEmail = async (userEmail: string, verificationUrl: 
     to: userEmail,
     ...template
   });
-}; 
+};
+
+interface KYCStatusEmailParams {
+  email: string;
+  firstName: string;
+  lastName: string;
+  status: 'APPROVED' | 'REJECTED';
+  documentType: string;
+  adminNotes?: string;
+}
+
+export async function sendKYCStatusEmail({
+  email,
+  firstName,
+  lastName,
+  status,
+  documentType,
+  adminNotes
+}: KYCStatusEmailParams) {
+  try {
+    // Create transporter (you'll need to configure this with your email service)
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    const subject = status === 'APPROVED' 
+      ? '🎉 Your KYC Verification is Approved!'
+      : '⚠️ KYC Verification Update';
+
+    const htmlContent = status === 'APPROVED' 
+      ? generateApprovalEmail({ firstName, lastName, documentType, adminNotes })
+      : generateRejectionEmail({ firstName, lastName, documentType, adminNotes });
+
+    const textContent = status === 'APPROVED'
+      ? `Dear ${firstName} ${lastName},\n\nYour KYC verification has been approved! You can now access all banking features.\n\nBest regards,\nGlobal Dot Bank Team`
+      : `Dear ${firstName} ${lastName},\n\nYour KYC verification requires attention. Please review the details and resubmit if needed.\n\nBest regards,\nGlobal Dot Bank Team`;
+
+    // Send email
+    const info = await transporter.sendMail({
+      from: `"Global Dot Bank" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject,
+      text: textContent,
+      html: htmlContent,
+    });
+
+    console.log('✅ Email sent successfully:', info.messageId);
+    return info;
+
+  } catch (error) {
+    console.error('❌ Failed to send email:', error);
+    throw error;
+  }
+}
+
+function generateApprovalEmail({ firstName, lastName, documentType, adminNotes }: any) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>KYC Approved</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .success-icon { font-size: 48px; margin-bottom: 20px; }
+        .button { display: inline-block; background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="success-icon">🎉</div>
+          <h1>KYC Verification Approved!</h1>
+        </div>
+        <div class="content">
+          <h2>Dear ${firstName} ${lastName},</h2>
+          <p>Great news! Your KYC verification has been <strong>approved</strong> successfully.</p>
+          
+          <h3>Document Details:</h3>
+          <ul>
+            <li><strong>Document Type:</strong> ${documentType}</li>
+            <li><strong>Status:</strong> ✅ Approved</li>
+            <li><strong>Approved Date:</strong> ${new Date().toLocaleDateString()}</li>
+          </ul>
+
+          ${adminNotes ? `<h3>Admin Notes:</h3><p>${adminNotes}</p>` : ''}
+
+          <p>You can now access all banking features including:</p>
+          <ul>
+            <li>✅ Full account access</li>
+            <li>✅ Money transfers</li>
+            <li>✅ Fixed deposits</li>
+            <li>✅ Virtual cards</li>
+            <li>✅ E-checks</li>
+          </ul>
+
+          <a href="https://globaldotbank.org/dashboard" class="button">Access Your Dashboard</a>
+
+          <p>If you have any questions, please don't hesitate to contact our support team.</p>
+          
+          <p>Best regards,<br>
+          <strong>Global Dot Bank Team</strong></p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+          <p>© 2025 Global Dot Bank. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+function generateRejectionEmail({ firstName, lastName, documentType, adminNotes }: any) {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>KYC Update Required</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .warning-icon { font-size: 48px; margin-bottom: 20px; }
+        .button { display: inline-block; background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="warning-icon">⚠️</div>
+          <h1>KYC Verification Update</h1>
+        </div>
+        <div class="content">
+          <h2>Dear ${firstName} ${lastName},</h2>
+          <p>We need to inform you that your KYC verification requires attention.</p>
+          
+          <h3>Document Details:</h3>
+          <ul>
+            <li><strong>Document Type:</strong> ${documentType}</li>
+            <li><strong>Status:</strong> ❌ Requires Review</li>
+            <li><strong>Review Date:</strong> ${new Date().toLocaleDateString()}</li>
+          </ul>
+
+          ${adminNotes ? `<h3>Admin Notes:</h3><p>${adminNotes}</p>` : ''}
+
+          <p>Please review the feedback above and resubmit your documents if needed.</p>
+
+          <a href="https://globaldotbank.org/kyc/verification" class="button">Resubmit Documents</a>
+
+          <p>If you have any questions, please contact our support team for assistance.</p>
+          
+          <p>Best regards,<br>
+          <strong>Global Dot Bank Team</strong></p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+          <p>© 2025 Global Dot Bank. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+} 

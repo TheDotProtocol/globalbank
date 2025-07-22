@@ -1,88 +1,125 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { prisma } from '@/lib/prisma';
 
-// Admin dashboard statistics
 export const GET = requireAdminAuth(async (request: NextRequest) => {
   try {
-    const admin = (request as any).admin;
-
-    // Get system statistics
+    // Fetch all statistics in parallel
     const [
       totalUsers,
-      activeUsers,
-      pendingKyc,
-      verifiedKyc,
+      totalAccounts,
       totalTransactions,
       totalCards,
       totalFixedDeposits,
-      systemBalance
+      totalEchecks,
+      pendingKYC,
+      corporateBanks,
+      totalBankTransfers,
+      recentTransactions,
+      recentKYC,
+      corporateBankStats
     ] = await Promise.all([
+      // Total users
       prisma.user.count(),
-      prisma.user.count({ where: { kycStatus: 'VERIFIED' } }),
-      prisma.kycDocument.count({ where: { status: 'PENDING' } }),
-      prisma.kycDocument.count({ where: { status: 'VERIFIED' } }),
+      
+      // Total accounts
+      prisma.account.count(),
+      
+      // Total transactions
       prisma.transaction.count(),
+      
+      // Total cards
       prisma.card.count(),
-      prisma.fixedDeposit.count({ where: { status: 'ACTIVE' } }),
-      prisma.account.aggregate({
-        _sum: { balance: true }
+      
+      // Total fixed deposits
+      prisma.fixedDeposit.count(),
+      
+      // Total e-checks
+      prisma.eCheck.count(),
+      
+      // Pending KYC documents
+      prisma.kycDocument.count({
+        where: { status: 'PENDING' }
+      }),
+      
+      // Corporate banks
+      prisma.corporateBank.count(),
+      
+      // Total bank transfers
+      prisma.bankTransfer.count(),
+      
+      // Recent transactions (last 10)
+      prisma.transaction.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          account: {
+            include: {
+              user: {
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  email: true
+                }
+              }
+            }
+          }
+        }
+      }),
+      
+      // Recent KYC documents (last 10)
+      prisma.kycDocument.findMany({
+        take: 10,
+        orderBy: { uploadedAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true
+            }
+          }
+        }
+      }),
+      
+      // Corporate bank statistics
+      prisma.corporateBank.findMany({
+        select: {
+          id: true,
+          bankName: true,
+          accountNumber: true,
+          isActive: true,
+          dailyLimit: true,
+          monthlyLimit: true,
+          currency: true,
+          _count: {
+            select: {
+              bankTransfers: true
+            }
+          }
+        }
       })
     ]);
 
-    // Get recent users
-    const recentUsers = await prisma.user.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        kycStatus: true,
-        createdAt: true
-      }
-    });
-
-    // Get recent transactions
-    const recentTransactions = await prisma.transaction.findMany({
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        },
-        account: {
-          select: {
-            accountNumber: true,
-            accountType: true
-          }
-        }
-      }
-    });
-
     return NextResponse.json({
-      statistics: {
-        totalUsers,
-        activeUsers,
-        pendingKyc,
-        verifiedKyc,
-        totalTransactions,
-        totalCards,
-        totalFixedDeposits,
-        systemBalance: systemBalance._sum.balance || 0
-      },
-      recentUsers,
-      recentTransactions
+      totalUsers,
+      totalAccounts,
+      totalTransactions,
+      totalCards,
+      totalFixedDeposits,
+      totalEchecks,
+      pendingKYC,
+      corporateBanks,
+      totalBankTransfers,
+      recentTransactions,
+      recentKYC,
+      corporateBankStats
     });
-  } catch (error) {
-    console.error('Admin dashboard error:', error);
+
+  } catch (error: any) {
+    console.error('❌ Error fetching dashboard stats:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch dashboard statistics' },
       { status: 500 }
     );
   }

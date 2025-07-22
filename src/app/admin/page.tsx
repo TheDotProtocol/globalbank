@@ -24,7 +24,12 @@ import {
   Phone,
   Copy,
   ExternalLink,
-  LogOut
+  LogOut,
+  Building,
+  Banknote,
+  ArrowUpRight,
+  ArrowDownRight,
+  Activity
 } from 'lucide-react';
 
 interface User {
@@ -68,6 +73,21 @@ interface Transaction {
   requiresVerification?: boolean;
 }
 
+interface DashboardStats {
+  totalUsers: number;
+  totalAccounts: number;
+  totalTransactions: number;
+  totalCards: number;
+  totalFixedDeposits: number;
+  totalEchecks: number;
+  pendingKYC: number;
+  corporateBanks: number;
+  totalBankTransfers: number;
+  recentTransactions: any[];
+  recentKYC: any[];
+  corporateBankStats: any[];
+}
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState<User[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -89,6 +109,7 @@ export default function AdminDashboard() {
     description: '',
     adminNote: ''
   });
+  const [stats, setStats] = useState<DashboardStats | null>(null);
 
   const router = useRouter();
 
@@ -142,6 +163,15 @@ export default function AdminDashboard() {
 
       // Set empty transactions array since endpoint doesn't exist
       setTransactions([]);
+      
+      // Fetch dashboard stats
+      const statsResponse = await fetch('/api/admin/dashboard', { headers });
+      if (statsResponse.ok) {
+        const data = await statsResponse.json();
+        setStats(data);
+      } else {
+        console.error('Failed to fetch dashboard stats:', await statsResponse.text());
+      }
       
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -244,31 +274,41 @@ export default function AdminDashboard() {
   };
 
   const getStats = () => {
-    const totalUsers = users.length;
-    const verifiedUsers = users.filter(u => u.kycStatus === 'VERIFIED').length;
-    const pendingKYC = users.filter(u => u.kycStatus === 'PENDING').length;
-    const totalBalance = users.reduce((sum, user) => sum + user.totalBalance, 0);
-    const totalCards = users.reduce((sum, user) => sum + user.totalCards, 0);
-    const emailVerified = users.filter(u => u.emailVerified).length;
-
-    return {
-      totalUsers,
-      verifiedUsers,
-      pendingKYC,
-      totalBalance,
-      totalCards,
-      emailVerified
+    if (!stats) return {
+      totalUsers: 0,
+      totalAccounts: 0,
+      totalTransactions: 0,
+      totalCards: 0,
+      totalFixedDeposits: 0,
+      totalEchecks: 0,
+      pendingKYC: 0,
+      corporateBanks: 0,
+      totalBankTransfers: 0,
+      recentTransactions: [],
+      recentKYC: [],
+      corporateBankStats: []
     };
+    return stats;
   };
-
-  const stats = getStats();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentStats = getStats();
+
+  if (!currentStats) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">Failed to load dashboard data</p>
         </div>
       </div>
     );
@@ -301,7 +341,7 @@ export default function AdminDashboard() {
               <Users className="w-8 h-8 text-blue-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
+                <p className="text-2xl font-bold text-gray-900">{currentStats.totalUsers}</p>
               </div>
             </div>
           </div>
@@ -311,8 +351,8 @@ export default function AdminDashboard() {
               <CheckCircle className="w-8 h-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Verified KYC</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.verifiedUsers}</p>
-                <p className="text-xs text-gray-500">{stats.pendingKYC} pending</p>
+                <p className="text-2xl font-bold text-gray-900">{currentStats.totalUsers - currentStats.pendingKYC}</p>
+                <p className="text-xs text-gray-500">{currentStats.pendingKYC} pending</p>
               </div>
             </div>
           </div>
@@ -323,7 +363,7 @@ export default function AdminDashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Balance</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  ${stats.totalBalance.toLocaleString()}
+                  ${users.reduce((sum, user) => sum + user.totalBalance, 0).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -334,7 +374,7 @@ export default function AdminDashboard() {
               <CreditCard className="w-8 h-8 text-purple-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Cards</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalCards}</p>
+                <p className="text-2xl font-bold text-gray-900">{currentStats.totalCards}</p>
               </div>
             </div>
           </div>
@@ -360,7 +400,7 @@ export default function AdminDashboard() {
               <Shield className="w-8 h-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Email Verified</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.emailVerified}</p>
+                <p className="text-2xl font-bold text-gray-900">{currentStats.totalUsers - currentStats.pendingKYC}</p>
                 <p className="text-xs text-gray-500">Users verified</p>
               </div>
             </div>
@@ -372,7 +412,7 @@ export default function AdminDashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Pending Review</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {users.reduce((sum, user) => sum + user.kycDocuments.filter(doc => doc.status === 'PENDING').length, 0)}
+                  {currentStats.pendingKYC}
                 </p>
                 <p className="text-xs text-gray-500">Documents pending</p>
               </div>
