@@ -41,6 +41,14 @@ export default function ProfilePage() {
     phone: ''
   });
 
+  const [emailChangeForm, setEmailChangeForm] = useState({
+    newEmail: '',
+    password: ''
+  });
+
+  const [showEmailChange, setShowEmailChange] = useState(false);
+  const [emailChangeLoading, setEmailChangeLoading] = useState(false);
+
   const [securityForm, setSecurityForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -148,6 +156,40 @@ export default function ProfilePage() {
       setMessage({ type: 'error', text: 'Failed to change password' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEmailChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailChangeLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch('/api/user/change-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          newEmail: emailChangeForm.newEmail,
+          password: emailChangeForm.password
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: data.message });
+        setEmailChangeForm({ newEmail: '', password: '' });
+        setShowEmailChange(false);
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to request email change' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to request email change' });
+    } finally {
+      setEmailChangeLoading(false);
     }
   };
 
@@ -317,8 +359,83 @@ export default function ProfilePage() {
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
                       />
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Email cannot be changed</p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Email cannot be changed directly</p>
+                      <button
+                        type="button"
+                        onClick={() => setShowEmailChange(!showEmailChange)}
+                        className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                      >
+                        {showEmailChange ? 'Cancel' : 'Change Email'}
+                      </button>
+                    </div>
                   </div>
+
+                  {showEmailChange && (
+                    <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3">
+                        Change Email Address
+                      </h3>
+                      <form onSubmit={handleEmailChange} className="space-y-4">
+                        <div>
+                          <label htmlFor="newEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            New Email Address
+                          </label>
+                          <input
+                            id="newEmail"
+                            type="email"
+                            value={emailChangeForm.newEmail}
+                            onChange={(e) => setEmailChangeForm(prev => ({ ...prev, newEmail: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                            placeholder="Enter new email address"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="emailPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Current Password
+                          </label>
+                          <input
+                            id="emailPassword"
+                            type="password"
+                            value={emailChangeForm.password}
+                            onChange={(e) => setEmailChangeForm(prev => ({ ...prev, password: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                            placeholder="Enter your current password"
+                            required
+                          />
+                        </div>
+                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                          <div className="flex items-start">
+                            <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 mr-2 flex-shrink-0" />
+                            <div className="text-xs text-yellow-800 dark:text-yellow-200">
+                              <p className="font-medium">Important:</p>
+                              <p>You'll receive a verification email at the new address. Click the link to complete the change.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-3">
+                          <button
+                            type="submit"
+                            disabled={emailChangeLoading}
+                            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                          >
+                            {emailChangeLoading ? 'Sending...' : 'Request Email Change'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowEmailChange(false);
+                              setEmailChangeForm({ newEmail: '', password: '' });
+                            }}
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
 
                   <div>
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { Sun, Moon, ArrowRight, ShieldCheck, CheckCircle, Play, Award, Smartphone, DollarSign, TrendingUp, Globe, FileText, UserCheck, Clock, Menu, X, ChevronDown, ChevronUp } from "lucide-react";
 import Image from "next/image";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useTranslation, getCurrentLocale } from "@/lib/i18n";
 
 export default function Page() {
   const [darkMode, setDarkMode] = useState(false);
@@ -9,10 +11,14 @@ export default function Page() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedFeatures, setExpandedFeatures] = useState<number[]>([]);
   const [expandedAccounts, setExpandedAccounts] = useState<number[]>([]);
+  const [currentLocale, setCurrentLocale] = useState('en');
 
   useEffect(() => {
     setIsLoaded(true);
+    setCurrentLocale(getCurrentLocale());
   }, []);
+
+  const { t } = useTranslation(currentLocale as any);
 
   const scrollToFeatures = () => {
     const featuresSection = document.getElementById('features-section');
@@ -174,10 +180,11 @@ export default function Page() {
                 </span>
               </div>
               <div className="hidden md:flex items-center space-x-8">
-                <button onClick={scrollToFeatures} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Features</button>
-                <button className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Support</button>
-                <button onClick={() => window.location.href = "/login"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</button>
-                <button onClick={() => window.location.href = "/register"} className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-2 rounded-full hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg hover:shadow-xl font-medium">Open Account</button>
+                <button onClick={scrollToFeatures} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">{t('navigation.features')}</button>
+                <button className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">{t('navigation.support')}</button>
+                <button onClick={() => window.location.href = "/login"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">{t('navigation.login')}</button>
+                <button onClick={() => window.location.href = "/register"} className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-2 rounded-full hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg hover:shadow-xl font-medium">{t('landing.openAccount')}</button>
+                <LanguageSwitcher />
                 <button
                   onClick={() => setDarkMode(!darkMode)}
                   className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -187,6 +194,7 @@ export default function Page() {
                 </button>
               </div>
               <div className="md:hidden flex items-center space-x-2">
+                <LanguageSwitcher variant="buttons" />
                 <button
                   onClick={() => setDarkMode(!darkMode)}
                   className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -202,10 +210,10 @@ export default function Page() {
             {isMobileMenuOpen && (
               <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col space-y-4">
-                  <button onClick={scrollToFeatures} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Features</button>
-                  <button className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Support</button>
-                  <button onClick={() => window.location.href = "/login"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Login</button>
-                  <button onClick={() => window.location.href = "/register"} className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-full hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 font-medium text-left">Open Account</button>
+                  <button onClick={scrollToFeatures} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">{t('navigation.features')}</button>
+                  <button className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">{t('navigation.support')}</button>
+                  <button onClick={() => window.location.href = "/login"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">{t('navigation.login')}</button>
+                  <button onClick={() => window.location.href = "/register"} className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-6 py-3 rounded-full hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 font-medium text-left">{t('landing.openAccount')}</button>
                 </div>
               </div>
             )}
@@ -219,37 +227,36 @@ export default function Page() {
               <div className={`transition-all duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
                 <div className="inline-flex items-center space-x-2 bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-full px-4 py-2 mb-8 shadow-lg">
                   <ShieldCheck className="h-4 w-4 text-green-500" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Backed by Dot Protocol Blockchain</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('landing.backedBy')}</span>
                 </div>
                 <h1 className={`text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                  The World's First
+                  {t('landing.heroTitle')}
                   <span className="block bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                    Next-Generation Bank
+                    {t('landing.heroSubtitle')}
                   </span>
                   <span className="block text-sm text-gray-500 mt-2">🚀 The Future of Borderless Banking is finally here</span>
                 </h1>
                 <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-2xl">
-                  A modern, borderless fiat-only bank built for today's digital-first world. 
-                  Safe, fast, and secure — banking redefined.
+                  {t('landing.heroDescription')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 mb-12">
                   <button onClick={() => window.location.href = "/register"} className="group bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-xl hover:shadow-2xl flex items-center justify-center space-x-2 hover:scale-105">
-                    <span>Open an Account</span>
+                    <span>{t('landing.openAccount')}</span>
                     <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </button>
                   <button className="group bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center space-x-2 hover:scale-105">
                     <Play className="h-5 w-5" />
-                    <span>Learn More</span>
+                    <span>{t('landing.learnMore')}</span>
                   </button>
                 </div>
                 <div className="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>Licensed & Transparent</span>
+                    <span>{t('landing.licensedTransparent')}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>Global KYC & AML Compliance</span>
+                    <span>{t('landing.globalCompliance')}</span>
                   </div>
                 </div>
               </div>
