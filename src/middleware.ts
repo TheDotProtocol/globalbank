@@ -53,18 +53,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Handle root path specially
-  if (pathname === '/') {
-    const locale = getLocale(request);
-    const newUrl = new URL(`/${locale}`, request.url);
-    return NextResponse.redirect(newUrl);
-  }
-  
-  // Redirect to locale-prefixed URL for other paths
-  const locale = getLocale(request);
-  const newUrl = new URL(`/${locale}${pathname}`, request.url);
-  
-  return NextResponse.redirect(newUrl);
+  // For now, just pass through and let client-side handle locale detection
+  // This prevents 404 errors since we don't have separate locale directories
+  return NextResponse.next();
 }
 
 export const config = {

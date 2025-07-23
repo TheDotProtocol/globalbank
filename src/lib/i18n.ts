@@ -112,7 +112,13 @@ export function getCurrentLocale(): Locale {
     }
     
     // Detect from browser
-    return detectLanguage();
+    const detectedLocale = detectLanguage();
+    if (detectedLocale && locales.includes(detectedLocale)) {
+      return detectedLocale;
+    }
+    
+    // Fallback to English
+    return 'en';
   } catch (error) {
     // Fallback to default locale if any error occurs
     console.warn('Error getting current locale:', error);
@@ -126,14 +132,9 @@ export function setLocale(locale: Locale) {
   
   localStorage.setItem('locale', locale);
   
-  // Update URL if needed
-  const currentPath = window.location.pathname;
-  const currentLocale = getCurrentLocale();
-  
-  if (currentLocale !== locale) {
-    const newPath = currentPath.replace(`/${currentLocale}`, `/${locale}`);
-    window.history.replaceState({}, '', newPath);
-  }
+  // Reload the page to apply the new locale
+  // This is simpler than trying to update the URL since we're not using locale-prefixed routing
+  window.location.reload();
 }
 
 // Format currency based on locale
