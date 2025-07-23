@@ -96,22 +96,28 @@ export function useTranslation(locale: Locale) {
 export function getCurrentLocale(): Locale {
   if (typeof window === 'undefined') return 'en';
   
-  // Check URL first (for Next.js i18n)
-  const pathname = window.location.pathname;
-  const localeFromUrl = pathname.split('/')[1];
-  
-  if (locales.includes(localeFromUrl as Locale)) {
-    return localeFromUrl as Locale;
+  try {
+    // Check URL first (for Next.js i18n)
+    const pathname = window.location.pathname;
+    const localeFromUrl = pathname.split('/')[1];
+    
+    if (locales.includes(localeFromUrl as Locale)) {
+      return localeFromUrl as Locale;
+    }
+    
+    // Check localStorage
+    const savedLocale = localStorage.getItem('locale') as Locale;
+    if (savedLocale && locales.includes(savedLocale)) {
+      return savedLocale;
+    }
+    
+    // Detect from browser
+    return detectLanguage();
+  } catch (error) {
+    // Fallback to default locale if any error occurs
+    console.warn('Error getting current locale:', error);
+    return 'en';
   }
-  
-  // Check localStorage
-  const savedLocale = localStorage.getItem('locale') as Locale;
-  if (savedLocale && locales.includes(savedLocale)) {
-    return savedLocale;
-  }
-  
-  // Detect from browser
-  return detectLanguage();
 }
 
 // Set locale and save to localStorage

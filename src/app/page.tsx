@@ -15,10 +15,29 @@ export default function Page() {
 
   useEffect(() => {
     setIsLoaded(true);
-    setCurrentLocale(getCurrentLocale());
+    // Safely get current locale with fallback
+    try {
+      const locale = getCurrentLocale();
+      setCurrentLocale(locale);
+    } catch (error) {
+      console.warn('Error getting locale, using default:', error);
+      setCurrentLocale('en');
+    }
   }, []);
 
   const { t } = useTranslation(currentLocale as any);
+
+  // Fallback while loading
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Global Dot Bank...</p>
+        </div>
+      </div>
+    );
+  }
 
   const scrollToFeatures = () => {
     const featuresSection = document.getElementById('features-section');
