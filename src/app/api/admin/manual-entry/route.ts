@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { prisma } from '@/lib/prisma';
+import { corporateBankService } from '@/lib/corporate-bank-service';
 
 export const POST = requireAdminAuth(async (request: NextRequest) => {
   try {
     const { userId, accountId, amount, type, description, adminNote } = await request.json();
 
-    // Validate input
+    console.log('🔧 Admin manual entry request:', { userId, accountId, amount, type, description });
+
+    // Validate required fields
     if (!userId || !accountId || !amount || !type || !description) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -14,32 +17,21 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
       );
     }
 
+    // Validate transaction type
+    const validTypes = ['CREDIT', 'DEBIT'];
+    if (!validTypes.includes(type)) {
+      return NextResponse.json(
+        { error: 'Invalid transaction type. Must be CREDIT or DEBIT' },
+        { status: 400 }
+      );
+    }
+
     // Validate amount
-    const numericAmount = parseFloat(amount);
-    if (isNaN(numericAmount) || numericAmount <= 0) {
+    const transactionAmount = parseFloat(amount);
+    if (isNaN(transactionAmount) || transactionAmount <= 0) {
       return NextResponse.json(
         { error: 'Invalid amount' },
         { status: 400 }
-      );
-    }
-
-    // Validate transaction type
-    if (!['CREDIT', 'DEBIT'].includes(type)) {
-      return NextResponse.json(
-        { error: 'Invalid transaction type' },
-        { status: 400 }
-      );
-    }
-
-    // Verify user exists
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
       );
     }
 
@@ -47,41 +39,68 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
     const account = await prisma.account.findFirst({
       where: {
         id: accountId,
-        userId: userId
+        userId: userId,
+        isActive: true
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
       }
     });
 
     if (!account) {
       return NextResponse.json(
-        { error: 'Account not found or does not belong to user' },
+        { error: 'Account not found or inactive' },
         { status: 404 }
       );
     }
 
-    // Create transaction with admin note in description
-    const fullDescription = adminNote ? `${description} (Admin Note: ${adminNote})` : description;
-    
-    const transaction = await prisma.transaction.create({
-      data: {
+    // For DEBIT transactions, check sufficient balance
+    if (type === 'DEBIT') {
+      if (account.balance.toNumber() < transactionAmount) {
+        return NextResponse.json(
+          { error: 'Insufficient balance in account' },
+          { status: 400 }
+        );
+      }
+    }
+
+    let transaction;
+
+    // Route transaction through K Bank corporate account
+    if (type === 'CREDIT') {
+      transaction = await corporateBankService.processCreditTransaction(
         userId,
         accountId,
-        type,
-        amount: numericAmount,
-        description: fullDescription,
-        status: 'COMPLETED',
-        reference: `ADMIN-${Date.now()}`
-      }
+        transactionAmount,
+        `Admin Manual Entry: ${description}${adminNote ? ` (${adminNote})` : ''}`,
+        `ADMIN-${Date.now()}`
+      );
+    } else {
+      transaction = await corporateBankService.processDebitTransaction(
+        userId,
+        accountId,
+        transactionAmount,
+        `Admin Manual Entry: ${description}${adminNote ? ` (${adminNote})` : ''}`,
+        `ADMIN-${Date.now()}`
+      );
+    }
+
+    // Get updated account balance
+    const updatedAccount = await prisma.account.findUnique({
+      where: { id: accountId }
     });
 
-    // Update account balance
-    const balanceChange = type === 'CREDIT' ? numericAmount : -numericAmount;
-    await prisma.account.update({
-      where: { id: accountId },
-      data: {
-        balance: {
-          increment: balanceChange
-        }
-      }
+    console.log('✅ Admin manual entry completed:', {
+      transactionId: transaction.id,
+      type: transaction.type,
+      amount: transaction.amount,
+      newBalance: updatedAccount?.balance
     });
 
     return NextResponse.json({
@@ -92,16 +111,30 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
         type: transaction.type,
         amount: transaction.amount,
         description: transaction.description,
-        status: transaction.status,
         reference: transaction.reference,
+        status: transaction.status,
         createdAt: transaction.createdAt
+      },
+      account: {
+        id: account.id,
+        accountNumber: account.accountNumber,
+        accountType: account.accountType,
+        previousBalance: account.balance,
+        newBalance: updatedAccount?.balance,
+        user: {
+          name: `${account.user.firstName} ${account.user.lastName}`,
+          email: account.user.email
+        }
       }
-    }, { status: 201 });
+    });
 
-  } catch (error) {
-    console.error('Manual entry error:', error);
+  } catch (error: any) {
+    console.error('❌ Admin manual entry error:', error);
     return NextResponse.json(
-      { error: 'Failed to create manual entry' },
+      { 
+        error: 'Failed to create manual entry',
+        details: error.message 
+      },
       { status: 500 }
     );
   }
