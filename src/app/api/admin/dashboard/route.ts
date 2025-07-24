@@ -4,52 +4,66 @@ import { prisma } from '@/lib/prisma';
 
 export const GET = requireAdminAuth(async (request: NextRequest) => {
   try {
-    // Fetch all statistics in parallel
-    const [
-      totalUsers,
-      totalAccounts,
-      totalTransactions,
-      totalCards,
-      totalFixedDeposits,
-      totalEchecks,
-      pendingKYC,
-      corporateBanks,
-      totalBankTransfers,
-      recentTransactions,
-      recentKYC,
-      corporateBankStats
-    ] = await Promise.all([
-      // Total users
+    console.log('🔍 Fetching admin dashboard statistics...');
+
+    // Fetch basic statistics first
+    const [totalUsers, totalAccounts, totalTransactions, totalCards] = await Promise.all([
       prisma.user.count(),
-      
-      // Total accounts
       prisma.account.count(),
-      
-      // Total transactions
       prisma.transaction.count(),
-      
-      // Total cards
-      prisma.card.count(),
-      
-      // Total fixed deposits
-      prisma.fixedDeposit.count(),
-      
-      // Total e-checks
-      prisma.eCheck.count(),
-      
-      // Pending KYC documents
-      prisma.kycDocument.count({
+      prisma.card.count()
+    ]);
+
+    console.log('✅ Basic stats fetched:', { totalUsers, totalAccounts, totalTransactions, totalCards });
+
+    // Try to fetch additional statistics with error handling
+    let totalFixedDeposits = 0;
+    let totalEchecks = 0;
+    let pendingKYC = 0;
+    let corporateBanks = 0;
+    let totalBankTransfers = 0;
+
+    try {
+      totalFixedDeposits = await prisma.fixedDeposit.count();
+      console.log('✅ Fixed deposits count:', totalFixedDeposits);
+    } catch (error) {
+      console.warn('⚠️ Fixed deposits count failed:', error);
+    }
+
+    try {
+      totalEchecks = await prisma.eCheck.count();
+      console.log('✅ E-checks count:', totalEchecks);
+    } catch (error) {
+      console.warn('⚠️ E-checks count failed:', error);
+    }
+
+    try {
+      pendingKYC = await prisma.kycDocument.count({
         where: { status: 'PENDING' }
-      }),
-      
-      // Corporate banks
-      prisma.corporateBank.count(),
-      
-      // Total bank transfers
-      prisma.bankTransfer.count(),
-      
-      // Recent transactions (last 10)
-      prisma.transaction.findMany({
+      });
+      console.log('✅ Pending KYC count:', pendingKYC);
+    } catch (error) {
+      console.warn('⚠️ Pending KYC count failed:', error);
+    }
+
+    try {
+      corporateBanks = await prisma.corporateBank.count();
+      console.log('✅ Corporate banks count:', corporateBanks);
+    } catch (error) {
+      console.warn('⚠️ Corporate banks count failed:', error);
+    }
+
+    try {
+      totalBankTransfers = await prisma.bankTransfer.count();
+      console.log('✅ Bank transfers count:', totalBankTransfers);
+    } catch (error) {
+      console.warn('⚠️ Bank transfers count failed:', error);
+    }
+
+    // Fetch recent transactions
+    let recentTransactions: any[] = [];
+    try {
+      recentTransactions = await prisma.transaction.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -65,10 +79,16 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
             }
           }
         }
-      }),
-      
-      // Recent KYC documents (last 10)
-      prisma.kycDocument.findMany({
+      });
+      console.log('✅ Recent transactions fetched:', recentTransactions.length);
+    } catch (error) {
+      console.warn('⚠️ Recent transactions fetch failed:', error);
+    }
+
+    // Fetch recent KYC documents
+    let recentKYC: any[] = [];
+    try {
+      recentKYC = await prisma.kycDocument.findMany({
         take: 10,
         orderBy: { uploadedAt: 'desc' },
         include: {
@@ -80,10 +100,16 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
             }
           }
         }
-      }),
-      
-      // Corporate bank statistics
-      prisma.corporateBank.findMany({
+      });
+      console.log('✅ Recent KYC documents fetched:', recentKYC.length);
+    } catch (error) {
+      console.warn('⚠️ Recent KYC documents fetch failed:', error);
+    }
+
+    // Fetch corporate bank statistics
+    let corporateBankStats: any[] = [];
+    try {
+      corporateBankStats = await prisma.corporateBank.findMany({
         select: {
           id: true,
           bankName: true,
@@ -98,8 +124,13 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
             }
           }
         }
-      })
-    ]);
+      });
+      console.log('✅ Corporate bank stats fetched:', corporateBankStats.length);
+    } catch (error) {
+      console.warn('⚠️ Corporate bank stats fetch failed:', error);
+    }
+
+    console.log('✅ All dashboard statistics fetched successfully');
 
     return NextResponse.json({
       totalUsers,
@@ -118,8 +149,9 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
 
   } catch (error: any) {
     console.error('❌ Error fetching dashboard stats:', error);
+    console.error('❌ Error stack:', error.stack);
     return NextResponse.json(
-      { error: 'Failed to fetch dashboard statistics' },
+      { error: 'Failed to fetch dashboard statistics', details: error.message },
       { status: 500 }
     );
   }
