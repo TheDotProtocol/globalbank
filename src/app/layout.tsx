@@ -17,14 +17,12 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://globaldotbank.org'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'Global Dot Bank - Digital Banking Platform',
     description: 'Modern digital banking with AI-powered assistance, secure transactions, and comprehensive financial services.',
-    url: 'https://globaldotbank.org',
     siteName: 'Global Dot Bank',
     images: [
       {

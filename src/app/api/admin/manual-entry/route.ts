@@ -1,35 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
-// Simple admin authentication check
-async function authenticateAdmin(request: NextRequest) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-  
-  const token = authHeader.substring(7);
-  
-  // For now, check if it's a valid admin session token
-  // In production, you'd want proper admin authentication
-  if (token && token.length > 10) {
-    return { isAdmin: true };
-  }
-  
-  return null;
-}
-
-export const POST = async (request: NextRequest) => {
+export const POST = requireAdminAuth(async (request: NextRequest) => {
   try {
-    // Authenticate admin
-    const admin = await authenticateAdmin(request);
-    if (!admin) {
-      return NextResponse.json(
-        { error: 'Admin authentication required' },
-        { status: 401 }
-      );
-    }
-
     const { userId, accountId, amount, type, description, adminNote } = await request.json();
 
     // Validate input
@@ -131,4 +105,4 @@ export const POST = async (request: NextRequest) => {
       { status: 500 }
     );
   }
-}; 
+}); 
