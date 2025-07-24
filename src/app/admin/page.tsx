@@ -420,6 +420,116 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Corporate Bank Section */}
+        <div className="bg-white rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                  <Building className="w-5 h-5 mr-2 text-blue-600" />
+                  Corporate Bank Accounts
+                </h2>
+                <p className="text-sm text-gray-500">Monitor corporate bank transactions and balances</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  {currentStats.corporateBanks} Active
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6">
+            {currentStats.corporateBankStats && currentStats.corporateBankStats.length > 0 ? (
+              <div className="space-y-6">
+                {currentStats.corporateBankStats.map((bank: any) => (
+                  <div key={bank.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Building className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">{bank.bankName}</h3>
+                          <p className="text-sm text-gray-500">{bank.accountHolderName}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          bank.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {bank.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                        <span className="text-sm text-gray-500">{bank.currency}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs font-medium text-gray-500">Account Number</p>
+                        <p className="text-sm font-semibold text-gray-900">{bank.accountNumber}</p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs font-medium text-gray-500">Daily Limit</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {Number(bank.dailyLimit).toLocaleString()} {bank.currency}
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs font-medium text-gray-500">Monthly Limit</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {Number(bank.monthlyLimit).toLocaleString()} {bank.currency}
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs font-medium text-gray-500">Transfer Fee</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {Number(bank.transferFee).toLocaleString()} {bank.currency}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <Banknote className="w-4 h-4 text-green-600" />
+                          <span className="text-sm text-gray-600">
+                            {bank._count?.bankTransfers || 0} transfers
+                          </span>
+                        </div>
+                        {bank.apiEnabled && (
+                          <div className="flex items-center space-x-2">
+                            <Activity className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm text-gray-600">API Enabled</span>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => router.push('/admin/corporate-bank')}
+                        className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>View Details</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">No corporate bank accounts configured</p>
+                <button
+                  onClick={() => router.push('/admin/corporate-bank')}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Add Corporate Bank
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Navigation Tabs */}
         <div className="bg-white rounded-lg shadow mb-6">
           <div className="border-b border-gray-200">
@@ -434,6 +544,13 @@ export default function AdminDashboard() {
                 className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 KYC Management
+              </button>
+              <button
+                onClick={() => router.push('/admin/corporate-bank')}
+                className="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center space-x-1"
+              >
+                <Building className="w-4 h-4" />
+                <span>Corporate Bank</span>
               </button>
             </nav>
           </div>

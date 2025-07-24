@@ -1,64 +1,95 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAdminAuth } from '@/lib/admin-auth';
+import { prisma } from '@/lib/prisma';
 
-// Get all corporate bank accounts
 export const GET = requireAdminAuth(async (request: NextRequest) => {
   try {
-    const admin = (request as any).admin;
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    console.log('🏦 Fetching corporate bank data...');
 
-    // Get corporate banks with pagination
-    const [banks, totalCount] = await Promise.all([
-      prisma.corporateBank.findMany({
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          _count: {
-            select: {
-              bankTransfers: true
-            }
+    // Fetch corporate banks with transfer counts
+    const corporateBanks = await prisma.corporateBank.findMany({
+      select: {
+        id: true,
+        bankName: true,
+        accountHolderName: true,
+        accountNumber: true,
+        currency: true,
+        isActive: true,
+        dailyLimit: true,
+        monthlyLimit: true,
+        transferFee: true,
+        apiEnabled: true,
+        createdAt: true,
+        _count: {
+          select: {
+            bankTransfers: true
           }
         }
-      }),
-      prisma.corporateBank.count()
-    ]);
-
-    return NextResponse.json({
-      banks: banks.map(bank => ({
-        id: bank.id,
-        bankName: bank.bankName,
-        accountHolderName: bank.accountHolderName,
-        accountNumber: bank.accountNumber,
-        routingNumber: bank.routingNumber,
-        swiftCode: bank.swiftCode,
-        iban: bank.iban,
-        branchCode: bank.branchCode,
-        accountType: bank.accountType,
-        currency: bank.currency,
-        isActive: bank.isActive,
-        dailyLimit: bank.dailyLimit,
-        monthlyLimit: bank.monthlyLimit,
-        transferFee: bank.transferFee,
-        apiEnabled: bank.apiEnabled,
-        createdAt: bank.createdAt,
-        updatedAt: bank.updatedAt,
-        transferCount: bank._count.bankTransfers
-      })),
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit)
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
-  } catch (error) {
-    console.error('Admin corporate bank error:', error);
+
+    console.log('✅ Found corporate banks:', corporateBanks.length);
+
+    // Fetch all bank transfers
+    const bankTransfers = await prisma.bankTransfer.findMany({
+      select: {
+        id: true,
+        toAccountNumber: true,
+        toAccountName: true,
+        amount: true,
+        currency: true,
+        transferType: true,
+        status: true,
+        reference: true,
+        description: true,
+        fee: true,
+        netAmount: true,
+        processedAt: true,
+        createdAt: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    console.log('✅ Found bank transfers:', bankTransfers.length);
+
+    // Calculate summary statistics
+    const totalTransfers = bankTransfers.length;
+    const totalAmount = bankTransfers.reduce((sum, transfer) => sum + Number(transfer.amount), 0);
+    const totalFees = bankTransfers.reduce((sum, transfer) => sum + Number(transfer.fee), 0);
+    const completedTransfers = bankTransfers.filter(t => t.status === 'COMPLETED').length;
+
+    console.log('📊 Summary stats:');
+    console.log('   Total transfers:', totalTransfers);
+    console.log('   Total amount:', totalAmount);
+    console.log('   Total fees:', totalFees);
+    console.log('   Completed transfers:', completedTransfers);
+
+    return NextResponse.json({
+      success: true,
+      corporateBanks,
+      bankTransfers,
+      summary: {
+        totalTransfers,
+        totalAmount,
+        totalFees,
+        completedTransfers,
+        activeBanks: corporateBanks.filter(b => b.isActive).length
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error fetching corporate bank data:', error);
+    console.error('❌ Error stack:', error.stack);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Failed to fetch corporate bank data', 
+        details: error.message 
+      },
       { status: 500 }
     );
   }
