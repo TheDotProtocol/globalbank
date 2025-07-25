@@ -4,6 +4,8 @@ import { Sun, Moon, ArrowRight, ShieldCheck, CheckCircle, Play, Award, Smartphon
 import Image from "next/image";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation, getCurrentLocale } from "@/lib/i18n";
+import { NoTranslate, Translate } from "@/components/TranslationWrapper";
+import TranslationPrompt from "@/components/TranslationPrompt";
 
 export default function Page() {
   const [darkMode, setDarkMode] = useState(false);
@@ -179,6 +181,9 @@ export default function Page() {
   return (
     <div className={darkMode ? "dark" : ""}>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
+        {/* Translation Prompt */}
+        <TranslationPrompt />
+        
         {/* Background Elements */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-300 to-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse"></div>
@@ -195,7 +200,7 @@ export default function Page() {
                   <Image src="/logo.png" alt="Global Dot Bank Logo" width={40} height={40} className="object-contain" />
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                  Global Dot Bank
+                  <NoTranslate>Global Dot Bank</NoTranslate>
                 </span>
               </div>
               <div className="hidden md:flex items-center space-x-8">
@@ -249,11 +254,11 @@ export default function Page() {
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('landing.backedBy')}</span>
                 </div>
                 <h1 className={`text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                  {t('landing.heroTitle')}
+                  <Translate>{t('landing.heroTitle')}</Translate>
                   <span className="block bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
-                    {t('landing.heroSubtitle')}
+                    <NoTranslate>Global Dot Bank</NoTranslate>
                   </span>
-                  <span className="block text-sm text-gray-500 mt-2">🚀 The Future of Borderless Banking is finally here</span>
+                  <span className="block text-sm text-gray-500 mt-2">🚀 <Translate>The Future of Borderless Banking is finally here</Translate></span>
                 </h1>
                 <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-2xl">
                   {t('landing.heroDescription')}
@@ -414,7 +419,7 @@ export default function Page() {
                   <Image src="/logo.png" alt="Global Dot Bank Logo" width={40} height={40} className="object-contain" />
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                  Global Dot Bank
+                  <NoTranslate>Global Dot Bank</NoTranslate>
                 </span>
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">

@@ -42,6 +42,8 @@ import TransferModal from '@/components/modals/TransferModal';
 import Image from "next/image";
 import Sidebar from '@/components/Sidebar';
 import InterestRatesDisplay from '@/components/InterestRatesDisplay';
+import { NoTranslate, Translate } from "@/components/TranslationWrapper";
+import TranslationPrompt from "@/components/TranslationPrompt";
 
 interface User {
   id: string;
@@ -542,8 +544,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <TranslationPrompt />
+      <div className="flex">
         {/* Background Elements */}
         <div className="absolute inset-0">
           <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-300 to-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse"></div>
@@ -572,7 +575,7 @@ export default function Dashboard() {
                   />
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                  Global Dot Bank
+                  <NoTranslate>Global Dot Bank</NoTranslate>
                 </span>
               </div>
               <div className="flex items-center space-x-4">
