@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         documentType: type as any,
-        fileUrl,
+        documentUrl: fileUrl,
         status: 'PENDING'
       }
     });

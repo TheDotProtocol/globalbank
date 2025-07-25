@@ -41,6 +41,7 @@ import { exportStatement, exportTransactions, exportFixedDeposits, exportFixedDe
 import TransferModal from '@/components/modals/TransferModal';
 import Image from "next/image";
 import Sidebar from '@/components/Sidebar';
+import InterestRatesDisplay from '@/components/InterestRatesDisplay';
 
 interface User {
   id: string;
@@ -633,20 +634,56 @@ export default function Dashboard() {
             <BankBuggerAI userId={user?.id || ''} className="w-full" />
           </div>
 
-          {/* Total Balance Card */}
+          {/* Multi-Currency Balance Card */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white mb-8">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold mb-2">Total Balance</h2>
-                <p className="text-blue-100 mb-4">Across all your accounts</p>
-                <div className="text-4xl font-bold">
-                  ${totalBalance.toLocaleString()}
-                </div>
+                <h2 className="text-2xl font-bold mb-2">🌍 Global Balance</h2>
+                <p className="text-blue-100">Your money in all major world currencies</p>
               </div>
               <div className="text-right">
                 <div className="text-blue-100 text-sm">Active Accounts</div>
                 <div className="text-2xl font-bold">{accounts.length}</div>
               </div>
+            </div>
+            
+            {/* Multi-Currency Display */}
+            <MultiCurrencyDisplay 
+              usdAmount={totalBalance} 
+              className="text-white"
+              showSettings={true}
+            />
+            
+            {/* Quick Currency Overview */}
+            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="text-sm text-blue-100">🇺🇸 USD</div>
+                <div className="text-lg font-bold">${totalBalance.toLocaleString()}</div>
+              </div>
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="text-sm text-blue-100">🇪🇺 EUR</div>
+                <div className="text-lg font-bold">€{(totalBalance * 0.85).toLocaleString()}</div>
+              </div>
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="text-sm text-blue-100">🇬🇧 GBP</div>
+                <div className="text-lg font-bold">£{(totalBalance * 0.73).toLocaleString()}</div>
+              </div>
+              <div className="bg-white/10 rounded-lg p-3 text-center">
+                <div className="text-sm text-blue-100">🇹🇭 THB</div>
+                <div className="text-lg font-bold">฿{(totalBalance * 35.5).toLocaleString()}</div>
+              </div>
+            </div>
+            
+            {/* Borderless Banking Info */}
+            <div className="mt-6 p-4 bg-white/10 rounded-lg">
+              <div className="flex items-center space-x-2 mb-2">
+                <Globe className="h-5 w-5 text-blue-100" />
+                <span className="text-blue-100 font-semibold">Borderless Banking</span>
+              </div>
+              <p className="text-blue-100 text-sm">
+                Make payments in any currency worldwide with just 1% transaction fee. 
+                No hidden charges, no complex conversion rates.
+              </p>
             </div>
           </div>
 
@@ -727,7 +764,6 @@ export default function Dashboard() {
                     View All
                   </button>
                 </div>
-                
                 <div className="space-y-4">
                   {accounts.map((account) => (
                     <div
@@ -762,8 +798,12 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Recent Transactions */}
-            <div>
+            {/* Sidebar - Interest Rates and Recent Transactions */}
+            <div className="space-y-6">
+              {/* Interest Rates Display */}
+              <InterestRatesDisplay userBalance={totalBalance} />
+              
+              {/* Recent Transactions */}
               <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Transactions</h2>
@@ -774,24 +814,41 @@ export default function Dashboard() {
                     View All
                   </button>
                 </div>
-                
                 <div className="space-y-4">
                   {transactions.slice(0, 5).map((transaction) => (
                     <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <div>
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {transaction.description}
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-2 rounded-lg ${
+                          transaction.type === 'CREDIT' 
+                            ? 'bg-green-100 dark:bg-green-900/50' 
+                            : 'bg-red-100 dark:bg-red-900/50'
+                        }`}>
+                          {transaction.type === 'CREDIT' ? (
+                            <Upload className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          ) : (
+                            <Download className="h-4 w-4 text-red-600 dark:text-red-400" />
+                          )}
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                          {new Date(transaction.createdAt).toLocaleDateString()}
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white text-sm">
+                            {transaction.description}
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-300">
+                            {new Date(transaction.createdAt).toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
-                      <div className={`font-semibold ${
-                        transaction.type === 'CREDIT' 
-                          ? 'text-green-600 dark:text-green-400' 
-                          : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        {transaction.type === 'CREDIT' ? '+' : '-'}${Math.abs(typeof transaction.amount === 'string' ? parseFloat(transaction.amount) : transaction.amount).toLocaleString()}
+                      <div className="text-right">
+                        <div className={`font-bold text-sm ${
+                          transaction.type === 'CREDIT' 
+                            ? 'text-green-600 dark:text-green-400' 
+                            : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {transaction.type === 'CREDIT' ? '+' : '-'}${transaction.amount.toLocaleString()}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-300">
+                          {transaction.status}
+                        </div>
                       </div>
                     </div>
                   ))}

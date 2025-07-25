@@ -273,6 +273,32 @@ export default function AdminDashboard() {
     router.push('/admin/login');
   };
 
+  const triggerInterestCalculation = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch('/api/admin/calculate-interest', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(`✅ Interest calculation completed successfully!\n\n${result.message}`);
+        // Refresh dashboard data
+        fetchDashboardData();
+      } else {
+        const error = await response.json();
+        alert(`❌ Interest calculation failed: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Interest calculation error:', error);
+      alert('❌ Failed to trigger interest calculation');
+    }
+  };
+
   const getStats = () => {
     if (!stats) return {
       totalUsers: 0,
@@ -334,8 +360,8 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <Users className="w-8 h-8 text-blue-600" />
@@ -375,6 +401,21 @@ export default function AdminDashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Cards</p>
                 <p className="text-2xl font-bold text-gray-900">{currentStats.totalCards}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <Banknote className="w-8 h-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Interest Calculation</p>
+                <button
+                  onClick={triggerInterestCalculation}
+                  className="text-sm font-medium text-blue-600 hover:underline"
+                >
+                  Trigger Monthly Interest
+                </button>
               </div>
             </div>
           </div>

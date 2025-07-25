@@ -1,183 +1,201 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { corporateBankService } from '@/lib/corporate-bank-service';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
     const user = (request as any).user;
+    const body = await request.json();
+    
     const { 
       fromAccountId, 
-      toAccountNumber, 
-      toAccountName, 
+      toAccountId, 
       amount, 
-      currency = 'USD',
-      transferType = 'INTERNAL', // INTERNAL, EXTERNAL, INTERNATIONAL
-      description = '',
-      recipientBank = null,
-      recipientPhone = null
-    } = await request.json();
-
-    console.log('🔍 Transfer request from user:', user.email);
-
-    // Validate required fields
-    if (!fromAccountId || !toAccountNumber || !amount) {
+      description, 
+      targetCurrency,
+      reference 
+    } = body;
+    
+    if (!fromAccountId || !amount || !description) {
       return NextResponse.json(
-        { error: 'From account, to account number, and amount are required' },
+        { error: 'Missing required fields' },
         { status: 400 }
       );
     }
-
-    // Validate amount
-    const transferAmount = parseFloat(amount);
-    if (isNaN(transferAmount) || transferAmount <= 0) {
-      return NextResponse.json(
-        { error: 'Invalid transfer amount' },
-        { status: 400 }
-      );
-    }
-
-    // Get source account and verify ownership
-    const sourceAccount = await prisma.account.findFirst({
+    
+    // Get source account
+    const fromAccount = await prisma.account.findFirst({
       where: {
         id: fromAccountId,
-        userId: user.id
+        userId: user.id,
+        isActive: true
       }
     });
-
-    if (!sourceAccount) {
+    
+    if (!fromAccount) {
       return NextResponse.json(
-        { error: 'Source account not found or access denied' },
+        { error: 'Source account not found' },
         { status: 404 }
       );
     }
 
     // Check sufficient balance
-    const currentBalance = parseFloat(sourceAccount.balance.toString());
-    if (currentBalance < transferAmount) {
+    if (fromAccount.balance.toNumber() < amount) {
       return NextResponse.json(
-        { error: 'Insufficient balance in source account' },
+        { error: 'Insufficient balance' },
         { status: 400 }
       );
     }
 
-    // Calculate transfer fee based on type
-    let transferFee = 0;
-    if (transferType === 'EXTERNAL') {
-      transferFee = 2.00; // $2 for external transfers
-    } else if (transferType === 'INTERNATIONAL') {
-      transferFee = transferAmount * 0.015; // 1.5% for international
-    }
+    // Calculate transaction fee (1% for cross-currency transfers)
+    const isCrossCurrency = targetCurrency && targetCurrency !== fromAccount.currency;
+    const transactionFee = isCrossCurrency ? amount * 0.01 : 0; // 1% fee for cross-currency
+    const totalAmount = amount + transactionFee;
 
-    const totalDebit = transferAmount + transferFee;
-    if (currentBalance < totalDebit) {
+    // Check if user has enough balance including fee
+    if (fromAccount.balance.toNumber() < totalAmount) {
       return NextResponse.json(
-        { error: `Insufficient balance. Need $${totalDebit.toFixed(2)} (amount + fee)` },
+        { 
+          error: 'Insufficient balance including transaction fee',
+          details: {
+            requestedAmount: amount,
+            transactionFee: transactionFee,
+            totalRequired: totalAmount,
+            availableBalance: fromAccount.balance.toNumber()
+          }
+        },
         { status: 400 }
       );
     }
 
-    // Generate unique transfer ID
-    const transferId = `TRF_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // Start database transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Update source account balance
-      const updatedSourceAccount = await tx.account.update({
-        where: { id: fromAccountId },
-        data: {
-          balance: (currentBalance - totalDebit).toString()
+    // Get destination account if provided
+    let toAccount = null;
+    if (toAccountId) {
+      toAccount = await prisma.account.findFirst({
+        where: {
+          id: toAccountId,
+          isActive: true
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true
+            }
+          }
         }
       });
+    }
 
-      // Create transaction record for source account (debit)
-      const sourceTransaction = await tx.transaction.create({
-        data: {
-          accountId: fromAccountId,
-          userId: user.id,
-          type: 'TRANSFER',
-          amount: totalDebit.toString(),
-          description: `Transfer to ${toAccountNumber}${description ? ` - ${description}` : ''}`,
-          reference: transferId,
-          transferMode: transferType === 'INTERNAL' ? 'INTERNAL_TRANSFER' : 
-                       transferType === 'EXTERNAL' ? 'EXTERNAL_TRANSFER' : 'INTERNATIONAL_TRANSFER',
-          sourceAccountNumber: sourceAccount.accountNumber,
-          destinationAccountNumber: toAccountNumber,
-          sourceAccountHolder: `${user.firstName} ${user.lastName}`,
-          destinationAccountHolder: toAccountName || 'Unknown',
-          transferFee: transferFee.toString(),
-          status: 'COMPLETED'
+    // Calculate converted amount if cross-currency
+    let convertedAmount = amount;
+    let exchangeRate = 1;
+    
+    if (isCrossCurrency && targetCurrency) {
+      // In a real implementation, you would fetch live exchange rates
+      // For now, we'll use mock rates
+      const mockRates: { [key: string]: number } = {
+        'EUR': 0.85,
+        'GBP': 0.73,
+        'JPY': 110.0,
+        'CAD': 1.25,
+        'AUD': 1.35,
+        'CHF': 0.92,
+        'CNY': 6.45,
+        'INR': 74.5,
+        'THB': 35.5,
+        'SGD': 1.35,
+        'HKD': 7.78,
+        'NZD': 1.42,
+        'SEK': 8.65,
+        'NOK': 8.85,
+        'DKK': 6.25,
+        'PLN': 3.85,
+        'CZK': 21.5,
+        'HUF': 305.0
+      };
+      
+      exchangeRate = mockRates[targetCurrency] || 1;
+      convertedAmount = amount * exchangeRate;
+    }
+
+    // Process the transfer through K Bank corporate account
+    let transferTransaction;
+    
+    if (toAccount) {
+      // Internal transfer to another account
+      transferTransaction = await corporateBankService.processInternalTransfer(
+        user.id,
+        fromAccountId,
+        toAccountId,
+        amount,
+        convertedAmount,
+        description,
+        reference || `TRF-${Date.now()}`,
+        {
+          isCrossCurrency,
+          transactionFee,
+          exchangeRate,
+          sourceCurrency: fromAccount.currency,
+          targetCurrency: targetCurrency || toAccount.currency
         }
-      });
-
-      // For internal transfers, update destination account immediately
-      if (transferType === 'INTERNAL') {
-        const destinationAccount = await tx.account.findFirst({
-          where: { accountNumber: toAccountNumber }
-        });
-
-        if (destinationAccount) {
-          const destBalance = parseFloat(destinationAccount.balance.toString());
-          const newDestBalance = destBalance + transferAmount;
-
-          await tx.account.update({
-            where: { id: destinationAccount.id },
-            data: { balance: newDestBalance.toString() }
-          });
-
-          // Create transaction record for destination account (credit)
-          await tx.transaction.create({
-            data: {
-              accountId: destinationAccount.id,
-              userId: destinationAccount.userId,
-              type: 'TRANSFER',
-              amount: transferAmount.toString(),
-              description: `Transfer from ${sourceAccount.accountNumber}${description ? ` - ${description}` : ''}`,
-              reference: transferId,
-              transferMode: 'INTERNAL_TRANSFER',
-              sourceAccountNumber: sourceAccount.accountNumber,
-              destinationAccountNumber: toAccountNumber,
-              sourceAccountHolder: `${user.firstName} ${user.lastName}`,
-              destinationAccountHolder: toAccountName || 'Unknown',
-              transferFee: '0',
-              status: 'COMPLETED'
-            }
-          });
-        } else {
-          // Destination account not found - mark as failed
-          await tx.transaction.update({
-            where: { id: sourceTransaction.id },
-            data: { 
-              status: 'FAILED',
-              description: `Transfer failed - destination account ${toAccountNumber} not found`
-            }
-          });
+      );
+    } else {
+      // External transfer (to account number/IBAN)
+      transferTransaction = await corporateBankService.processExternalTransfer(
+        user.id,
+        fromAccountId,
+        amount,
+        convertedAmount,
+        description,
+        reference || `TRF-${Date.now()}`,
+        {
+          isCrossCurrency,
+          transactionFee,
+          exchangeRate,
+          sourceCurrency: fromAccount.currency,
+          targetCurrency: targetCurrency || 'USD'
         }
-      }
-
-      return { sourceTransaction };
-    });
-
-    console.log('✅ Transfer completed:', transferId);
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      message: transferType === 'INTERNAL' ? 'Transfer completed successfully' : 'Transfer initiated successfully',
       transfer: {
-        id: result.sourceTransaction.id,
-        amount: result.sourceTransaction.amount,
-        fee: result.sourceTransaction.transferFee,
-        status: result.sourceTransaction.status,
-        reference: result.sourceTransaction.id
+        id: transferTransaction.id,
+        type: transferTransaction.type,
+        amount: transferTransaction.amount,
+        convertedAmount: convertedAmount,
+        description: transferTransaction.description,
+        reference: transferTransaction.reference,
+        status: transferTransaction.status,
+        createdAt: transferTransaction.createdAt,
+        transactionFee: transactionFee,
+        exchangeRate: exchangeRate,
+        isCrossCurrency: isCrossCurrency,
+        sourceCurrency: fromAccount.currency,
+        targetCurrency: targetCurrency || (toAccount?.currency || 'USD'),
+        sourceAccount: {
+          accountNumber: fromAccount.accountNumber,
+          accountType: fromAccount.accountType,
+          currency: fromAccount.currency
+        },
+        destinationAccount: toAccount ? {
+          accountNumber: toAccount.accountNumber,
+          accountType: toAccount.accountType,
+          currency: toAccount.currency,
+          accountHolder: `${toAccount.user.firstName} ${toAccount.user.lastName}`
+        } : null
       }
     });
 
-  } catch (error: any) {
-    console.error('❌ Transfer error:', error);
+  } catch (error) {
+    console.error('Transfer error:', error);
     return NextResponse.json(
-      { 
-        error: 'Transfer failed', 
-        details: error.message 
-      },
+      { error: 'Failed to process transfer' },
       { status: 500 }
     );
   }
@@ -187,67 +205,55 @@ export const GET = requireAuth(async (request: NextRequest) => {
   try {
     const user = (request as any).user;
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const accountId = searchParams.get('accountId');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
 
-    console.log('🔍 Fetching transfers for user:', user.email);
+    const where: any = { 
+      userId: user.id,
+      type: 'TRANSFER'
+    };
+    
+    if (accountId) {
+      where.OR = [
+        { accountId: accountId },
+        { sourceAccountId: accountId },
+        { destinationAccountId: accountId }
+      ];
+    }
 
-    const transfers = await prisma.transaction.findMany({
-      where: { 
-        userId: user.id,
-        type: 'TRANSFER'
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
-      include: {
-        account: {
-          select: {
-            accountNumber: true,
-            accountType: true
+    const [transfers, totalCount] = await Promise.all([
+      prisma.transaction.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          account: {
+            select: {
+              accountNumber: true,
+              accountType: true,
+              currency: true
+            }
           }
         }
-      }
-    });
-
-    const totalCount = await prisma.transaction.count({
-      where: { 
-        userId: user.id,
-        type: 'TRANSFER'
-      }
-    });
+      }),
+      prisma.transaction.count({ where })
+    ]);
 
     return NextResponse.json({
-      success: true,
-      transfers: transfers.map(transfer => ({
-        id: transfer.id,
-        fromAccount: transfer.sourceAccountNumber || transfer.account.accountNumber,
-        toAccount: transfer.destinationAccountNumber,
-        toAccountName: transfer.destinationAccountHolder,
-        amount: transfer.amount,
-        currency: 'USD',
-        transferType: transfer.transferMode === 'INTERNAL_TRANSFER' ? 'INTERNAL' :
-                     transfer.transferMode === 'EXTERNAL_TRANSFER' ? 'EXTERNAL' : 'INTERNATIONAL',
-        status: transfer.status,
-        description: transfer.description,
-        transferFee: transfer.transferFee,
-        createdAt: transfer.createdAt
-      })),
+      transfers,
       pagination: {
-        total: totalCount,
+        page,
         limit,
-        offset,
-        hasMore: offset + limit < totalCount
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit)
       }
     });
-
-  } catch (error: any) {
-    console.error('❌ Error fetching transfers:', error);
+  } catch (error) {
+    console.error('Get transfers error:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to fetch transfers', 
-        details: error.message 
-      },
+      { error: 'Failed to fetch transfers' },
       { status: 500 }
     );
   }

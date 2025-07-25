@@ -35,6 +35,7 @@ model User {
   kycDocuments          KycDocument[]
   aiInteractions        AiInteraction[]
   eChecks               ECheck[]
+  payments              Payment[]
 
   @@map("users")
 }
@@ -56,6 +57,8 @@ model Account {
   cards         Card[]
   eChecks       ECheck[]
   bankTransfers BankTransfer[]
+  payments      Payment[]
+  fixedDeposits FixedDeposit[]
 
   @@map("accounts")
 }
@@ -122,40 +125,33 @@ model Card {
 }
 
 model FixedDeposit {
-  id            String    @id @default(cuid())
+  id            String        @id @default(cuid())
   userId        String
   accountId     String
   amount        Decimal
   interestRate  Decimal
-  duration      Int       // in months
+  duration      Int           // in months
   maturityDate  DateTime
   status        DepositStatus @default(ACTIVE)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   // Relations
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account       Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   @@map("fixed_deposits")
 }
 
 model KycDocument {
-  id          String    @id @default(cuid())
-  userId      String
-  documentType DocumentType
-  fileUrl     String
-  s3Key       String?   // S3 object key for the file
-  fileName    String?
-  fileSize    Int?
-  mimeType    String?
-  status      DocumentStatus @default(PENDING)
-  uploadedAt  DateTime  @default(now())
-  verifiedAt  DateTime?
-  verifiedBy  String?   // Admin ID who verified
+  id            String        @id @default(cuid())
+  userId        String
+  documentType  DocumentType
+  documentUrl   String
+  status        DocumentStatus @default(PENDING)
   rejectionReason String?
-  notes       String?   // Admin notes
-  isActive    Boolean   @default(true)
-  version     Int       @default(1) // For document updates
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   // Relations
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -164,12 +160,12 @@ model KycDocument {
 }
 
 model AiInteraction {
-  id        String      @id @default(cuid())
-  userId    String
-  message   String
-  response  String
-  category  AiCategory
-  createdAt DateTime    @default(now())
+  id            String      @id @default(cuid())
+  userId        String
+  category      AiCategory
+  question      String
+  answer        String
+  createdAt     DateTime    @default(now())
 
   // Relations
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -178,17 +174,14 @@ model AiInteraction {
 }
 
 model ECheck {
-  id            String        @id @default(cuid())
+  id            String      @id @default(cuid())
   userId        String
   accountId     String
-  checkNumber   String        @unique
-  payeeName     String
+  checkNumber   String      @unique
   amount        Decimal
-  memo          String?
-  status        CheckStatus   @default(PENDING)
-  clearedAt     DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  status        CheckStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   // Relations
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -202,20 +195,14 @@ model CorporateBank {
   bankName          String
   accountHolderName String
   accountNumber     String    @unique
-  routingNumber     String?   // For US banks
-  swiftCode         String?   // For international transfers
-  iban              String?   // For European banks
-  branchCode        String?   // For local banks
-  accountType       String    @default("BUSINESS") // SAVINGS, CURRENT, BUSINESS
-  currency          String    @default("USD")
+  swiftCode         String
+  bicCode           String
+  accountType       String
+  currency          String    @default("THB")
+  transferFee       Decimal   @default(50)
   isActive          Boolean   @default(true)
-  dailyLimit        Decimal   @default(100000) // $100k daily limit
-  monthlyLimit      Decimal   @default(1000000) // $1M monthly limit
-  transferFee       Decimal   @default(0) // Fee per transfer
-  apiEnabled        Boolean   @default(false) // Whether bank API is integrated
-  apiEndpoint       String?   // Bank API endpoint
-  apiKey            String?   // Encrypted API key
-  webhookUrl        String?   // For real-time notifications
+  apiEndpoint       String?
+  apiKey            String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -228,12 +215,12 @@ model CorporateBank {
 model BankTransfer {
   id                String            @id @default(cuid())
   corporateBankId   String
-  fromAccountId     String?           // User's account ID
+  fromAccountId     String?
   toAccountNumber   String
   toAccountName     String
   amount            Decimal
-  currency          String            @default("USD")
-  transferType      BankTransferType  @default(INBOUND) // INBOUND (to user), OUTBOUND (from user)
+  currency          String            @default("THB")
+  transferType      BankTransferType
   status            BankTransferStatus @default(PENDING)
   reference         String            @unique
   description       String?
@@ -372,4 +359,43 @@ enum BankTransferStatus {
   FAILED
   CANCELLED
   REVERSED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+  THAI_QR
+  WIRE_TRANSFER
+  MOBILE_PAYMENT
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  userId        String
+  accountId     String
+  amount        Decimal
+  currency      String        @default("USD")
+  paymentMethod PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  reference     String        @unique
+  description   String?
+  metadata      Json?
+  completedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account       Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
 } 

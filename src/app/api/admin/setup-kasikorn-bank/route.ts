@@ -25,8 +25,6 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
           accountType: 'CURRENT',
           currency: 'THB',
           isActive: true,
-          dailyLimit: 1000000,  // 1M THB daily limit
-          monthlyLimit: 10000000, // 10M THB monthly limit
           transferFee: 0,        // No transfer fee
           updatedAt: new Date()
         }
@@ -44,8 +42,6 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
           accountType: updatedBank.accountType,
           currency: updatedBank.currency,
           isActive: updatedBank.isActive,
-          dailyLimit: updatedBank.dailyLimit,
-          monthlyLimit: updatedBank.monthlyLimit,
           transferFee: updatedBank.transferFee
         }
       });
@@ -61,11 +57,10 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
         accountHolderName: 'The Dotprotocol Co ., Ltd',
         accountNumber: '198-1-64757-9',
         swiftCode: 'KASITHBK',
+        bicCode: 'KASITHBK',
         accountType: 'CURRENT',
         currency: 'THB',
         isActive: true,
-        dailyLimit: 1000000,  // 1M THB daily limit
-        monthlyLimit: 10000000, // 10M THB monthly limit
         transferFee: 0,        // No transfer fee
         createdAt: new Date(),
         updatedAt: new Date()
@@ -86,8 +81,6 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
         accountType: newBank.accountType,
         currency: newBank.currency,
         isActive: newBank.isActive,
-        dailyLimit: newBank.dailyLimit,
-        monthlyLimit: newBank.monthlyLimit,
         transferFee: newBank.transferFee
       }
     });

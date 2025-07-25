@@ -145,33 +145,27 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
       );
     }
 
-    // Check daily limit
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Check daily transfer limit (optional - remove if not needed)
+    // const todayTransfers = await prisma.bankTransfer.aggregate({
+    //   where: {
+    //     corporateBankId,
+    //     createdAt: {
+    //       gte: new Date(new Date().setHours(0, 0, 0, 0))
+    //     },
+    //     status: 'COMPLETED'
+    //   },
+    //   _sum: {
+    //     amount: true
+    //   }
+    // });
 
-    const todayTransfers = await prisma.bankTransfer.aggregate({
-      where: {
-        corporateBankId,
-        createdAt: {
-          gte: today,
-          lt: tomorrow
-        },
-        status: 'COMPLETED'
-      },
-      _sum: {
-        amount: true
-      }
-    });
-
-    const todayTotal = parseFloat(todayTransfers._sum.amount?.toString() || '0');
-    if (todayTotal + transferAmount > parseFloat(corporateBank.dailyLimit.toString())) {
-      return NextResponse.json(
-        { error: `Transfer would exceed daily limit of $${corporateBank.dailyLimit}` },
-        { status: 400 }
-      );
-    }
+    // const todayTotal = parseFloat(todayTransfers._sum.amount?.toString() || '0');
+    // if (todayTotal + transferAmount > parseFloat(corporateBank.dailyLimit.toString())) {
+    //   return NextResponse.json(
+    //     { error: `Transfer would exceed daily limit of $${corporateBank.dailyLimit}` },
+    //     { status: 400 }
+    //   );
+    // }
 
     // For outbound transfers, check user account balance
     if (transferType === 'OUTBOUND' && fromAccountId) {

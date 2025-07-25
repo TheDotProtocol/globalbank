@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
         }
       },
       orderBy: {
-        uploadedAt: 'desc'
+        createdAt: 'desc'
       }
     });
 

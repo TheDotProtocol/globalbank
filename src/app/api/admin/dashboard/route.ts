@@ -90,7 +90,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
     try {
       recentKYC = await prisma.kycDocument.findMany({
         take: 10,
-        orderBy: { uploadedAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
         include: {
           user: {
             select: {
@@ -115,9 +115,8 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
           bankName: true,
           accountNumber: true,
           isActive: true,
-          dailyLimit: true,
-          monthlyLimit: true,
           currency: true,
+          transferFee: true,
           _count: {
             select: {
               bankTransfers: true

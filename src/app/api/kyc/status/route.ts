@@ -18,14 +18,15 @@ export const GET = requireAuth(async (request: NextRequest) => {
         lastName: true,
         kycStatus: true,
         kycDocuments: {
-          orderBy: { uploadedAt: 'desc' },
+          orderBy: { createdAt: 'desc' },
           select: {
             id: true,
             documentType: true,
             status: true,
-            uploadedAt: true,
-            verifiedAt: true,
-            rejectionReason: true
+            documentUrl: true,
+            rejectionReason: true,
+            createdAt: true,
+            updatedAt: true
           }
         }
       }

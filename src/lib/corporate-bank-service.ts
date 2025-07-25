@@ -165,57 +165,185 @@ export class CorporateBankService {
   /**
    * Process a debit transaction (money going out of user account)
    */
-  async processDebitTransaction(
-    userId: string,
-    accountId: string,
-    amount: number,
-    description: string,
-    reference: string
-  ) {
-    console.log(`💸 Processing DEBIT transaction:`, { amount, description, reference });
-
-    // Route through K Bank (money flows from user account to K Bank)
-    const kBankTransaction = await this.routeTransactionThroughKBank(
-      userId,
-      accountId,
-      'DEBIT',
-      amount,
-      description,
-      reference
-    );
-
-    // Create the actual transaction record
-    const transaction = await prisma.transaction.create({
-      data: {
-        userId,
-        accountId,
-        type: 'DEBIT',
-        amount: amount,
-        description: `${description} (via K Bank)`,
-        reference: reference,
-        status: 'COMPLETED',
-        transferMode: 'EXTERNAL_TRANSFER',
-        sourceAccountNumber: await this.getAccountNumber(accountId),
-        destinationAccountNumber: '198-1-64757-9',
-        sourceAccountHolder: await this.getAccountHolderName(accountId),
-        destinationAccountHolder: 'The Dotprotocol Co., Ltd',
-        transferFee: 0, // Fee already added in K Bank transaction
-        netAmount: amount
-      }
-    });
-
-    // Update account balance
-    await prisma.account.update({
-      where: { id: accountId },
-      data: {
-        balance: {
-          decrement: amount
+  async processDebitTransaction(userId: string, accountId: string, amount: number, description: string, reference: string) {
+    console.log(`🏦 Processing DEBIT transaction: $${amount} from account ${accountId}`);
+    
+    try {
+      // Route through K Bank
+      await this.routeTransactionThroughKBank(userId, accountId, 'DEBIT', amount, description, reference);
+      
+      // Create the transaction
+      const transaction = await prisma.transaction.create({
+        data: {
+          userId,
+          accountId,
+          type: 'DEBIT',
+          amount,
+          description,
+          reference,
+          status: 'COMPLETED',
+          transferMode: 'INTERNAL_TRANSFER'
         }
-      }
-    });
+      });
 
-    console.log(`✅ DEBIT transaction completed:`, transaction.id);
-    return transaction;
+      // Update account balance
+      await prisma.account.update({
+        where: { id: accountId },
+        data: {
+          balance: {
+            decrement: amount
+          }
+        }
+      });
+
+      console.log(`✅ DEBIT transaction completed: ${transaction.id}`);
+      return transaction;
+    } catch (error) {
+      console.error(`❌ DEBIT transaction failed:`, error);
+      throw error;
+    }
+  }
+
+  async processInternalTransfer(
+    userId: string, 
+    fromAccountId: string, 
+    toAccountId: string, 
+    amount: number, 
+    convertedAmount: number,
+    description: string, 
+    reference: string,
+    transferDetails: {
+      isCrossCurrency: boolean;
+      transactionFee: number;
+      exchangeRate: number;
+      sourceCurrency: string;
+      targetCurrency: string;
+    }
+  ) {
+    console.log(`🏦 Processing INTERNAL transfer: $${amount} from ${fromAccountId} to ${toAccountId}`);
+    
+    try {
+      // Route through K Bank
+      await this.routeTransactionThroughKBank(userId, fromAccountId, 'DEBIT', amount + transferDetails.transactionFee, description, reference);
+      
+      // Create the transfer transaction
+      const transaction = await prisma.transaction.create({
+        data: {
+          userId,
+          accountId: fromAccountId,
+          type: 'TRANSFER',
+          amount: amount + transferDetails.transactionFee,
+          description: `${description}${transferDetails.isCrossCurrency ? ` (${transferDetails.sourceCurrency} → ${transferDetails.targetCurrency})` : ''}`,
+          reference,
+          status: 'COMPLETED',
+          transferMode: 'INTERNAL_TRANSFER',
+          sourceAccountId: fromAccountId,
+          destinationAccountId: toAccountId,
+          transferFee: transferDetails.transactionFee,
+          netAmount: amount
+        }
+      });
+
+      // Update source account balance (deduct amount + fee)
+      await prisma.account.update({
+        where: { id: fromAccountId },
+        data: {
+          balance: {
+            decrement: amount + transferDetails.transactionFee
+          }
+        }
+      });
+
+      // Update destination account balance (add converted amount)
+      await prisma.account.update({
+        where: { id: toAccountId },
+        data: {
+          balance: {
+            increment: convertedAmount
+          }
+        }
+      });
+
+      // Create credit transaction for destination account
+      await prisma.transaction.create({
+        data: {
+          userId: (await prisma.account.findUnique({ where: { id: toAccountId } }))?.userId || '',
+          accountId: toAccountId,
+          type: 'TRANSFER',
+          amount: convertedAmount,
+          description: `Transfer received${transferDetails.isCrossCurrency ? ` (${transferDetails.sourceCurrency} → ${transferDetails.targetCurrency})` : ''}`,
+          reference,
+          status: 'COMPLETED',
+          transferMode: 'INTERNAL_TRANSFER',
+          sourceAccountId: fromAccountId,
+          destinationAccountId: toAccountId,
+          transferFee: 0,
+          netAmount: convertedAmount
+        }
+      });
+
+      console.log(`✅ INTERNAL transfer completed: ${transaction.id}`);
+      return transaction;
+    } catch (error) {
+      console.error(`❌ INTERNAL transfer failed:`, error);
+      throw error;
+    }
+  }
+
+  async processExternalTransfer(
+    userId: string, 
+    fromAccountId: string, 
+    amount: number, 
+    convertedAmount: number,
+    description: string, 
+    reference: string,
+    transferDetails: {
+      isCrossCurrency: boolean;
+      transactionFee: number;
+      exchangeRate: number;
+      sourceCurrency: string;
+      targetCurrency: string;
+    }
+  ) {
+    console.log(`🏦 Processing EXTERNAL transfer: $${amount} from ${fromAccountId}`);
+    
+    try {
+      // Route through K Bank
+      await this.routeTransactionThroughKBank(userId, fromAccountId, 'DEBIT', amount + transferDetails.transactionFee, description, reference);
+      
+      // Create the transfer transaction
+      const transaction = await prisma.transaction.create({
+        data: {
+          userId,
+          accountId: fromAccountId,
+          type: 'TRANSFER',
+          amount: amount + transferDetails.transactionFee,
+          description: `${description}${transferDetails.isCrossCurrency ? ` (${transferDetails.sourceCurrency} → ${transferDetails.targetCurrency})` : ''}`,
+          reference,
+          status: 'COMPLETED',
+          transferMode: 'EXTERNAL_TRANSFER',
+          sourceAccountId: fromAccountId,
+          transferFee: transferDetails.transactionFee,
+          netAmount: amount
+        }
+      });
+
+      // Update source account balance (deduct amount + fee)
+      await prisma.account.update({
+        where: { id: fromAccountId },
+        data: {
+          balance: {
+            decrement: amount + transferDetails.transactionFee
+          }
+        }
+      });
+
+      console.log(`✅ EXTERNAL transfer completed: ${transaction.id}`);
+      return transaction;
+    } catch (error) {
+      console.error(`❌ EXTERNAL transfer failed:`, error);
+      throw error;
+    }
   }
 
   /**

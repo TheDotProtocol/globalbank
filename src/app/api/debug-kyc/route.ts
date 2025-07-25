@@ -31,8 +31,10 @@ export const GET = requireAuth(async (request: NextRequest) => {
         id: doc.id,
         documentType: doc.documentType,
         status: doc.status,
-        fileName: doc.fileName,
-        version: doc.version
+        documentUrl: doc.documentUrl,
+        rejectionReason: doc.rejectionReason,
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt
       }))
     });
 

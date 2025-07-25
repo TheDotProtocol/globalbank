@@ -130,13 +130,8 @@ export const POST = requireAuth(async (request: NextRequest) => {
             return prisma.kycDocument.update({
               where: { id: existingDocuments[index].id },
               data: {
-                fileUrl: doc.fileUrl,
-                s3Key: doc.s3Key,
-                fileName: doc.fileName,
-                fileSize: doc.fileSize,
-                mimeType: doc.mimeType,
-                status: 'PENDING',
-                version: existingDocuments[index].version + 1
+                documentUrl: doc.fileUrl,
+                status: 'PENDING'
               }
             });
           } else {
@@ -144,11 +139,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
               data: {
                 userId: user.id,
                 documentType: doc.documentType as any,
-                fileUrl: doc.fileUrl,
-                s3Key: doc.s3Key,
-                fileName: doc.fileName,
-                fileSize: doc.fileSize,
-                mimeType: doc.mimeType,
+                documentUrl: doc.fileUrl,
                 status: 'PENDING'
               }
             });
@@ -165,11 +156,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
             data: {
               userId: user.id,
               documentType: doc.documentType as any,
-              fileUrl: doc.fileUrl,
-              s3Key: doc.s3Key,
-              fileName: doc.fileName,
-              fileSize: doc.fileSize,
-              mimeType: doc.mimeType,
+              documentUrl: doc.fileUrl,
               status: 'PENDING'
             }
           })

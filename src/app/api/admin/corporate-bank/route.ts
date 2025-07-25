@@ -15,10 +15,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
         accountNumber: true,
         currency: true,
         isActive: true,
-        dailyLimit: true,
-        monthlyLimit: true,
         transferFee: true,
-        apiEnabled: true,
         createdAt: true,
         _count: {
           select: {
@@ -104,19 +101,13 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
       bankName,
       accountHolderName,
       accountNumber,
-      routingNumber,
       swiftCode,
-      iban,
-      branchCode,
-      accountType = 'BUSINESS',
-      currency = 'USD',
-      dailyLimit = 100000,
-      monthlyLimit = 1000000,
-      transferFee = 0,
-      apiEnabled = false,
+      bicCode,
+      accountType,
+      currency,
+      transferFee,
       apiEndpoint,
-      apiKey,
-      webhookUrl
+      apiKey
     } = await request.json();
 
     // Validate required fields
@@ -150,19 +141,13 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
           bankName,
           accountHolderName,
           accountNumber,
-          routingNumber,
           swiftCode,
-          iban,
-          branchCode,
+          bicCode,
           accountType,
           currency,
-          dailyLimit: parseFloat(dailyLimit),
-          monthlyLimit: parseFloat(monthlyLimit),
           transferFee: parseFloat(transferFee),
-          apiEnabled,
           apiEndpoint,
-          apiKey,
-          webhookUrl
+          apiKey
         }
       });
     } else {
@@ -172,19 +157,13 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
           bankName,
           accountHolderName,
           accountNumber,
-          routingNumber,
           swiftCode,
-          iban,
-          branchCode,
+          bicCode,
           accountType,
           currency,
-          dailyLimit: parseFloat(dailyLimit),
-          monthlyLimit: parseFloat(monthlyLimit),
           transferFee: parseFloat(transferFee),
-          apiEnabled,
           apiEndpoint,
-          apiKey,
-          webhookUrl
+          apiKey
         }
       });
     }
@@ -197,17 +176,12 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
         bankName: bank.bankName,
         accountHolderName: bank.accountHolderName,
         accountNumber: bank.accountNumber,
-        routingNumber: bank.routingNumber,
         swiftCode: bank.swiftCode,
-        iban: bank.iban,
-        branchCode: bank.branchCode,
+        bicCode: bank.bicCode,
         accountType: bank.accountType,
         currency: bank.currency,
         isActive: bank.isActive,
-        dailyLimit: bank.dailyLimit,
-        monthlyLimit: bank.monthlyLimit,
         transferFee: bank.transferFee,
-        apiEnabled: bank.apiEnabled,
         createdAt: bank.createdAt,
         updatedAt: bank.updatedAt
       }

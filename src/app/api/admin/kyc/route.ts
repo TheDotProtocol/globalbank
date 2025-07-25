@@ -41,7 +41,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
             }
           }
         },
-        orderBy: { uploadedAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
         skip,
         take: limit
       }),
@@ -53,19 +53,11 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
         id: doc.id,
         userId: doc.userId,
         documentType: doc.documentType,
-        fileUrl: doc.fileUrl,
-        s3Key: doc.s3Key,
-        fileName: doc.fileName,
-        fileSize: doc.fileSize,
-        mimeType: doc.mimeType,
+        fileUrl: doc.documentUrl,
         status: doc.status,
-        uploadedAt: doc.uploadedAt,
-        verifiedAt: doc.verifiedAt,
-        verifiedBy: doc.verifiedBy,
+        uploadedAt: doc.createdAt,
+        verifiedAt: doc.updatedAt,
         rejectionReason: doc.rejectionReason,
-        notes: doc.notes,
-        isActive: doc.isActive,
-        version: doc.version,
         user: doc.user
       })),
       pagination: {
@@ -97,9 +89,7 @@ export const PUT = requireAdminAuth(async (request: NextRequest) => {
       where: { id: documentId },
       data: {
         status: status,
-        verifiedAt: status === 'VERIFIED' ? new Date() : null,
-        verifiedBy: status === 'VERIFIED' ? admin.username : null,
-        notes: comments || null
+        rejectionReason: status === 'REJECTED' ? comments : null
       },
       include: {
         user: {
@@ -120,8 +110,7 @@ export const PUT = requireAdminAuth(async (request: NextRequest) => {
     if (status === 'VERIFIED') {
       const allUserDocuments = await prisma.kycDocument.findMany({
         where: { 
-          userId: updatedDocument.userId,
-          isActive: true
+          userId: updatedDocument.userId
         }
       });
 

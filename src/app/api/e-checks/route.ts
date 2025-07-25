@@ -72,9 +72,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
         checkNumber,
         accountId,
         userId: user.id,
-        payeeName,
         amount: checkAmount.toString(),
-        memo,
         status: 'PENDING'
       }
     });
@@ -88,7 +86,6 @@ export const POST = requireAuth(async (request: NextRequest) => {
         id: check.id,
         checkNumber: check.checkNumber,
         amount: check.amount,
-        payeeName: check.payeeName,
         status: check.status,
         createdAt: check.createdAt
       }
@@ -146,12 +143,9 @@ export const GET = requireAuth(async (request: NextRequest) => {
         id: check.id,
         checkNumber: check.checkNumber,
         accountNumber: check.account.accountNumber,
-        payeeName: check.payeeName,
         amount: check.amount,
-        memo: check.memo,
         status: check.status,
-        createdAt: check.createdAt,
-        clearedAt: check.clearedAt
+        createdAt: check.createdAt
       })),
       pagination: {
         total: totalCount,
