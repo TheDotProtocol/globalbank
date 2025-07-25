@@ -82,7 +82,8 @@ export default function KYCVerificationPage() {
         const data = await response.json();
         setUser(data.user);
         
-        if (data.kycStatus === 'APPROVED') {
+        // Check for both APPROVED and VERIFIED status
+        if (data.kycStatus === 'APPROVED' || data.kycStatus === 'VERIFIED') {
           router.push('/dashboard');
         }
       }

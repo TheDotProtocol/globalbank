@@ -595,12 +595,18 @@ export async function exportStatement(
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
     
-    const openingBalance = Math.max(0, parseFloat(account.balance) - 
-      transactions.reduce((sum, tx) => {
-        const amount = parseFloat(tx.amount);
-        return sum + (tx.type === 'CREDIT' ? amount : -amount);
-      }, 0)
-    );
+    // Calculate total credits and debits from transactions
+    const totalCredits = transactions
+      .filter(tx => tx.type === 'CREDIT')
+      .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+    
+    const totalDebits = transactions
+      .filter(tx => tx.type === 'DEBIT' || tx.type === 'TRANSFER')
+      .reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+    
+    // Calculate opening balance based on current balance and transaction history
+    const currentBalance = parseFloat(account.balance);
+    const openingBalance = currentBalance - totalCredits + totalDebits;
     
     const statementOptions: StatementOptions = {
       user: {
@@ -611,12 +617,12 @@ export async function exportStatement(
       account: {
         accountNumber: account.accountNumber,
         accountType: account.accountType,
-        balance: parseFloat(account.balance)
+        balance: currentBalance
       },
       transactions: transactions.slice(0, 50),
       startDate,
       endDate,
-      openingBalance
+      openingBalance: Math.max(0, openingBalance)
     };
     
     const blob = await ExportManager.exportStatementToPDF(statementOptions);

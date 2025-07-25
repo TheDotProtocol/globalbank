@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Image from "next/image";
 import KYCUploadForm from '@/components/KYCUploadForm';
+import KYCDocumentsDisplay from '@/components/KYCDocumentsDisplay';
 
 interface UserProfile {
   id: string;
@@ -592,6 +593,9 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
+
+                {/* KYC Documents Display */}
+                <KYCDocumentsDisplay userId={user?.id} />
 
                 {user?.kycStatus !== 'APPROVED' && (
                   <KYCUploadForm />
