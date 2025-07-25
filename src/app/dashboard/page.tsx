@@ -546,62 +546,56 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <TranslationPrompt />
-      <div className="flex">
-        {/* Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-300 to-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-300 to-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-1000"></div>
-          <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-gradient-to-r from-indigo-300 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-2000"></div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="relative z-50 bg-white/90 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors lg:hidden"
-                >
-                  <Menu className="h-5 w-5" />
-                </button>
-                <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm">
-                  <Image
-                    src="/logo.png"
-                    alt="Global Dot Bank Logo"
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                  <NoTranslate>Global Dot Bank</NoTranslate>
-                </span>
+      
+      {/* Navigation */}
+      <nav className="relative z-50 bg-white/90 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors lg:hidden"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm">
+                <Image
+                  src="/logo.png"
+                  alt="Global Dot Bank Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </div>
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-600 dark:text-gray-300 hidden md:block">
-                  Welcome, {user?.firstName || 'User'} {user?.lastName || ''}
-                </span>
-                <NotificationCenter />
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  aria-label="Toggle Dark Mode"
-                >
-                  {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden md:block">Logout</span>
-                </button>
-              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                <NoTranslate>Global Dot Bank</NoTranslate>
+              </span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-600 dark:text-gray-300 hidden md:block">
+                Welcome, {user?.firstName || 'User'} {user?.lastName || ''}
+              </span>
+              <NotificationCenter />
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Toggle Dark Mode"
+              >
+                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden md:block">Logout</span>
+              </button>
             </div>
           </div>
-        </nav>
+        </div>
+      </nav>
 
+      <div className="flex">
         {/* Sidebar */}
         <Sidebar 
           sidebarOpen={sidebarOpen}
@@ -621,304 +615,306 @@ export default function Dashboard() {
         />
 
         {/* Main Content */}
-        <div className={`relative z-10 ${sidebarOpen ? 'lg:ml-64' : ''} lg:ml-64 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8`}>
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Welcome back, {user?.firstName || 'User'}! 👋
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Here's your financial overview for today
-            </p>
-          </div>
-
-          {/* Bank Bugger AI */}
-          <div className="mb-8">
-            <BankBuggerAI userId={user?.id || ''} className="w-full" />
-          </div>
-
-          {/* Multi-Currency Balance Card */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">🌍 Global Balance</h2>
-                <p className="text-blue-100">Your money in all major world currencies</p>
-              </div>
-              <div className="text-right">
-                <div className="text-blue-100 text-sm">Active Accounts</div>
-                <div className="text-2xl font-bold">{accounts.length}</div>
-              </div>
-            </div>
-            
-            {/* Multi-Currency Display */}
-            <MultiCurrencyDisplay 
-              usdAmount={totalBalance} 
-              className="text-white"
-              showSettings={true}
-            />
-            
-            {/* Quick Currency Overview */}
-            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white/10 rounded-lg p-3 text-center">
-                <div className="text-sm text-blue-100">🇺🇸 USD</div>
-                <div className="text-lg font-bold">${totalBalance.toLocaleString()}</div>
-              </div>
-              <div className="bg-white/10 rounded-lg p-3 text-center">
-                <div className="text-sm text-blue-100">🇪🇺 EUR</div>
-                <div className="text-lg font-bold">€{(totalBalance * 0.85).toLocaleString()}</div>
-              </div>
-              <div className="bg-white/10 rounded-lg p-3 text-center">
-                <div className="text-sm text-blue-100">🇬🇧 GBP</div>
-                <div className="text-lg font-bold">£{(totalBalance * 0.73).toLocaleString()}</div>
-              </div>
-              <div className="bg-white/10 rounded-lg p-3 text-center">
-                <div className="text-sm text-blue-100">🇹🇭 THB</div>
-                <div className="text-lg font-bold">฿{(totalBalance * 35.5).toLocaleString()}</div>
-              </div>
-            </div>
-            
-            {/* Borderless Banking Info */}
-            <div className="mt-6 p-4 bg-white/10 rounded-lg">
-              <div className="flex items-center space-x-2 mb-2">
-                <Globe className="h-5 w-5 text-blue-100" />
-                <span className="text-blue-100 font-semibold">Borderless Banking</span>
-              </div>
-              <p className="text-blue-100 text-sm">
-                Make payments in any currency worldwide with just 1% transaction fee. 
-                No hidden charges, no complex conversion rates.
+        <div className="flex-1 lg:ml-64">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Welcome Section */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Welcome back, {user?.firstName || 'User'}! 👋
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300">
+                Here's your financial overview for today
               </p>
             </div>
-          </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <button
-              onClick={() => handleQuickAction('add-money')}
-              className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
-                  <Upload className="h-5 w-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900 dark:text-white">Add Money</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Deposit funds</div>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => handleQuickAction('transfer')}
-              className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-                  <ArrowRight className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900 dark:text-white">Transfer</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Send money</div>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => handleQuickAction('new-card')}
-              className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                  <Plus className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900 dark:text-white">New Card</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Request card</div>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => handleQuickAction('fixed-deposit')}
-              className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg">
-                  <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900 dark:text-white">Fixed Deposit</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Invest money</div>
-                </div>
-              </div>
-            </button>
-          </div>
-
-          {/* Accounts and Transactions Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Accounts Section */}
-            <div className="lg:col-span-2">
-              <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Accounts</h2>
-                  <button 
-                    onClick={() => router.push('/profile')}
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
-                  >
-                    View All
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  {accounts.map((account) => (
-                    <div
-                      key={account.id}
-                      onClick={() => handleAccountClick(account.id)}
-                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg ${getAccountColor(account.accountType)}`}>
-                          {getAccountIcon(account.accountType)}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-gray-900 dark:text-white">
-                            {account.accountType} Account
-                          </div>
-                          <div className="text-sm text-gray-600 dark:text-gray-300">
-                            ****{account.accountNumber.slice(-4)}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-bold text-gray-900 dark:text-white">
-                          ${(typeof account.balance === 'string' ? parseFloat(account.balance) : account.balance).toLocaleString()}
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                          {account.currency}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Bank Bugger AI */}
+            <div className="mb-8">
+              <BankBuggerAI userId={user?.id || ''} className="w-full" />
             </div>
 
-            {/* Sidebar - Interest Rates and Recent Transactions */}
-            <div className="space-y-6">
-              {/* Interest Rates Display */}
-              <InterestRatesDisplay userBalance={totalBalance} />
+            {/* Multi-Currency Balance Card */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">🌍 Global Balance</h2>
+                  <p className="text-blue-100">Your money in all major world currencies</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-blue-100 text-sm">Active Accounts</div>
+                  <div className="text-2xl font-bold">{accounts.length}</div>
+                </div>
+              </div>
               
-              {/* Recent Transactions */}
-              <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Transactions</h2>
-                  <button 
-                    onClick={() => router.push('/dashboard/transactions')}
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
-                  >
-                    View All
-                  </button>
+              {/* Multi-Currency Display */}
+              <MultiCurrencyDisplay 
+                usdAmount={totalBalance} 
+                className="text-white"
+                showSettings={true}
+              />
+              
+              {/* Quick Currency Overview */}
+              <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/10 rounded-lg p-3 text-center">
+                  <div className="text-sm text-blue-100">🇺🇸 USD</div>
+                  <div className="text-lg font-bold">${totalBalance.toLocaleString()}</div>
                 </div>
-                <div className="space-y-4">
-                  {transactions.slice(0, 5).map((transaction) => (
-                    <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg ${
-                          transaction.type === 'CREDIT' 
-                            ? 'bg-green-100 dark:bg-green-900/50' 
-                            : 'bg-red-100 dark:bg-red-900/50'
-                        }`}>
-                          {transaction.type === 'CREDIT' ? (
-                            <Upload className="h-4 w-4 text-green-600 dark:text-green-400" />
-                          ) : (
-                            <Download className="h-4 w-4 text-red-600 dark:text-red-400" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900 dark:text-white text-sm">
-                            {transaction.description}
-                          </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-300">
-                            {new Date(transaction.createdAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-bold text-sm ${
-                          transaction.type === 'CREDIT' 
-                            ? 'text-green-600 dark:text-green-400' 
-                            : 'text-red-600 dark:text-red-400'
-                        }`}>
-                          {transaction.type === 'CREDIT' ? '+' : '-'}${transaction.amount.toLocaleString()}
-                        </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-300">
-                          {transaction.status}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="bg-white/10 rounded-lg p-3 text-center">
+                  <div className="text-sm text-blue-100">🇪🇺 EUR</div>
+                  <div className="text-lg font-bold">€{(totalBalance * 0.85).toLocaleString()}</div>
+                </div>
+                <div className="bg-white/10 rounded-lg p-3 text-center">
+                  <div className="text-sm text-blue-100">🇬🇧 GBP</div>
+                  <div className="text-lg font-bold">£{(totalBalance * 0.73).toLocaleString()}</div>
+                </div>
+                <div className="bg-white/10 rounded-lg p-3 text-center">
+                  <div className="text-sm text-blue-100">🇹🇭 THB</div>
+                  <div className="text-lg font-bold">฿{(totalBalance * 35.5).toLocaleString()}</div>
                 </div>
               </div>
+              
+              {/* Borderless Banking Info */}
+              <div className="mt-6 p-4 bg-white/10 rounded-lg">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Globe className="h-5 w-5 text-blue-100" />
+                  <span className="text-blue-100 font-semibold">Borderless Banking</span>
+                </div>
+                <p className="text-blue-100 text-sm">
+                  Make payments in any currency worldwide with just 1% transaction fee. 
+                  No hidden charges, no complex conversion rates.
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Fixed Deposits Section */}
-          {fixedDeposits.length > 0 && (
-            <div className="mt-8">
-              <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Fixed Deposits</h2>
-                  <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
-                    View All
-                  </button>
+            {/* Quick Actions */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <button
+                onClick={() => handleQuickAction('add-money')}
+                className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg">
+                    <Upload className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white">Add Money</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Deposit funds</div>
+                  </div>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {fixedDeposits.map((deposit) => (
-                    <div key={deposit.id} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-700">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
-                          <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          deposit.status === 'ACTIVE' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                        }`}>
-                          {deposit.status}
-                        </span>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="font-bold text-gray-900 dark:text-white">
-                          ${(typeof deposit.amount === 'string' ? parseFloat(deposit.amount) : deposit.amount).toLocaleString()}
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                          {deposit.interestRate}% for {deposit.duration} months
-                        </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                          Matures: {new Date(deposit.maturityDate).toLocaleDateString()}
-                        </div>
-                        <button
-                          onClick={() => handleCertificateGeneration(deposit.id)}
-                          className="mt-2 w-full bg-purple-600 text-white py-1 px-3 rounded-lg text-xs hover:bg-purple-700 transition-colors"
-                        >
-                          Generate Certificate
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+              </button>
+
+              <button
+                onClick={() => handleQuickAction('transfer')}
+                className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                    <ArrowRight className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white">Transfer</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Send money</div>
+                  </div>
                 </div>
-                {fixedDeposits.length > 0 && (
-                  <div className="mt-4 flex justify-end">
-                    <button
-                      onClick={handleGenerateAllCertificates}
-                      className="bg-purple-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-purple-700 transition-colors"
+              </button>
+
+              <button
+                onClick={() => handleQuickAction('new-card')}
+                className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                    <Plus className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white">New Card</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Request card</div>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleQuickAction('fixed-deposit')}
+                className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white">Fixed Deposit</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Invest money</div>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* Accounts and Transactions Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Accounts Section */}
+              <div className="lg:col-span-2">
+                <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Your Accounts</h2>
+                    <button 
+                      onClick={() => router.push('/profile')}
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
                     >
-                      Generate All Certificates
+                      View All
                     </button>
                   </div>
-                )}
+                  <div className="space-y-4">
+                    {accounts.map((account) => (
+                      <div
+                        key={account.id}
+                        onClick={() => handleAccountClick(account.id)}
+                        className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-2 rounded-lg ${getAccountColor(account.accountType)}`}>
+                            {getAccountIcon(account.accountType)}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 dark:text-white">
+                              {account.accountType} Account
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                              ****{account.accountNumber.slice(-4)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-gray-900 dark:text-white">
+                            ${(typeof account.balance === 'string' ? parseFloat(account.balance) : account.balance).toLocaleString()}
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-300">
+                            {account.currency}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sidebar - Interest Rates and Recent Transactions */}
+              <div className="space-y-6">
+                {/* Interest Rates Display */}
+                <InterestRatesDisplay userBalance={totalBalance} />
+                
+                {/* Recent Transactions */}
+                <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Transactions</h2>
+                    <button 
+                      onClick={() => router.push('/dashboard/transactions')}
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+                    >
+                      View All
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {transactions.slice(0, 5).map((transaction) => (
+                      <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-2 rounded-lg ${
+                            transaction.type === 'CREDIT' 
+                              ? 'bg-green-100 dark:bg-green-900/50' 
+                              : 'bg-red-100 dark:bg-red-900/50'
+                          }`}>
+                            {transaction.type === 'CREDIT' ? (
+                              <Upload className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            ) : (
+                              <Download className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-white text-sm">
+                              {transaction.description}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-300">
+                              {new Date(transaction.createdAt).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className={`font-bold text-sm ${
+                            transaction.type === 'CREDIT' 
+                              ? 'text-green-600 dark:text-green-400' 
+                              : 'text-red-600 dark:text-red-400'
+                          }`}>
+                            {transaction.type === 'CREDIT' ? '+' : '-'}${transaction.amount.toLocaleString()}
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-300">
+                            {transaction.status}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-          )}
+
+            {/* Fixed Deposits Section */}
+            {fixedDeposits.length > 0 && (
+              <div className="mt-8">
+                <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Fixed Deposits</h2>
+                    <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
+                      View All
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {fixedDeposits.map((deposit) => (
+                      <div key={deposit.id} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-700">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="p-2 bg-purple-100 dark:bg-purple-900/50 rounded-lg">
+                            <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                          </div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            deposit.status === 'ACTIVE' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                          }`}>
+                            {deposit.status}
+                          </span>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="font-bold text-gray-900 dark:text-white">
+                            ${(typeof deposit.amount === 'string' ? parseFloat(deposit.amount) : deposit.amount).toLocaleString()}
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-300">
+                            {deposit.interestRate}% for {deposit.duration} months
+                          </div>
+                          <div className="text-sm text-gray-600 dark:text-gray-300">
+                            Matures: {new Date(deposit.maturityDate).toLocaleDateString()}
+                          </div>
+                          <button
+                            onClick={() => handleCertificateGeneration(deposit.id)}
+                            className="mt-2 w-full bg-purple-600 text-white py-1 px-3 rounded-lg text-xs hover:bg-purple-700 transition-colors"
+                          >
+                            Generate Certificate
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {fixedDeposits.length > 0 && (
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        onClick={handleGenerateAllCertificates}
+                        className="bg-purple-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-purple-700 transition-colors"
+                      >
+                        Generate All Certificates
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Modals */}
