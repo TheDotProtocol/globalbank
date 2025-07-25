@@ -24,7 +24,14 @@ export const GET = requireAuth(async (request: NextRequest) => {
             documentType: true,
             status: true,
             documentUrl: true,
+            fileName: true,
+            fileSize: true,
+            mimeType: true,
+            s3Key: true,
             rejectionReason: true,
+            verifiedAt: true,
+            verifiedBy: true,
+            notes: true,
             createdAt: true,
             updatedAt: true
           }

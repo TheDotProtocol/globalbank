@@ -54,9 +54,15 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
         userId: doc.userId,
         documentType: doc.documentType,
         fileUrl: doc.documentUrl,
+        fileName: doc.fileName,
+        fileSize: doc.fileSize,
+        mimeType: doc.mimeType,
+        s3Key: doc.s3Key,
         status: doc.status,
         uploadedAt: doc.createdAt,
-        verifiedAt: doc.updatedAt,
+        verifiedAt: doc.verifiedAt,
+        verifiedBy: doc.verifiedBy,
+        notes: doc.notes,
         rejectionReason: doc.rejectionReason,
         user: doc.user
       })),
@@ -89,7 +95,10 @@ export const PUT = requireAdminAuth(async (request: NextRequest) => {
       where: { id: documentId },
       data: {
         status: status,
-        rejectionReason: status === 'REJECTED' ? comments : null
+        rejectionReason: status === 'REJECTED' ? comments : null,
+        verifiedAt: status === 'VERIFIED' ? new Date() : null,
+        verifiedBy: status === 'VERIFIED' ? admin.id : null,
+        notes: comments || null
       },
       include: {
         user: {

@@ -148,8 +148,15 @@ model KycDocument {
   userId        String
   documentType  DocumentType
   documentUrl   String
+  fileName      String
+  fileSize      Int
+  mimeType      String
+  s3Key         String?       // S3 object key
   status        DocumentStatus @default(PENDING)
   rejectionReason String?
+  verifiedAt    DateTime?
+  verifiedBy    String?       // Admin ID who verified
+  notes         String?       // Admin notes
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -178,8 +185,14 @@ model ECheck {
   userId        String
   accountId     String
   checkNumber   String      @unique
+  payeeName     String
   amount        Decimal
+  currency      String      @default("USD")
+  memo          String?
+  signatureUrl  String?     // S3 URL for signature image
   status        CheckStatus @default(PENDING)
+  clearedAt     DateTime?
+  processedAt   DateTime?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -333,6 +346,7 @@ enum AiCategory {
 
 enum CheckStatus {
   PENDING
+  SIGNED
   CLEARED
   REJECTED
 }

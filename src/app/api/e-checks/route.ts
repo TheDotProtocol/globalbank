@@ -9,6 +9,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
       accountId, 
       payeeName, 
       amount, 
+      currency = 'USD',
       memo = '',
       selfieImage = null,
       checkType = 'ACCOUNT_ONLY' // ACCOUNT_ONLY, CASHIERS
@@ -72,7 +73,10 @@ export const POST = requireAuth(async (request: NextRequest) => {
         checkNumber,
         accountId,
         userId: user.id,
+        payeeName,
         amount: checkAmount.toString(),
+        currency,
+        memo,
         status: 'PENDING'
       }
     });
@@ -85,7 +89,10 @@ export const POST = requireAuth(async (request: NextRequest) => {
       check: {
         id: check.id,
         checkNumber: check.checkNumber,
+        payeeName: check.payeeName,
         amount: check.amount,
+        currency: check.currency,
+        memo: check.memo,
         status: check.status,
         createdAt: check.createdAt
       }
@@ -143,8 +150,14 @@ export const GET = requireAuth(async (request: NextRequest) => {
         id: check.id,
         checkNumber: check.checkNumber,
         accountNumber: check.account.accountNumber,
+        payeeName: check.payeeName,
         amount: check.amount,
+        currency: check.currency,
+        memo: check.memo,
         status: check.status,
+        signatureUrl: check.signatureUrl,
+        clearedAt: check.clearedAt,
+        processedAt: check.processedAt,
         createdAt: check.createdAt
       })),
       pagination: {

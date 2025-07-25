@@ -32,7 +32,14 @@ export const GET = requireAuth(async (request: NextRequest) => {
         documentType: doc.documentType,
         status: doc.status,
         documentUrl: doc.documentUrl,
+        fileName: doc.fileName,
+        fileSize: doc.fileSize,
+        mimeType: doc.mimeType,
+        s3Key: doc.s3Key,
         rejectionReason: doc.rejectionReason,
+        verifiedAt: doc.verifiedAt,
+        verifiedBy: doc.verifiedBy,
+        notes: doc.notes,
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt
       }))

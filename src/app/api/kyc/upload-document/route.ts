@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     // In production, upload to cloud storage (AWS S3, Cloudinary, etc.)
     // For now, we'll simulate file upload
     const fileUrl = `https://example.com/uploads/${userId}/${type}/${file.name}`;
+    const s3Key = `kyc/${userId}/${type}/${file.name}`;
 
     // Save document record to database
     const document = await prisma.kycDocument.create({
@@ -25,6 +26,10 @@ export async function POST(request: NextRequest) {
         userId,
         documentType: type as any,
         documentUrl: fileUrl,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        s3Key: s3Key,
         status: 'PENDING'
       }
     });

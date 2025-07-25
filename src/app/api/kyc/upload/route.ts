@@ -131,6 +131,10 @@ export const POST = requireAuth(async (request: NextRequest) => {
               where: { id: existingDocuments[index].id },
               data: {
                 documentUrl: doc.fileUrl,
+                fileName: doc.fileName,
+                fileSize: doc.fileSize,
+                mimeType: doc.mimeType,
+                s3Key: doc.s3Key,
                 status: 'PENDING'
               }
             });
@@ -140,6 +144,10 @@ export const POST = requireAuth(async (request: NextRequest) => {
                 userId: user.id,
                 documentType: doc.documentType as any,
                 documentUrl: doc.fileUrl,
+                fileName: doc.fileName,
+                fileSize: doc.fileSize,
+                mimeType: doc.mimeType,
+                s3Key: doc.s3Key,
                 status: 'PENDING'
               }
             });
@@ -157,6 +165,10 @@ export const POST = requireAuth(async (request: NextRequest) => {
               userId: user.id,
               documentType: doc.documentType as any,
               documentUrl: doc.fileUrl,
+              fileName: doc.fileName,
+              fileSize: doc.fileSize,
+              mimeType: doc.mimeType,
+              s3Key: doc.s3Key,
               status: 'PENDING'
             }
           })
