@@ -275,7 +275,7 @@ export default function AdminDashboard() {
 
   const triggerInterestCalculation = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('adminSessionToken');
       const response = await fetch('/api/admin/calculate-interest', {
         method: 'POST',
         headers: {
