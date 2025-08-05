@@ -30,33 +30,14 @@ async function runDeploymentMigration() {
     } catch (migrationError) {
       console.log('⚠️ Prisma migration failed, applying manual schema fixes...');
       
-      // Apply the KYC document URL fix manually
-      console.log('🔧 Applying KYC document URL fix...');
+      // Apply comprehensive schema fixes
+      console.log('🔧 Applying comprehensive schema fixes...');
+      
+      // Fix KYC documents table
       await prisma.$executeRaw`
         ALTER TABLE kyc_documents ADD COLUMN IF NOT EXISTS "documentUrl" TEXT;
       `;
       
-      // Check if fileUrl column exists before trying to copy data
-      const fileUrlExists = await prisma.$queryRaw`
-        SELECT COUNT(*) as count FROM information_schema.columns 
-        WHERE table_name = 'kyc_documents' AND column_name = 'fileUrl'
-      `;
-      
-      if (fileUrlExists[0].count > 0) {
-        console.log('📄 Found fileUrl column, copying data to documentUrl...');
-        await prisma.$executeRaw`
-          UPDATE kyc_documents SET "documentUrl" = "fileUrl" WHERE "fileUrl" IS NOT NULL AND "documentUrl" IS NULL;
-        `;
-        
-        await prisma.$executeRaw`
-          ALTER TABLE kyc_documents DROP COLUMN IF EXISTS "fileUrl";
-        `;
-      } else {
-        console.log('✅ documentUrl column already exists, no need to copy data');
-      }
-      
-      // Add other missing columns
-      console.log('🔧 Adding missing columns...');
       await prisma.$executeRaw`
         ALTER TABLE kyc_documents ADD COLUMN IF NOT EXISTS "fileName" TEXT;
       `;
@@ -78,6 +59,10 @@ async function runDeploymentMigration() {
       `;
       
       await prisma.$executeRaw`
+        ALTER TABLE kyc_documents ADD COLUMN IF NOT EXISTS "verifiedAt" TIMESTAMP;
+      `;
+      
+      await prisma.$executeRaw`
         ALTER TABLE kyc_documents ADD COLUMN IF NOT EXISTS "verifiedBy" TEXT;
       `;
       
@@ -86,10 +71,158 @@ async function runDeploymentMigration() {
       `;
       
       await prisma.$executeRaw`
+        ALTER TABLE kyc_documents ADD COLUMN IF NOT EXISTS "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      `;
+      
+      await prisma.$executeRaw`
         ALTER TABLE kyc_documents ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
       `;
       
-      console.log('✅ Manual schema fixes applied successfully');
+      // Fix users table
+      await prisma.$executeRaw`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS "emailVerified" BOOLEAN DEFAULT FALSE;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS "emailVerifiedAt" TIMESTAMP;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS "emailVerificationToken" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS "twoFactorSecret" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS "twoFactorEnabled" BOOLEAN DEFAULT FALSE;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS "twoFactorVerifiedAt" TIMESTAMP;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      `;
+      
+      // Fix cards table
+      await prisma.$executeRaw`
+        ALTER TABLE cards ADD COLUMN IF NOT EXISTS "accountId" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE cards ADD COLUMN IF NOT EXISTS "status" TEXT DEFAULT 'ACTIVE';
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE cards ADD COLUMN IF NOT EXISTS "isVirtual" BOOLEAN DEFAULT FALSE;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE cards ADD COLUMN IF NOT EXISTS "dailyLimit" DECIMAL(65,30) DEFAULT 1000;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE cards ADD COLUMN IF NOT EXISTS "monthlyLimit" DECIMAL(65,30) DEFAULT 10000;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE cards ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN DEFAULT TRUE;
+      `;
+      
+      // Fix transactions table
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "transferMode" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "sourceAccountId" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "destinationAccountId" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "sourceAccountNumber" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "destinationAccountNumber" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "sourceAccountHolder" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "destinationAccountHolder" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "transferFee" DECIMAL(65,30) DEFAULT 0;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "netAmount" DECIMAL(65,30);
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "isDisputed" BOOLEAN DEFAULT FALSE;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "disputeReason" TEXT;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "disputeStatus" TEXT DEFAULT 'NONE';
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "disputeCreatedAt" TIMESTAMP;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "disputeResolvedAt" TIMESTAMP;
+      `;
+      
+      await prisma.$executeRaw`
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "disputeResolution" TEXT;
+      `;
+      
+      // Fix accounts table
+      await prisma.$executeRaw`
+        ALTER TABLE accounts ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      `;
+      
+      // Fix fixed_deposits table
+      await prisma.$executeRaw`
+        ALTER TABLE fixed_deposits ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      `;
+      
+      // Check if fileUrl column exists before trying to copy data
+      const fileUrlExists = await prisma.$queryRaw`
+        SELECT COUNT(*) as count FROM information_schema.columns 
+        WHERE table_name = 'kyc_documents' AND column_name = 'fileUrl'
+      `;
+      
+      if (fileUrlExists[0].count > 0) {
+        console.log('📄 Found fileUrl column, copying data to documentUrl...');
+        await prisma.$executeRaw`
+          UPDATE kyc_documents SET "documentUrl" = "fileUrl" WHERE "fileUrl" IS NOT NULL AND "documentUrl" IS NULL;
+        `;
+        
+        await prisma.$executeRaw`
+          ALTER TABLE kyc_documents DROP COLUMN IF EXISTS "fileUrl";
+        `;
+      } else {
+        console.log('✅ documentUrl column already exists, no need to copy data');
+      }
+      
+      console.log('✅ Comprehensive schema fixes applied successfully');
     }
     
     // Test KYC documents query specifically
@@ -100,7 +233,9 @@ async function runDeploymentMigration() {
         id: true,
         documentType: true,
         documentUrl: true,
-        status: true
+        status: true,
+        createdAt: true,
+        updatedAt: true
       }
     });
     console.log(`✅ KYC documents query successful! Found ${kycDocs.length} documents`);
