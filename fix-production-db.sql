@@ -4,11 +4,14 @@
 -- First, add the new column if it doesn't exist
 ALTER TABLE kyc_documents ADD COLUMN IF NOT EXISTS "documentUrl" TEXT;
 
--- Copy data from fileUrl to documentUrl if fileUrl exists
-UPDATE kyc_documents SET "documentUrl" = "fileUrl" WHERE "fileUrl" IS NOT NULL AND "documentUrl" IS NULL;
-
--- Drop the old column if it exists
-ALTER TABLE kyc_documents DROP COLUMN IF EXISTS "fileUrl";
+-- Only copy data if fileUrl exists and documentUrl is empty
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'kyc_documents' AND column_name = 'fileUrl') THEN
+        UPDATE kyc_documents SET "documentUrl" = "fileUrl" WHERE "fileUrl" IS NOT NULL AND "documentUrl" IS NULL;
+        ALTER TABLE kyc_documents DROP COLUMN IF EXISTS "fileUrl";
+    END IF;
+END $$;
 
 -- Add other missing columns that are in the schema but not in the database
 ALTER TABLE kyc_documents ADD COLUMN IF NOT EXISTS "fileName" TEXT;

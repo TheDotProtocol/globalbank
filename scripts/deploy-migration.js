@@ -36,13 +36,24 @@ async function runDeploymentMigration() {
         ALTER TABLE kyc_documents ADD COLUMN IF NOT EXISTS "documentUrl" TEXT;
       `;
       
-      await prisma.$executeRaw`
-        UPDATE kyc_documents SET "documentUrl" = "fileUrl" WHERE "fileUrl" IS NOT NULL AND "documentUrl" IS NULL;
+      // Check if fileUrl column exists before trying to copy data
+      const fileUrlExists = await prisma.$queryRaw`
+        SELECT COUNT(*) as count FROM information_schema.columns 
+        WHERE table_name = 'kyc_documents' AND column_name = 'fileUrl'
       `;
       
-      await prisma.$executeRaw`
-        ALTER TABLE kyc_documents DROP COLUMN IF EXISTS "fileUrl";
-      `;
+      if (fileUrlExists[0].count > 0) {
+        console.log('📄 Found fileUrl column, copying data to documentUrl...');
+        await prisma.$executeRaw`
+          UPDATE kyc_documents SET "documentUrl" = "fileUrl" WHERE "fileUrl" IS NOT NULL AND "documentUrl" IS NULL;
+        `;
+        
+        await prisma.$executeRaw`
+          ALTER TABLE kyc_documents DROP COLUMN IF EXISTS "fileUrl";
+        `;
+      } else {
+        console.log('✅ documentUrl column already exists, no need to copy data');
+      }
       
       // Add other missing columns
       console.log('🔧 Adding missing columns...');
