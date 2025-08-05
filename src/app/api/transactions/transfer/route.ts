@@ -1,71 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
+    const { fromAccountId, toAccountNumber, amount, description } = await request.json();
     const user = (request as any).user;
-    const body = await request.json();
-    
-    const { 
-      sourceAccountId, 
-      destinationAccountNumber, 
-      amount, 
-      description,
-      transferMode = 'INTERNAL_TRANSFER'
-    } = body;
-    
-    if (!sourceAccountId || !destinationAccountNumber || !amount || !description) {
+
+    if (!fromAccountId || !toAccountNumber || !amount || amount <= 0) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Invalid transfer parameters' },
         { status: 400 }
       );
     }
-    
-    const transferAmount = parseFloat(amount);
-    if (transferAmount <= 0) {
-      return NextResponse.json(
-        { error: 'Invalid transfer amount' },
-        { status: 400 }
-      );
-    }
-    
-    // Find source account and verify ownership
+
+    // Verify user owns the source account
     const sourceAccount = await prisma.account.findFirst({
       where: {
-        id: sourceAccountId,
+        id: fromAccountId,
         userId: user.id,
         isActive: true
-      },
-      include: {
-        user: {
-          select: {
-            firstName: true,
-            lastName: true
-          }
-        }
       }
     });
-    
+
     if (!sourceAccount) {
       return NextResponse.json(
-        { error: 'Source account not found' },
+        { error: 'Source account not found or access denied' },
         { status: 404 }
       );
     }
-    
-    // Check if source account has sufficient balance
-    if (sourceAccount.balance.toNumber() < transferAmount) {
-      return NextResponse.json(
-        { error: 'Insufficient balance' },
-        { status: 400 }
-      );
-    }
-    
+
     // Find destination account
     const destinationAccount = await prisma.account.findFirst({
       where: {
-        accountNumber: destinationAccountNumber,
+        accountNumber: toAccountNumber,
         isActive: true
       },
       include: {
@@ -77,122 +45,98 @@ export const POST = requireAuth(async (request: NextRequest) => {
         }
       }
     });
-    
+
     if (!destinationAccount) {
       return NextResponse.json(
         { error: 'Destination account not found' },
         { status: 404 }
       );
     }
-    
-    // Prevent self-transfer
-    if (sourceAccount.id === destinationAccount.id) {
+
+    // Check if source account has sufficient balance
+    const sourceBalance = parseFloat(sourceAccount.balance.toString());
+    if (sourceBalance < amount) {
       return NextResponse.json(
-        { error: 'Cannot transfer to the same account' },
+        { error: 'Insufficient balance' },
         { status: 400 }
       );
     }
-    
-    // Calculate transfer fee (1% for external transfers, 0% for internal)
-    const transferFee = transferMode === 'INTERNAL_TRANSFER' ? 0 : transferAmount * 0.01;
-    const netAmount = transferAmount - transferFee;
-    
-    // Use database transaction to ensure data consistency
-    const result = await prisma.$transaction(async (tx) => {
-      // Create debit transaction for source account
-      const debitTransaction = await tx.transaction.create({
-        data: {
-          userId: user.id,
-          accountId: sourceAccount.id,
-          type: 'DEBIT',
-          amount: transferAmount,
-          description: `Transfer to ${destinationAccount.accountNumber} - ${description}`,
-          reference: `TXN-${Date.now()}-DEBIT`,
-          status: 'COMPLETED',
-          transferMode: transferMode as any,
-          sourceAccountId: sourceAccount.id,
-          destinationAccountId: destinationAccount.id,
-          sourceAccountNumber: sourceAccount.accountNumber,
-          destinationAccountNumber: destinationAccount.accountNumber,
-          sourceAccountHolder: `${sourceAccount.user.firstName} ${sourceAccount.user.lastName}`,
-          destinationAccountHolder: `${destinationAccount.user.firstName} ${destinationAccount.user.lastName}`,
-          transferFee,
-          netAmount
-        }
-      });
-      
-      // Create credit transaction for destination account
-      const creditTransaction = await tx.transaction.create({
-        data: {
-          userId: destinationAccount.userId,
-          accountId: destinationAccount.id,
-          type: 'CREDIT',
-          amount: netAmount,
-          description: `Transfer from ${sourceAccount.accountNumber} - ${description}`,
-          reference: `TXN-${Date.now()}-CREDIT`,
-          status: 'COMPLETED',
-          transferMode: transferMode as any,
-          sourceAccountId: sourceAccount.id,
-          destinationAccountId: destinationAccount.id,
-          sourceAccountNumber: sourceAccount.accountNumber,
-          destinationAccountNumber: destinationAccount.accountNumber,
-          sourceAccountHolder: `${sourceAccount.user.firstName} ${sourceAccount.user.lastName}`,
-          destinationAccountHolder: `${destinationAccount.user.firstName} ${destinationAccount.user.lastName}`,
-          transferFee: 0, // No fee for recipient
-          netAmount
-        }
-      });
-      
-      // Update source account balance
-      await tx.account.update({
-        where: { id: sourceAccount.id },
+
+    // Perform transfer in a transaction
+    const transferResult = await prisma.$transaction(async (tx) => {
+      // Deduct from source account
+      const updatedSourceAccount = await tx.account.update({
+        where: { id: fromAccountId },
         data: {
           balance: {
-            decrement: transferAmount
+            decrement: amount
           }
         }
       });
-      
-      // Update destination account balance
-      await tx.account.update({
+
+      // Add to destination account
+      const updatedDestinationAccount = await tx.account.update({
         where: { id: destinationAccount.id },
         data: {
           balance: {
-            increment: netAmount
+            increment: amount
           }
         }
       });
-      
-      return { debitTransaction, creditTransaction };
+
+      // Create debit transaction
+      const debitTransaction = await tx.transaction.create({
+        data: {
+          accountId: fromAccountId,
+          userId: user.id,
+          type: 'DEBIT',
+          amount: amount,
+          description: `Transfer to ${destinationAccount.accountNumber} - ${description || 'Internal Transfer'}`,
+          reference: `TRF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          status: 'COMPLETED'
+        }
+      });
+
+      // Create credit transaction
+      const creditTransaction = await tx.transaction.create({
+        data: {
+          accountId: destinationAccount.id,
+          userId: destinationAccount.userId,
+          type: 'CREDIT',
+          amount: amount,
+          description: `Transfer from ${sourceAccount.accountNumber} - ${description || 'Internal Transfer'}`,
+          reference: `TRF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          status: 'COMPLETED'
+        }
+      });
+
+      return {
+        sourceAccount: updatedSourceAccount,
+        destinationAccount: updatedDestinationAccount,
+        debitTransaction,
+        creditTransaction
+      };
     });
-    
+
     return NextResponse.json({
       success: true,
+      message: 'Transfer completed successfully',
       transfer: {
-        id: result.debitTransaction.id,
-        amount: transferAmount,
-        netAmount,
-        transferFee,
-        sourceAccount: {
-          number: sourceAccount.accountNumber,
-          holder: `${sourceAccount.user.firstName} ${sourceAccount.user.lastName}`
-        },
-        destinationAccount: {
-          number: destinationAccount.accountNumber,
-          holder: `${destinationAccount.user.firstName} ${destinationAccount.user.lastName}`
-        },
-        description,
-        transferMode,
-        status: 'COMPLETED',
-        reference: result.debitTransaction.reference,
-        createdAt: result.debitTransaction.createdAt
+        fromAccount: sourceAccount.accountNumber,
+        toAccount: destinationAccount.accountNumber,
+        amount: amount,
+        description: description || 'Internal Transfer',
+        timestamp: new Date().toISOString()
       }
     });
-    
+
   } catch (error) {
-    console.error('Transfer error:', error);
+    console.error('❌ Transfer error:', error);
     return NextResponse.json(
-      { error: 'Transfer failed' },
+      { 
+        error: 'Transfer failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

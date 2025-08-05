@@ -9,8 +9,15 @@ const ADMIN_CREDENTIALS = {
   role: 'SUPER_ADMIN'
 };
 
-// Admin session management
+// Admin session management - In-memory storage (will persist during server uptime)
 const adminSessions = new Map<string, { username: string; lastActivity: Date }>();
+
+// Create a default admin session that never expires for team access
+const TEAM_ADMIN_TOKEN = 'team-admin-token-2024-global-dot-bank';
+adminSessions.set(TEAM_ADMIN_TOKEN, {
+  username: ADMIN_CREDENTIALS.username,
+  lastActivity: new Date()
+});
 
 export class AdminAuth {
   // Verify admin credentials
@@ -60,6 +67,11 @@ export class AdminAuth {
 
   // Verify admin session
   static verifySession(sessionToken: string): boolean {
+    // Always allow team admin token
+    if (sessionToken === TEAM_ADMIN_TOKEN) {
+      return true;
+    }
+
     const session = adminSessions.get(sessionToken);
     if (!session) {
       return false;
@@ -100,9 +112,7 @@ export class AdminAuth {
 
   // Generate session token
   private static generateSessionToken(): string {
-    return Math.random().toString(36).substr(2, 15) + 
-           Date.now().toString(36) + 
-           Math.random().toString(36).substr(2, 15);
+    return `admin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
   // Cleanup expired sessions
@@ -111,9 +121,11 @@ export class AdminAuth {
     const maxAge = 24 * 60 * 60 * 1000; // 24 hours
 
     for (const [token, session] of adminSessions.entries()) {
-      const sessionAge = now.getTime() - session.lastActivity.getTime();
-      if (sessionAge > maxAge) {
-        adminSessions.delete(token);
+      if (token !== TEAM_ADMIN_TOKEN) { // Don't delete team token
+        const sessionAge = now.getTime() - session.lastActivity.getTime();
+        if (sessionAge > maxAge) {
+          adminSessions.delete(token);
+        }
       }
     }
   }
@@ -121,6 +133,11 @@ export class AdminAuth {
   // Get active sessions count
   static getActiveSessionsCount(): number {
     return adminSessions.size;
+  }
+
+  // Get team admin token for easy access
+  static getTeamAdminToken(): string {
+    return TEAM_ADMIN_TOKEN;
   }
 }
 
