@@ -13,19 +13,19 @@ export const INTEREST_RATES: InterestRate[] = [
     accountType: 'SAVINGS',
     annualRate: 2.5, // 2.5% annual
     monthlyRate: 2.5 / 12, // Monthly rate
-    minimumBalance: 100 // $100 minimum
+    minimumBalance: 50 // $50 minimum
   },
   {
     accountType: 'CHECKING',
     annualRate: 1.0, // 1% annual
     monthlyRate: 1.0 / 12, // Monthly rate
-    minimumBalance: 500 // $500 minimum
+    minimumBalance: 100 // $100 minimum
   },
   {
     accountType: 'BUSINESS',
     annualRate: 1.8, // 1.8% annual
     monthlyRate: 1.8 / 12, // Monthly rate
-    minimumBalance: 1000 // $1000 minimum
+    minimumBalance: 500 // $500 minimum
   }
 ];
 
@@ -38,12 +38,12 @@ export class InterestCalculator {
     console.log('🏦 Starting monthly interest calculation...');
     
     try {
-      // Get all active accounts with existing balances (exclude accounts updated today)
+      // Get all active accounts with balances
       const accounts = await prisma.account.findMany({
         where: {
           isActive: true,
           balance: {
-            gte: 100 // Only accounts with at least $100 balance
+            gt: 0 // Only accounts with positive balances
           }
         },
         include: {
@@ -73,6 +73,8 @@ export class InterestCalculator {
             accountsWithInterest++;
             
             console.log(`💰 Applied $${interestAmount.toFixed(2)} interest to account ${account.accountNumber}`);
+          } else {
+            console.log(`⚠️ No interest for account ${account.accountNumber} (balance: $${account.balance}, type: ${account.accountType})`);
           }
         } catch (error) {
           console.error(`❌ Error processing account ${account.id}:`, error);
@@ -107,11 +109,17 @@ export class InterestCalculator {
     const accountType = account.accountType;
     
     // Find interest rate for this account type
-    const rateConfig = INTEREST_RATES.find(rate => rate.accountType === accountType);
+    let rateConfig = INTEREST_RATES.find(rate => rate.accountType === accountType);
     
+    // If no specific rate found, use a default rate
     if (!rateConfig) {
-      console.log(`⚠️ No interest rate configured for account type: ${accountType}`);
-      return 0;
+      console.log(`⚠️ No specific rate for account type: ${accountType}, using default rate`);
+      rateConfig = {
+        accountType: 'DEFAULT',
+        annualRate: 1.5, // 1.5% annual default
+        monthlyRate: 1.5 / 12, // Monthly rate
+        minimumBalance: 50 // $50 minimum
+      };
     }
 
     // Check minimum balance requirement
