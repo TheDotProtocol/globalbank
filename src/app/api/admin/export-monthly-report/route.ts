@@ -21,10 +21,21 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
         },
         transactions: {
           where: {
-            createdAt: {
-              gte: new Date(year, month - 1, 1),
-              lt: new Date(year, month, 1)
-            }
+            OR: [
+              // Regular transactions from the specified month
+              {
+                createdAt: {
+                  gte: new Date(year, month - 1, 1),
+                  lt: new Date(year, month, 1)
+                }
+              },
+              // Interest transactions (regardless of date)
+              {
+                description: {
+                  contains: 'Interest'
+                }
+              }
+            ]
           },
           orderBy: {
             createdAt: 'desc'
@@ -121,10 +132,10 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
             ${tableData.map(row => `
               <tr>
                 <td>${row.accountNumber}</td>
-                <td>$${row.balance.toLocaleString()}</td>
+                <td>$${row.balance.toFixed(2)}</td>
                 <td>$${row.interest.toFixed(2)}</td>
                 <td>${row.creditedOn}</td>
-                <td>$${row.totalBalance.toLocaleString()}</td>
+                <td>$${row.totalBalance.toFixed(2)}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -138,9 +149,9 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
       </html>
     `;
 
-    // Convert HTML to base64
+    // Convert HTML to base64 for frontend
     const htmlBase64 = btoa(unescape(encodeURIComponent(htmlContent)));
-    
+
     return NextResponse.json({
       success: true,
       htmlData: `data:text/html;base64,${htmlBase64}`,
