@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdminAuth } from '@/lib/admin-auth';
 import { prisma } from '@/lib/prisma';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 
 export const POST = requireAdminAuth(async (request: NextRequest) => {
   try {
@@ -38,16 +36,6 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
       }
     });
 
-    // Create PDF
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(20);
-    doc.text('Global Dot Bank - Monthly Report', 20, 20);
-    doc.setFontSize(12);
-    doc.text(`Period: ${new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`, 20, 30);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 40);
-
     // Calculate totals
     let totalBalance = 0;
     let totalInterest = 0;
@@ -65,53 +53,40 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
       totalInterest += monthlyInterest;
       totalTransactions += monthlyTransactions;
 
-      return [
-        account.accountNumber,
-        `$${balance.toLocaleString()}`,
-        `$${monthlyInterest.toFixed(2)}`,
-        monthlyTransactions.toString(),
-        `$${(balance + monthlyInterest).toLocaleString()}`
-      ];
+      return {
+        accountNumber: account.accountNumber,
+        balance: balance,
+        interest: monthlyInterest,
+        transactions: monthlyTransactions,
+        totalBalance: balance + monthlyInterest
+      };
     });
 
-    // Add summary
-    doc.setFontSize(14);
-    doc.text('Summary', 20, 60);
-    doc.setFontSize(10);
-    doc.text(`Total Accounts: ${accounts.length}`, 20, 70);
-    doc.text(`Total Balance: $${totalBalance.toLocaleString()}`, 20, 80);
-    doc.text(`Total Interest Paid: $${totalInterest.toFixed(2)}`, 20, 90);
-    doc.text(`Total Transactions: ${totalTransactions}`, 20, 100);
-
-    // Add table
-    (doc as any).autoTable({
-      startY: 120,
-      head: [['A/c Num', 'Balance', 'Interest', 'Transaction', 'Total Balance']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: {
-        fillColor: [41, 128, 185],
-        textColor: 255
-      },
-      styles: {
-        fontSize: 10
-      },
-      columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 30 }
-      }
-    });
+    // Create CSV data instead of PDF for now
+    const csvData = [
+      ['A/c Num', 'Balance', 'Interest', 'Transaction', 'Total Balance'],
+      ...tableData.map(row => [
+        row.accountNumber,
+        `$${row.balance.toLocaleString()}`,
+        `$${row.interest.toFixed(2)}`,
+        row.transactions.toString(),
+        `$${row.totalBalance.toLocaleString()}`
+      ])
+    ].map(row => row.join(',')).join('\n');
 
     // Convert to base64
-    const pdfBase64 = doc.output('datauristring');
+    const csvBase64 = btoa(csvData);
     
     return NextResponse.json({
       success: true,
-      pdfData: pdfBase64,
-      message: 'Monthly report generated successfully'
+      csvData: `data:text/csv;base64,${csvBase64}`,
+      message: 'Monthly report generated successfully',
+      summary: {
+        totalAccounts: accounts.length,
+        totalBalance: totalBalance,
+        totalInterest: totalInterest,
+        totalTransactions: totalTransactions
+      }
     });
 
   } catch (error) {

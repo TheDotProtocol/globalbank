@@ -137,7 +137,7 @@ export class InterestCalculator {
         // Get account details first
         const account = await tx.account.findUnique({ 
           where: { id: accountId },
-          select: { userId: true, accountNumber: true }
+          select: { userId: true, accountNumber: true, balance: true }
         });
 
         if (!account) {
@@ -145,31 +145,29 @@ export class InterestCalculator {
         }
 
         // Update account balance
+        const newBalance = parseFloat(account.balance.toString()) + interestAmount;
         await tx.account.update({
           where: { id: accountId },
           data: {
-            balance: {
-              increment: interestAmount
-            }
+            balance: newBalance
           }
         });
 
-        // Create interest transaction
+        // Create interest transaction with minimal required fields
         await tx.transaction.create({
           data: {
+            id: `int-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             accountId,
             userId: account.userId,
             type: 'CREDIT',
             amount: interestAmount,
             description: 'Monthly Interest Payment',
             reference: `INT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            status: 'COMPLETED',
-            createdAt: new Date(),
-            updatedAt: new Date()
+            status: 'COMPLETED'
           }
         });
 
-        console.log(`💰 Applied $${interestAmount.toFixed(2)} interest to account ${account.accountNumber}`);
+        console.log(`💰 Applied $${interestAmount.toFixed(2)} interest to account ${account.accountNumber} (New balance: $${newBalance.toFixed(2)})`);
       });
     } catch (error) {
       console.error(`❌ Error applying interest to account ${accountId}:`, error);

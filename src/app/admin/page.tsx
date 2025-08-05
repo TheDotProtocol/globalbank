@@ -329,15 +329,15 @@ export default function AdminDashboard() {
       if (response.ok) {
         const data = await response.json();
         
-        // Create a link to download the PDF
+        // Create a link to download the CSV
         const link = document.createElement('a');
-        link.href = data.pdfData;
-        link.download = `global-dot-bank-monthly-report-${year}-${month.toString().padStart(2, '0')}.pdf`;
+        link.href = data.csvData;
+        link.download = `global-dot-bank-monthly-report-${year}-${month.toString().padStart(2, '0')}.csv`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         
-        alert('✅ Monthly report exported successfully!');
+        alert(`✅ Monthly report exported successfully!\n\nSummary:\n- Total Accounts: ${data.summary.totalAccounts}\n- Total Balance: $${data.summary.totalBalance.toLocaleString()}\n- Total Interest: $${data.summary.totalInterest.toFixed(2)}\n- Total Transactions: ${data.summary.totalTransactions}`);
       } else {
         const error = await response.json();
         alert(`❌ Export failed: ${error.error}`);
@@ -470,7 +470,7 @@ export default function AdminDashboard() {
                     onClick={exportMonthlyReport}
                     className="text-sm font-medium text-green-600 hover:underline"
                   >
-                    Export PDF Report
+                    Export CSV Report
                   </button>
                 </div>
               </div>
