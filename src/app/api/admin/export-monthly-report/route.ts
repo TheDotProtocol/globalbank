@@ -87,7 +87,9 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
         <style>
           body { font-family: Arial, sans-serif; margin: 20px; }
           .header { text-align: center; margin-bottom: 30px; }
-          .logo { font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 10px; }
+          .logo-container { margin-bottom: 15px; }
+          .logo-image { max-width: 200px; max-height: 80px; }
+          .logo-text { font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 10px; }
           .title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
           .subtitle { font-size: 14px; color: #666; margin-bottom: 20px; }
           .summary { background: #f8fafc; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
@@ -102,7 +104,10 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
       </head>
       <body>
         <div class="header">
-          <div class="logo">🏦 Global Dot Bank</div>
+          <div class="logo-container">
+            <img src="https://globaldotbank.org/logo.png" alt="Global Dot Bank Logo" class="logo-image">
+          </div>
+          <div class="logo-text">🏦 Global Dot Bank</div>
           <div class="title">Monthly Interest Calculation Report</div>
           <div class="subtitle">
             Period: ${new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}<br>
