@@ -64,14 +64,19 @@ export class InterestCalculator {
       let accountsWithInterest = 0;
 
       for (const account of accounts) {
-        const interestAmount = await this.calculateAccountInterest(account);
-        
-        if (interestAmount > 0) {
-          await this.applyInterestToAccount(account.id, interestAmount);
-          totalInterestPaid += interestAmount;
-          accountsWithInterest++;
+        try {
+          const interestAmount = await this.calculateAccountInterest(account);
           
-          console.log(`💰 Applied $${interestAmount.toFixed(2)} interest to account ${account.accountNumber}`);
+          if (interestAmount > 0) {
+            await this.applyInterestToAccount(account.id, interestAmount);
+            totalInterestPaid += interestAmount;
+            accountsWithInterest++;
+            
+            console.log(`💰 Applied $${interestAmount.toFixed(2)} interest to account ${account.accountNumber}`);
+          }
+        } catch (error) {
+          console.error(`❌ Error processing account ${account.id}:`, error);
+          // Continue with other accounts even if one fails
         }
       }
 
@@ -127,31 +132,45 @@ export class InterestCalculator {
   static async applyInterestToAccount(accountId: string, interestAmount: number): Promise<void> {
     if (interestAmount <= 0) return;
 
-    await prisma.$transaction(async (tx) => {
-      // Update account balance
-      await tx.account.update({
-        where: { id: accountId },
-        data: {
-          balance: {
-            increment: interestAmount
-          }
-        }
-      });
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Get account details first
+        const account = await tx.account.findUnique({ 
+          where: { id: accountId },
+          select: { userId: true }
+        });
 
-      // Create interest transaction
-      await tx.transaction.create({
-        data: {
-          accountId,
-          userId: (await tx.account.findUnique({ where: { id: accountId } }))?.userId || '',
-          type: 'CREDIT',
-          amount: interestAmount,
-          description: 'Monthly Interest Payment',
-          reference: `INT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          status: 'COMPLETED',
-          transferMode: 'INTERNAL_TRANSFER'
+        if (!account) {
+          throw new Error(`Account ${accountId} not found`);
         }
+
+        // Update account balance
+        await tx.account.update({
+          where: { id: accountId },
+          data: {
+            balance: {
+              increment: interestAmount
+            }
+          }
+        });
+
+        // Create interest transaction with minimal required fields
+        await tx.transaction.create({
+          data: {
+            accountId,
+            userId: account.userId,
+            type: 'CREDIT',
+            amount: interestAmount,
+            description: 'Monthly Interest Payment',
+            reference: `INT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            status: 'COMPLETED'
+          }
+        });
       });
-    });
+    } catch (error) {
+      console.error(`❌ Error applying interest to account ${accountId}:`, error);
+      throw error;
+    }
   }
 
   /**
