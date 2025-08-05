@@ -12,25 +12,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify admin credentials
     const result = await AdminAuth.verifyCredentials(username, password);
 
-    if (!result.success) {
+    if (result.success && result.sessionToken) {
+      return NextResponse.json({
+        success: true,
+        message: 'Login successful',
+        sessionToken: result.sessionToken,
+        admin: AdminAuth.getAdminInfo()
+      });
+    } else {
       return NextResponse.json(
-        { error: result.message },
+        { 
+          success: false,
+          error: 'Invalid credentials',
+          message: result.message 
+        },
         { status: 401 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: result.message,
-      sessionToken: result.sessionToken,
-      admin: AdminAuth.getAdminInfo()
-    });
   } catch (error) {
-    console.error('Admin login error:', error);
+    console.error('❌ Admin login error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        success: false,
+        error: 'Login failed',
+        message: 'An error occurred during login'
+      },
       { status: 500 }
     );
   }

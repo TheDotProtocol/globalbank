@@ -114,7 +114,14 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    // Use team admin token instead of localStorage
+    // Check for admin session token in sessionStorage
+    const sessionToken = sessionStorage.getItem('adminSessionToken');
+    
+    if (!sessionToken) {
+      router.push('/admin/login');
+      return;
+    }
+
     fetchDashboardData();
   }, [router]);
 
@@ -122,10 +129,17 @@ export default function AdminDashboard() {
     setLoading(true);
     
     try {
-      // Use team admin token
+      // Get session token from sessionStorage
+      const sessionToken = sessionStorage.getItem('adminSessionToken');
+      
+      if (!sessionToken) {
+        router.push('/admin/login');
+        return;
+      }
+
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer team-admin-token-2024-global-dot-bank'
+        'Authorization': `Bearer ${sessionToken}`
       };
 
       // Only fetch users data since transactions endpoint doesn't exist
@@ -137,6 +151,13 @@ export default function AdminDashboard() {
       } else {
         const errorText = await usersResponse.text();
         console.error('Failed to fetch users:', errorText);
+        
+        // If it's an authentication error, redirect to login
+        if (usersResponse.status === 401) {
+          sessionStorage.removeItem('adminSessionToken');
+          router.push('/admin/login');
+          return;
+        }
       }
 
       // Set empty transactions array since endpoint doesn't exist
@@ -177,7 +198,7 @@ export default function AdminDashboard() {
     e.preventDefault();
     
     try {
-      const sessionToken = localStorage.getItem('adminSessionToken');
+      const sessionToken = sessionStorage.getItem('adminSessionToken');
       
       if (!sessionToken) {
         console.error('No admin session token found');
@@ -214,7 +235,7 @@ export default function AdminDashboard() {
 
   const updateKYCStatus = async (userId: string, status: string) => {
     try {
-      const sessionToken = localStorage.getItem('adminSessionToken');
+      const sessionToken = sessionStorage.getItem('adminSessionToken');
       
       if (!sessionToken) {
         console.error('No admin session token found');
@@ -247,16 +268,23 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('adminSessionToken');
+    sessionStorage.removeItem('adminSessionToken');
     router.push('/admin/login');
   };
 
   const triggerInterestCalculation = async () => {
     try {
+      const sessionToken = sessionStorage.getItem('adminSessionToken');
+      
+      if (!sessionToken) {
+        router.push('/admin/login');
+        return;
+      }
+
       const response = await fetch('/api/admin/calculate-interest', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer team-admin-token-2024-global-dot-bank',
+          'Authorization': `Bearer ${sessionToken}`,
           'Content-Type': 'application/json'
         }
       });
