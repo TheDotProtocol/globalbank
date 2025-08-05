@@ -58,28 +58,92 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
         balance: balance,
         interest: monthlyInterest,
         transactions: monthlyTransactions,
-        totalBalance: balance + monthlyInterest
+        totalBalance: balance + monthlyInterest,
+        creditedOn: account.transactions
+          .filter(tx => tx.description.includes('Interest'))
+          .map(tx => new Date(tx.createdAt).toLocaleDateString())
+          .join(', ') || 'N/A'
       };
     });
 
-    // Create CSV data instead of PDF for now
-    const csvData = [
-      ['A/c Num', 'Balance', 'Interest', 'Transaction', 'Total Balance'],
-      ...tableData.map(row => [
-        row.accountNumber,
-        `$${row.balance.toLocaleString()}`,
-        `$${row.interest.toFixed(2)}`,
-        row.transactions.toString(),
-        `$${row.totalBalance.toLocaleString()}`
-      ])
-    ].map(row => row.join(',')).join('\n');
+    // Create HTML for PDF generation
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Global Dot Bank - Monthly Interest Report</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .logo { font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 10px; }
+          .title { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+          .subtitle { font-size: 14px; color: #666; margin-bottom: 20px; }
+          .summary { background: #f8fafc; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+          .summary h3 { margin: 0 0 10px 0; color: #1e40af; }
+          .summary p { margin: 5px 0; }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #1e40af; color: white; font-weight: bold; }
+          tr:nth-child(even) { background-color: #f9f9f9; }
+          .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="logo">🏦 Global Dot Bank</div>
+          <div class="title">Monthly Interest Calculation Report</div>
+          <div class="subtitle">
+            Period: ${new Date(year, month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}<br>
+            Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+          </div>
+        </div>
 
-    // Convert to base64
-    const csvBase64 = btoa(csvData);
+        <div class="summary">
+          <h3>📊 Summary</h3>
+          <p><strong>Total Accounts:</strong> ${accounts.length}</p>
+          <p><strong>Total Balance:</strong> $${totalBalance.toLocaleString()}</p>
+          <p><strong>Total Interest Paid:</strong> $${totalInterest.toFixed(2)}</p>
+          <p><strong>Total Transactions:</strong> ${totalTransactions}</p>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>A/c Num</th>
+              <th>Balance</th>
+              <th>Interest</th>
+              <th>Credited On</th>
+              <th>Total Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableData.map(row => `
+              <tr>
+                <td>${row.accountNumber}</td>
+                <td>$${row.balance.toLocaleString()}</td>
+                <td>$${row.interest.toFixed(2)}</td>
+                <td>${row.creditedOn}</td>
+                <td>$${row.totalBalance.toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p>🏦 Global Dot Bank - Professional Banking Services</p>
+          <p>This report was generated automatically by the Global Dot Bank system.</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Convert HTML to base64
+    const htmlBase64 = btoa(unescape(encodeURIComponent(htmlContent)));
     
     return NextResponse.json({
       success: true,
-      csvData: `data:text/csv;base64,${csvBase64}`,
+      htmlData: `data:text/html;base64,${htmlBase64}`,
       message: 'Monthly report generated successfully',
       summary: {
         totalAccounts: accounts.length,

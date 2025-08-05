@@ -329,15 +329,19 @@ export default function AdminDashboard() {
       if (response.ok) {
         const data = await response.json();
         
-        // Create a link to download the CSV
-        const link = document.createElement('a');
-        link.href = data.csvData;
-        link.download = `global-dot-bank-monthly-report-${year}-${month.toString().padStart(2, '0')}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Create a new window with the HTML content
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(decodeURIComponent(escape(atob(data.htmlData.split(',')[1]))));
+          newWindow.document.close();
+          
+          // Wait a moment then print
+          setTimeout(() => {
+            newWindow.print();
+          }, 500);
+        }
         
-        alert(`✅ Monthly report exported successfully!\n\nSummary:\n- Total Accounts: ${data.summary.totalAccounts}\n- Total Balance: $${data.summary.totalBalance.toLocaleString()}\n- Total Interest: $${data.summary.totalInterest.toFixed(2)}\n- Total Transactions: ${data.summary.totalTransactions}`);
+        alert(`✅ Monthly report generated successfully!\n\nSummary:\n- Total Accounts: ${data.summary.totalAccounts}\n- Total Balance: $${data.summary.totalBalance.toLocaleString()}\n- Total Interest: $${data.summary.totalInterest.toFixed(2)}\n- Total Transactions: ${data.summary.totalTransactions}\n\n📄 The report will open in a new window for printing/saving as PDF.`);
       } else {
         const error = await response.json();
         alert(`❌ Export failed: ${error.error}`);
@@ -470,7 +474,7 @@ export default function AdminDashboard() {
                     onClick={exportMonthlyReport}
                     className="text-sm font-medium text-green-600 hover:underline"
                   >
-                    Export CSV Report
+                    Export PDF Report
                   </button>
                 </div>
               </div>

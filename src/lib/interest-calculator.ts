@@ -116,6 +116,7 @@ export class InterestCalculator {
 
     // Check minimum balance requirement
     if (balance < rateConfig.minimumBalance) {
+      console.log(`⚠️ Account ${account.accountNumber} has insufficient balance (${balance}) for interest (minimum: ${rateConfig.minimumBalance})`);
       return 0;
     }
 
@@ -123,7 +124,16 @@ export class InterestCalculator {
     const monthlyInterest = balance * (rateConfig.monthlyRate / 100);
     
     // Round to 2 decimal places
-    return Math.round(monthlyInterest * 100) / 100;
+    const roundedInterest = Math.round(monthlyInterest * 100) / 100;
+    
+    console.log(`📊 Interest calculation for account ${account.accountNumber}:`);
+    console.log(`   - Balance: $${balance}`);
+    console.log(`   - Account Type: ${accountType}`);
+    console.log(`   - Annual Rate: ${rateConfig.annualRate}%`);
+    console.log(`   - Monthly Rate: ${rateConfig.monthlyRate}%`);
+    console.log(`   - Calculated Interest: $${roundedInterest}`);
+    
+    return roundedInterest;
   }
 
   /**
