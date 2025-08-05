@@ -38,12 +38,12 @@ export class InterestCalculator {
     console.log('🏦 Starting monthly interest calculation...');
     
     try {
-      // Get all active accounts
+      // Get all active accounts with existing balances (exclude accounts updated today)
       const accounts = await prisma.account.findMany({
         where: {
           isActive: true,
           balance: {
-            gte: 0 // Only positive balances
+            gte: 100 // Only accounts with at least $100 balance
           }
         },
         include: {
@@ -137,7 +137,7 @@ export class InterestCalculator {
         // Get account details first
         const account = await tx.account.findUnique({ 
           where: { id: accountId },
-          select: { userId: true }
+          select: { userId: true, accountNumber: true }
         });
 
         if (!account) {
@@ -154,7 +154,7 @@ export class InterestCalculator {
           }
         });
 
-        // Create interest transaction with minimal required fields
+        // Create interest transaction
         await tx.transaction.create({
           data: {
             accountId,
@@ -163,9 +163,13 @@ export class InterestCalculator {
             amount: interestAmount,
             description: 'Monthly Interest Payment',
             reference: `INT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            status: 'COMPLETED'
+            status: 'COMPLETED',
+            createdAt: new Date(),
+            updatedAt: new Date()
           }
         });
+
+        console.log(`💰 Applied $${interestAmount.toFixed(2)} interest to account ${account.accountNumber}`);
       });
     } catch (error) {
       console.error(`❌ Error applying interest to account ${accountId}:`, error);

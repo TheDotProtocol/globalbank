@@ -304,6 +304,50 @@ export default function AdminDashboard() {
     }
   };
 
+  const exportMonthlyReport = async () => {
+    try {
+      const sessionToken = sessionStorage.getItem('adminSessionToken');
+      
+      if (!sessionToken) {
+        router.push('/admin/login');
+        return;
+      }
+
+      const currentDate = new Date();
+      const month = currentDate.getMonth() + 1; // getMonth() returns 0-11
+      const year = currentDate.getFullYear();
+
+      const response = await fetch('/api/admin/export-monthly-report', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ month, year })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Create a link to download the PDF
+        const link = document.createElement('a');
+        link.href = data.pdfData;
+        link.download = `global-dot-bank-monthly-report-${year}-${month.toString().padStart(2, '0')}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        alert('✅ Monthly report exported successfully!');
+      } else {
+        const error = await response.json();
+        alert(`❌ Export failed: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('❌ Failed to export monthly report');
+    }
+  };
+
   const getStats = () => {
     if (!stats) return {
       totalUsers: 0,
@@ -415,12 +459,20 @@ export default function AdminDashboard() {
               <Banknote className="w-8 h-8 text-orange-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Interest Calculation</p>
-                <button
-                  onClick={triggerInterestCalculation}
-                  className="text-sm font-medium text-blue-600 hover:underline"
-                >
-                  Trigger Monthly Interest
-                </button>
+                <div className="flex space-x-2 mt-2">
+                  <button
+                    onClick={triggerInterestCalculation}
+                    className="text-sm font-medium text-blue-600 hover:underline"
+                  >
+                    Trigger Monthly Interest
+                  </button>
+                  <button
+                    onClick={exportMonthlyReport}
+                    className="text-sm font-medium text-green-600 hover:underline"
+                  >
+                    Export PDF Report
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -163,10 +163,9 @@ export default function AdminLogin() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">Admin Credentials</h3>
+                    <h3 className="text-sm font-medium text-blue-800">Admin Access</h3>
                     <div className="mt-2 text-sm text-blue-700">
-                      <p><strong>Username:</strong> admingdb</p>
-                      <p><strong>Password:</strong> GlobalBank2024!@#$%^&*()_+SecureAdmin</p>
+                      <p>Enter your admin credentials to access the dashboard</p>
                     </div>
                   </div>
                 </div>
