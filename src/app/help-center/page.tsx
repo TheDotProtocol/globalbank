@@ -2,10 +2,6 @@
 import { useState, useEffect } from "react";
 import { Sun, Moon, ArrowRight, ShieldCheck, CheckCircle, Award, Globe, Users, Zap, Star, Building, Target, Calendar, TrendingUp, Heart, Leaf, BookOpen, GraduationCap, Newspaper, ArrowUpRight, CheckSquare, MapPin, Phone, Mail, BarChart3, FileText, PieChart, DollarSign, TrendingDown, Users2, Shield, FileBarChart, CalendarDays, Download, ChevronRight, ChevronDown, ChevronUp, Menu, X, Play, Eye, Gavel, Scale, Lock, UserCheck, FileCheck, AlertTriangle, CheckCircle2, ClipboardCheck, EyeOff, MessageSquare, HelpCircle, CreditCard, Wallet, Calculator, Headphones, MessageCircle, ExternalLink, FileDown, Search, Clock, Globe2, Smartphone, Monitor, Tablet } from "lucide-react";
 import Image from "next/image";
-<<<<<<< HEAD
-import Link from "next/link";
-=======
->>>>>>> c9f0d131989ca8263d75933f5d1df2dff3e786a3
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation, getCurrentLocale } from "@/lib/i18n";
 import { NoTranslate, Translate } from "@/components/TranslationWrapper";
@@ -120,21 +116,6 @@ export default function HelpCenterPage() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-<<<<<<< HEAD
-              <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</Link>
-              <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</Link>
-              <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</Link>
-              <Link href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Corporate Governance</Link>
-              <Link href="/help-center" className="text-blue-600 dark:text-blue-400 font-semibold">Help Center</Link>
-              <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</Link>
-=======
-              <a href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</a>
-              <a href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</a>
-              <a href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</a>
-              <a href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Corporate Governance</a>
-              <a href="/help-center" className="text-blue-600 dark:text-blue-400 font-semibold">Help Center</a>
-              <a href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</a>
->>>>>>> c9f0d131989ca8263d75933f5d1df2dff3e786a3
             </div>
 
             {/* Right side controls */}
@@ -161,21 +142,6 @@ export default function HelpCenterPage() {
           {mobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex flex-col space-y-4">
-<<<<<<< HEAD
-                <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</Link>
-                <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</Link>
-                <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</Link>
-                <Link href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Corporate Governance</Link>
-                <Link href="/help-center" className="text-blue-600 dark:text-blue-400 font-semibold">Help Center</Link>
-                <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</Link>
-=======
-                <a href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</a>
-                <a href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</a>
-                <a href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</a>
-                <a href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Corporate Governance</a>
-                <a href="/help-center" className="text-blue-600 dark:text-blue-400 font-semibold">Help Center</a>
-                <a href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</a>
->>>>>>> c9f0d131989ca8263d75933f5d1df2dff3e786a3
               </div>
             </div>
           )}
@@ -483,28 +449,12 @@ export default function HelpCenterPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-<<<<<<< HEAD
-                <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link href="/investor-relations" className="hover:text-white transition-colors">Investor Relations</Link></li>
-                <li><Link href="/corporate-governance" className="hover:text-white transition-colors">Corporate Governance</Link></li>
-                <li><Link href="/help-center" className="hover:text-white transition-colors">Help Center</Link></li>
-=======
-                <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="/investor-relations" className="hover:text-white transition-colors">Investor Relations</a></li>
-                <li><a href="/corporate-governance" className="hover:text-white transition-colors">Corporate Governance</a></li>
-                <li><a href="/help-center" className="hover:text-white transition-colors">Help Center</a></li>
->>>>>>> c9f0d131989ca8263d75933f5d1df2dff3e786a3
               </ul>
             </div>
             
             <div>
               <h3 className="text-lg font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-sm text-gray-400">
-<<<<<<< HEAD
-                <li><Link href="/help-center" className="hover:text-white transition-colors">Help Center</Link></li>
-=======
-                <li><a href="/help-center" className="hover:text-white transition-colors">Help Center</a></li>
->>>>>>> c9f0d131989ca8263d75933f5d1df2dff3e786a3
                 <li>Security</li>
                 <li>Privacy Policy</li>
                 <li>Terms of Service</li>

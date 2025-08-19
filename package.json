@@ -1,8 +1,4 @@
 {
-<<<<<<< HEAD
-  "dependencies": {
-    "lucide-react": "^0.525.0"
-=======
   "name": "globalbank",
   "version": "0.1.0",
   "private": true,
@@ -74,6 +70,5 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
->>>>>>> c9f0d131989ca8263d75933f5d1df2dff3e786a3
   }
 }
