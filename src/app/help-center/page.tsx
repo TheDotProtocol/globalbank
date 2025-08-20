@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Sun, Moon, ArrowRight, ShieldCheck, CheckCircle, Award, Globe, Users, Zap, Star, Building, Target, Calendar, TrendingUp, Heart, Leaf, BookOpen, GraduationCap, Newspaper, ArrowUpRight, CheckSquare, MapPin, Phone, Mail, BarChart3, FileText, PieChart, DollarSign, TrendingDown, Users2, Shield, FileBarChart, CalendarDays, Download, ChevronRight, ChevronDown, ChevronUp, Menu, X, Play, Eye, Gavel, Scale, Lock, UserCheck, FileCheck, AlertTriangle, CheckCircle2, ClipboardCheck, EyeOff, MessageSquare, HelpCircle, CreditCard, Wallet, Calculator, Headphones, MessageCircle, ExternalLink, FileDown, Search, Clock, Globe2, Smartphone, Monitor, Tablet } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation, getCurrentLocale } from "@/lib/i18n";
 import { NoTranslate, Translate } from "@/components/TranslationWrapper";
@@ -17,7 +18,7 @@ export default function HelpCenterPage() {
     contact: false
   });
   const [searchQuery, setSearchQuery] = useState("");
-  const { t } = useTranslation();
+  const { t } = useTranslation(getCurrentLocale());
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
@@ -116,6 +117,12 @@ export default function HelpCenterPage() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</Link>
+              <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</Link>
+              <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</Link>
+              <Link href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Corporate Governance</Link>
+              <Link href="/help-center" className="text-blue-600 dark:text-blue-400 font-semibold">Help Center</Link>
+              <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</Link>
             </div>
 
             {/* Right side controls */}
@@ -142,6 +149,12 @@ export default function HelpCenterPage() {
           {mobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex flex-col space-y-4">
+                <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</Link>
+                <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</Link>
+                <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</Link>
+                <Link href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Corporate Governance</Link>
+                <Link href="/help-center" className="text-blue-600 dark:text-blue-400 font-semibold">Help Center</Link>
+                <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</Link>
               </div>
             </div>
           )}
@@ -449,12 +462,17 @@ export default function HelpCenterPage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
+                <li><Link href="/investor-relations" className="hover:text-white transition-colors">Investor Relations</Link></li>
+                <li><Link href="/corporate-governance" className="hover:text-white transition-colors">Corporate Governance</Link></li>
+                <li><Link href="/help-center" className="hover:text-white transition-colors">Help Center</Link></li>
               </ul>
             </div>
             
             <div>
               <h3 className="text-lg font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-sm text-gray-400">
+                <li><Link href="/help-center" className="hover:text-white transition-colors">Help Center</Link></li>
                 <li>Security</li>
                 <li>Privacy Policy</li>
                 <li>Terms of Service</li>

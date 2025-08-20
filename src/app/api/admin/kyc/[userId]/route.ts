@@ -60,7 +60,7 @@ export const POST = requireAuth(async (request: NextRequest, { params }: { param
     const userUpdate = prisma.user.update({
       where: { id: userId },
       data: {
-        kycStatus: action === 'APPROVE' ? 'APPROVED' : 
+        kycStatus: action === 'APPROVE' ? 'VERIFIED' : 
                   action === 'REJECT' ? 'REJECTED' : 'PENDING'
       }
     });

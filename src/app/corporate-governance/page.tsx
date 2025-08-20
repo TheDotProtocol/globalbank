@@ -6,6 +6,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation, getCurrentLocale } from "@/lib/i18n";
 import { NoTranslate, Translate } from "@/components/TranslationWrapper";
 import TranslationPrompt from "@/components/TranslationPrompt";
+import Link from "next/link";
 
 export default function CorporateGovernancePage() {
   const [darkMode, setDarkMode] = useState(false);
@@ -16,7 +17,7 @@ export default function CorporateGovernancePage() {
     rights: false,
     transparency: false
   });
-  const { t } = useTranslation();
+  const { t } = useTranslation(getCurrentLocale());
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains('dark');
@@ -58,6 +59,11 @@ export default function CorporateGovernancePage() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</Link>
+              <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</Link>
+              <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</Link>
+              <Link href="/corporate-governance" className="text-blue-600 dark:text-blue-400 font-semibold">Corporate Governance</Link>
+              <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</Link>
             </div>
 
             {/* Right side controls */}
@@ -84,6 +90,11 @@ export default function CorporateGovernancePage() {
           {mobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex flex-col space-y-4">
+                <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</Link>
+                <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</Link>
+                <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</Link>
+                <Link href="/corporate-governance" className="text-blue-600 dark:text-blue-400 font-semibold">Corporate Governance</Link>
+                <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</Link>
               </div>
             </div>
           )}
@@ -588,6 +599,9 @@ export default function CorporateGovernancePage() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-sm text-gray-400">
+                <li><a href="/about" className="hover:text-white transition-colors">About Us</a></li>
+                <li><a href="/investor-relations" className="hover:text-white transition-colors">Investor Relations</a></li>
+                <li><a href="/corporate-governance" className="hover:text-white transition-colors">Corporate Governance</a></li>
                 <li>Contact</li>
               </ul>
             </div>
