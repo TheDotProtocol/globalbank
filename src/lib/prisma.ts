@@ -6,6 +6,11 @@ declare global {
 
 // Database connection configuration with fallback
 const getDatabaseUrl = (): string => {
+  // Only run on server side
+  if (typeof window !== 'undefined') {
+    throw new Error('Prisma client should only be used on the server side');
+  }
+  
   // Check for production database URL first
   if (process.env.DATABASE_URL) {
     return process.env.DATABASE_URL;
@@ -23,6 +28,11 @@ class PrismaClientSingleton {
   private static instance: PrismaClient;
 
   static getInstance(): PrismaClient {
+    // Only run on server side
+    if (typeof window !== 'undefined') {
+      throw new Error('Prisma client should only be used on the server side');
+    }
+    
     if (!PrismaClientSingleton.instance) {
       try {
         const databaseUrl = getDatabaseUrl();
@@ -57,8 +67,8 @@ class PrismaClientSingleton {
   }
 }
 
-// Export the singleton instance
-export const prisma = PrismaClientSingleton.getInstance();
+// Export the singleton instance (server-side only)
+export const prisma = typeof window === 'undefined' ? PrismaClientSingleton.getInstance() : null as any;
 
 // Export disconnect function for cleanup
 export const disconnectPrisma = () => PrismaClientSingleton.disconnect();
