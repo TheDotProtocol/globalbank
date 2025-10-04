@@ -593,7 +593,7 @@ export async function exportStatement(
   if (format === 'pdf') {
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
+    startDate.setDate(startDate.getDate() - 90); // Extended to 90 days to include more transactions
     
     // Calculate total credits and debits from transactions
     const totalCredits = transactions
@@ -619,7 +619,7 @@ export async function exportStatement(
         accountType: account.accountType,
         balance: currentBalance
       },
-      transactions: transactions.slice(0, 50),
+      transactions: transactions, // Include all transactions
       startDate,
       endDate,
       openingBalance: Math.max(0, openingBalance)

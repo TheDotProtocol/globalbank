@@ -102,7 +102,7 @@ export default function TransactionsPage() {
         return;
       }
 
-      const response = await fetch('/api/transactions?limit=100', {
+      const response = await fetch('/api/transactions?limit=500', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
