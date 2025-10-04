@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, extractTokenFromHeader } from './jwt';
+import { prisma } from './prisma';
 
-export async function authenticateUser(request: NextRequest): Promise<{ user: any; error?: string }> {
+export async function authenticateUserWithDatabase(request: NextRequest): Promise<{ user: any; error?: string }> {
   try {
     const authHeader = request.headers.get('authorization');
     console.log('🔍 Auth header received:', authHeader ? 'Present' : 'Missing');
@@ -25,10 +26,29 @@ export async function authenticateUser(request: NextRequest): Promise<{ user: an
 
     console.log('🔍 Token payload:', { userId: payload.userId, email: payload.email });
 
-    // For client-side auth, we only verify the token
-    // Database verification should be done in API routes
-    console.log('✅ Token verification successful');
-    return { user: payload };
+    // Verify user still exists in database
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        kycStatus: true,
+        createdAt: true
+      }
+    });
+
+    console.log('🔍 User found in database:', user ? 'Yes' : 'No');
+
+    if (!user) {
+      console.log('❌ User not found in database');
+      return { user: null, error: 'User not found' };
+    }
+
+    console.log('✅ Authentication successful for user:', user.email);
+    return { user };
   } catch (error) {
     console.error('❌ Authentication error:', error);
     return { user: null, error: 'Authentication failed' };
@@ -39,7 +59,7 @@ export function requireAuth(handler: Function) {
   return async (request: NextRequest) => {
     console.log('🔍 requireAuth middleware called for:', request.url);
     
-    const { user, error } = await authenticateUser(request);
+    const { user, error } = await authenticateUserWithDatabase(request);
     
     if (error || !user) {
       console.log('❌ Authentication failed:', error);
@@ -54,4 +74,4 @@ export function requireAuth(handler: Function) {
     (request as any).user = user;
     return handler(request);
   };
-} 
+}

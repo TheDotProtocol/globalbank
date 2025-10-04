@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth-server';
 
 // Get analytics data
 export const GET = requireAuth(async (request: NextRequest) => {

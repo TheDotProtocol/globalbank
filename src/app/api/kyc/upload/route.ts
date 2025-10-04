@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
 import { uploadFileToS3 } from '@/lib/s3';
 

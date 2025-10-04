@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireAuth } from '@/lib/auth-server';
 import { UserStandardization } from '@/lib/user-standardization';
 
 export const POST = requireAuth(async (request: NextRequest) => {
