@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, Info, Calculator } from 'lucide-react';
-import { InterestCalculator, InterestRate } from '@/lib/interest-calculator';
+import { InterestCalculator, InterestRate } from '@/lib/interest-calculator-client';
 
 interface InterestRatesDisplayProps {
   className?: string;
