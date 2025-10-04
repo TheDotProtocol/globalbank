@@ -55,13 +55,7 @@ export async function POST(request: NextRequest) {
           type: 'DEBIT',
           amount: amount,
           description: description || `Transfer to ${toAccount.user.firstName} ${toAccount.user.lastName} (${toAccount.accountNumber})`,
-          status: 'COMPLETED',
-          transferMode: 'INTERNAL_TRANSFER',
-          destinationAccountNumber: toAccount.accountNumber,
-          destinationAccountHolder: `${toAccount.user.firstName} ${toAccount.user.lastName}`,
-          sourceAccountNumber: fromAccount.accountNumber,
-          sourceAccountHolder: `${fromAccount.user.firstName} ${fromAccount.user.lastName}`,
-          isDisputed: false
+          status: 'COMPLETED'
         }
       });
 
@@ -73,13 +67,7 @@ export async function POST(request: NextRequest) {
           type: 'CREDIT',
           amount: amount,
           description: `Transfer from ${fromAccount.user.firstName} ${fromAccount.user.lastName} (${fromAccount.accountNumber})`,
-          status: 'COMPLETED',
-          transferMode: 'INTERNAL_TRANSFER',
-          sourceAccountNumber: fromAccount.accountNumber,
-          sourceAccountHolder: `${fromAccount.user.firstName} ${fromAccount.user.lastName}`,
-          destinationAccountNumber: toAccount.accountNumber,
-          destinationAccountHolder: `${toAccount.user.firstName} ${toAccount.user.lastName}`,
-          isDisputed: false
+          status: 'COMPLETED'
         }
       });
 
