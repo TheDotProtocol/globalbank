@@ -1,159 +1,104 @@
-"use client";
-import { useState, useEffect } from "react";
-import { Sun, Moon, ArrowRight, ShieldCheck, CheckCircle, Award, Globe, Users, Zap, Star, Building, Target, Calendar, TrendingUp, Heart, Leaf, BookOpen, GraduationCap, Newspaper, ArrowUpRight, CheckSquare, Star as StarIcon, Award as AwardIcon, Zap as ZapIcon, MapPin, Phone, Mail, Globe2, BarChart3, Clock3 } from "lucide-react";
-import Image from "next/image";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useTranslation, getCurrentLocale } from "@/lib/i18n";
-import { NoTranslate, Translate } from "@/components/TranslationWrapper";
-import TranslationPrompt from "@/components/TranslationPrompt";
+'use client';
 
-export default function AboutPage() {
+import React, { useState } from 'react';
+import { Shield, Award, Lock, Building, Globe, Users, Target, Heart, Briefcase, TrendingUp, Sun, Moon, Menu, X, ChevronDown } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+
+export default function About() {
   const [darkMode, setDarkMode] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [currentLocale, setCurrentLocale] = useState('en');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const theme = darkMode ? 'dark' : 'light';
+  
+  const iconMap: { [key: string]: any } = {
+    'shield': Shield,
+    'award': Award,
+    'lock': Lock,
+    'building': Building,
+    'globe': Globe,
+    'users': Users,
+    'target': Target,
+    'heart': Heart,
+    'briefcase': Briefcase,
+    'trending-up': TrendingUp
+  };
 
-  useEffect(() => {
-    setIsLoaded(true);
-    try {
-      const locale = getCurrentLocale();
-      setCurrentLocale(locale);
-    } catch (error) {
-      console.warn('Error getting locale, using default:', error);
-      setCurrentLocale('en');
-    }
-  }, []);
-
-  const { t } = useTranslation(currentLocale as any);
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading Global Dot Bank...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const values = [
-    {
-      title: "Innovation",
-      description: "Continuously developing new banking solutions",
-      icon: Zap,
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      title: "Integrity",
-      description: "Full compliance with regulatory standards",
-      icon: ShieldCheck,
-      color: "from-green-500 to-green-600"
-    },
-    {
-      title: "Customer-Centricity",
-      description: "Putting customers first in all operations",
-      icon: Heart,
-      color: "from-red-500 to-red-600"
-    },
-    {
-      title: "Sustainability",
-      description: "Promoting eco-friendly finance and green banking practices",
-      icon: Leaf,
-      color: "from-emerald-500 to-emerald-600"
-    }
+  const coreValues = [
+    { icon: 'shield', title: 'Integrity', description: 'We operate with transparency and accountability, ensuring trust at every level of our organization.' },
+    { icon: 'trending-up', title: 'Innovation', description: 'We continuously push the boundaries of fintech — delivering seamless, AI-driven, and user-centric banking solutions.' },
+    { icon: 'award', title: 'Compliance', description: 'We maintain the highest standards of regulatory adherence, aligned with Basel III, FATF, and FinCEN global frameworks.' },
+    { icon: 'globe', title: 'Inclusivity', description: 'We serve customers across borders, ensuring everyone — from individuals to enterprises — can access the global financial system.' },
+    { icon: 'heart', title: 'Stewardship', description: 'We uphold long-term sustainability and responsible growth, ensuring the success of our customers, communities, and investors alike.' }
   ];
 
-  const milestones = [
-    {
-      year: "2024",
-      title: "Founding of Dot Protocol Blockchain",
-      description: "Foundation for banking innovation established",
-      icon: BookOpen
-    },
-    {
-      year: "2025",
-      title: "Establishment of Global Dot Bank",
-      description: "Digital-first financial platform launched",
-      icon: Building
-    },
-    {
-      year: "2025",
-      title: "Banking Licenses Applied & Approved",
-      description: "Licenses applied for Thailand, USA, India, and Singapore. Approved by the Bank of Thailand",
-      icon: Award
-    }
+  const leadershipTeam = [
+    { name: 'Arun Kumar', title: 'Founder', bio: 'Visionary founder of AR Holdings, whose foresight and entrepreneurial spirit laid the foundation for a multi-industry conglomerate. His legacy of innovation and strategic leadership continues to guide GDB\'s mission to make global finance accessible and borderless.' },
+    { name: 'Kelsey Morgan (KM)', title: 'Chief Executive Officer', bio: 'Brings operational excellence and strategic foresight to Global Dot Bank. With a career spanning fintech innovation and global transformation, she drives execution, compliance, and customer trust at scale.' },
+    { name: 'Timothy Burton (TB)', title: 'Veteran Advisor & Chairman', bio: 'Seasoned executive with over 35 years in banking, blockchain, and logistics. A former advisor to Fortune 500 financial institutions, he ensures GDB maintains its commitment to governance and sustainable growth.' },
+    { name: 'Saleena Thamani (ST)', title: 'Executive Director', bio: 'Pioneering blockchain developer and architect of the DPC-20 Token Standard. Saleena bridges blockchain innovation and digital finance — merging compliance with creativity and serving as a driving force behind GDB\'s fintech ecosystem.' },
+    { name: 'Rudra Narayanan (RN)', title: 'Head of Business & Strategy', bio: 'Specialist in global market expansion and institutional partnerships. Rudra leads GDB\'s cross-border strategy, driving investor relations and business growth across continents.' },
+    { name: 'Jonathan Lee (李志明)', title: 'Chief Compliance Officer', bio: 'A highly respected compliance veteran with over 25 years at HSBC and Standard Chartered. Jonathan oversees GDB\'s global compliance, AML/CFT, and internal audit frameworks — ensuring absolute adherence to international banking standards and regulatory excellence.' },
+    { name: 'Dr. Maria Estevez', title: 'Head of International Banking & Risk', bio: 'Former Managing Director at Santander Global Markets, Dr. Estevez brings a deep understanding of sovereign risk, liquidity management, and digital asset compliance. She leads the risk and treasury divisions, reinforcing GDB\'s financial resilience.' },
+    { name: 'David Nasser', title: 'Chief Investment Officer', bio: 'A former Goldman Sachs executive with extensive experience in global asset management and structured investment products. David oversees all institutional portfolios, ensuring long-term growth and ethical asset allocation.' },
+    { name: 'Akira Tanaka (田中明)', title: 'Chief Technology & Digital Operations Officer', bio: 'With a decade of leadership at Mitsubishi UFJ Financial Group (MUFG), Akira drives GDB\'s technology infrastructure, cybersecurity, and global payments network — ensuring 24/7 stability and cutting-edge innovation across all systems.' },
+    { name: 'Sophia Bennett', title: 'Chief Financial Officer', bio: 'A financial strategist with global experience at UBS and Barclays, Sophia leads GDB\'s treasury, accounting, and capital optimization strategies. She ensures the bank\'s financial discipline and transparent reporting.' },
+    { name: 'Ethan Wong (黄以腾)', title: 'Head of Merchant Banking & Corporate Services', bio: 'A leader in corporate finance and trade facilitation, Ethan previously served at OCBC and Citi Asia-Pacific. He oversees GDB\'s merchant banking division, enabling seamless international transactions for enterprise clients.' }
   ];
 
-  const sustainablePractices = [
-    "Supporting green and eco-friendly projects",
-    "Reducing carbon footprint via digital-first banking",
-    "Promoting responsible lending and investment",
-    "Implementing paperless banking operations",
-    "Supporting renewable energy initiatives"
-  ];
-
-  const newsEvents = [
-    "Announcements, partnerships, and product launches",
-    "Updates on licensing approvals and regulatory milestones",
-    "Scheduled bank holidays",
-    "Technology updates and security enhancements",
-    "Community engagement and educational initiatives"
-  ];
-
-  const careerOpportunities = [
-    "Technology and software development",
-    "Operations and customer service",
-    "Finance and risk management",
-    "Marketing and business development",
-    "Legal and compliance"
-  ];
-
-  const scholarshipPrograms = [
-    "Fintech innovation scholarships",
-    "Blockchain technology education",
-    "Digital banking certification programs",
-    "AI and machine learning in finance",
-    "Sustainable finance initiatives"
+  const offices = [
+    { label: 'Headquarters (USA)', address: '1075 Terra Bella Ave, Mountain View, CA 94043, United States' },
+    { label: 'Asia Headquarters (Thailand)', address: '23 Sukhumvit Soi 13, Khlong Toei Nuea, Bangkok 10110' },
+    { label: 'Dubai, UAE', address: 'Level 29, Marina Plaza, Dubai Marina' },
+    { label: 'Singapore', address: '20 Collyer Quay, #23-01, Raffles Place, 049319' },
+    { label: 'Malaysia', address: 'Level 36, Menara Citibank, Jalan Ampang, Kuala Lumpur 50450' }
   ];
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
-        {/* Translation Prompt */}
-        <TranslationPrompt />
-        
-        {/* Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-200 to-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-indigo-200 to-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
-          <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-200 to-cyan-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-2000"></div>
-        </div>
-
+    <div className={darkMode ? 'dark' : ''}>
+      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
         {/* Navigation */}
-        <nav className="relative z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 shadow-sm">
+        <nav className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-3">
+              <Link href="/" className="flex items-center space-x-3">
                 <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm border border-gray-200">
                   <Image src="/logo.png" alt="Global Dot Bank Logo" width={40} height={40} className="object-contain" />
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                  <NoTranslate>Global Dot Bank</NoTranslate>
+                  Global Dot Bank
                 </span>
-              </div>
+              </Link>
+              
               <div className="hidden md:flex items-center space-x-8">
-                <button onClick={() => window.location.href = "/"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</button>
-                <button className="text-blue-600 dark:text-blue-400 font-medium">About Us</button>
-                <button className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Support</button>
-                <button onClick={() => window.location.href = "/login"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</button>
-                <button onClick={() => window.location.href = "/register"} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-medium">Open Account</button>
-                <LanguageSwitcher />
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  aria-label="Toggle Dark Mode"
-                >
+                <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</Link>
+                <Link href="/about" className="text-blue-600 dark:text-blue-400 font-semibold">About</Link>
+                <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investors</Link>
+                <Link href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Governance</Link>
+                <Link href="/help-center" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Help</Link>
+                
+                <div className="relative group">
+                  <button className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium flex items-center space-x-1">
+                    <span>Banking</span>
+                    <ChevronDown size={16} />
+                  </button>
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <Link href="/register" className="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">Create an account</Link>
+                    <Link href="/login" className="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300">Login</Link>
+                  </div>
+                </div>
+                
+                <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" aria-label="Toggle Dark Mode">
                   {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+              </div>
+              
+              <div className="md:hidden flex items-center space-x-2">
+                <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" aria-label="Toggle Dark Mode">
+                  {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
+                  {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                 </button>
               </div>
             </div>
@@ -161,323 +106,158 @@ export default function AboutPage() {
         </nav>
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden py-20 lg:py-32">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center">
-              <div className={`transition-all duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6">
-                  About <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Global Dot Bank</span>
-                </h1>
-                <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-3xl mx-auto">
-                  A next-generation digital financial institution committed to combining banking reliability with cutting-edge innovation.
-                </p>
-              </div>
+        <section className="relative py-20 lg:py-32 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+              About Us — Global Dot Bank
+            </h1>
+            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-4xl mx-auto">
+              Founded to revolutionize the world of digital finance, Global Dot Bank (GDB) was established with a singular purpose — to make global banking simple, secure, and borderless.
+            </p>
+          </div>
+        </section>
+
+        {/* Our Story */}
+        <section className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">Our Story</h2>
+            <div className="space-y-6 text-lg text-gray-700 dark:text-gray-300">
+              <p>
+                Emerging from the vision of AR Holdings, GDB represents the convergence of financial innovation and technology — serving as a trusted partner to global citizens, entrepreneurs, and institutions worldwide.
+              </p>
+              <p>
+                With headquarters in Mountain View, California, and an Asia hub in Bangkok, Thailand, GDB operates across 10 international offices, managing over USD 1.5 million in assets and serving 2,100+ clients across continents.
+              </p>
+              <p className="text-xl font-semibold italic text-center">
+                We believe banking should not be defined by borders — but by access, trust, and opportunity.
+              </p>
             </div>
           </div>
         </section>
 
         {/* Mission & Vision */}
-        <section className="px-6 py-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-12">
-              {/* Mission */}
-              <div className={`transition-all duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-6">
-                  <Target className="h-8 w-8 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Our Mission</h2>
-                <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                  Global Dot Bank is a next-generation digital financial institution committed to combining <strong>banking reliability</strong> with <strong>cutting-edge innovation</strong>. We leverage AI, blockchain, and modern banking technology to provide seamless, secure, and intelligent financial services worldwide.
+        <section className="py-16 bg-gray-50 dark:bg-gray-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="p-8 bg-white dark:bg-gray-900 rounded-xl shadow-sm">
+                <Target size={48} className="mb-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-2xl font-bold mb-4">Our Mission</h3>
+                <p className="text-gray-700 dark:text-gray-300">
+                  To empower individuals and businesses to manage, grow, and move their wealth globally — through transparent, intelligent, and secure digital banking solutions.
                 </p>
               </div>
-
-              {/* Vision */}
-              <div className={`transition-all duration-1000 delay-300 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <div className="h-16 w-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mb-6">
-                  <Globe className="h-8 w-8 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Our Vision</h2>
-                <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                  To become a <strong>trusted global digital bank</strong> that empowers individuals and businesses to manage their finances smarter, faster, and more securely.
+              <div className="p-8 bg-white dark:bg-gray-900 rounded-xl shadow-sm">
+                <TrendingUp size={48} className="mb-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-2xl font-bold mb-4">Our Vision</h3>
+                <p className="text-gray-700 dark:text-gray-300">
+                  To become the world's most trusted digital-first financial institution, uniting technology and compliance to redefine the standards of global banking.
                 </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Values */}
-        <section className="px-6 py-16 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Our Values</h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                The core principles that guide everything we do at Global Dot Bank
-              </p>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {values.map((value, index) => (
-                <div key={value.title} className={`text-center p-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-200/50 dark:border-gray-700/50 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} 
-                     style={{ transitionDelay: `${index * 100}ms` }}>
-                  <div className={`h-16 w-16 bg-gradient-to-r ${value.color} rounded-xl flex items-center justify-center mx-auto mb-4`}>
-                    <value.icon className="h-8 w-8 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">{value.title}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{value.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Bank History */}
-        <section className="px-6 py-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Bank History</h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Our journey from blockchain innovation to global banking leadership
-              </p>
-            </div>
-            <div className="space-y-8">
-              {milestones.map((milestone, index) => (
-                <div key={milestone.year} className={`flex items-start space-x-6 p-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} 
-                     style={{ transitionDelay: `${index * 200}ms` }}>
-                  <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <milestone.icon className="h-8 w-8 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-4 mb-2">
-                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{milestone.year}</span>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{milestone.title}</h3>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300">{milestone.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Sustainable Development */}
-        <section className="px-6 py-16 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className={`transition-all duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <div className="h-16 w-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-6">
-                  <Leaf className="h-8 w-8 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Sustainable Development</h2>
-                <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-                  Global Dot Bank is committed to sustainable banking practices and environmental responsibility.
-                </p>
-                <ul className="space-y-3">
-                  {sustainablePractices.map((practice, index) => (
-                    <li key={index} className="flex items-start space-x-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">{practice}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className={`transition-all duration-1000 delay-300 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl p-8 shadow-lg">
-                  <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Environmental Impact</h3>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">Carbon Footprint Reduction</span>
-                      <span className="text-green-600 font-semibold">85%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">Paperless Operations</span>
-                      <span className="text-green-600 font-semibold">100%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600 dark:text-gray-400">Green Project Support</span>
-                      <span className="text-green-600 font-semibold">$2M+</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* News & Events */}
-        <section className="px-6 py-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">News & Events</h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Stay up-to-date with Global Dot Bank's latest developments and announcements
-              </p>
-            </div>
-            <div className="grid lg:grid-cols-2 gap-8">
-              <div className={`transition-all duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-6">
-                  <Newspaper className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Latest Updates</h3>
-                <ul className="space-y-3">
-                  {newsEvents.map((event, index) => (
-                    <li key={index} className="flex items-start space-x-3">
-                      <ArrowUpRight className="h-4 w-4 text-blue-500 mt-1 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">{event}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className={`transition-all duration-1000 delay-300 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-8 text-white">
-                  <h3 className="text-xl font-semibold mb-4">Subscribe to Updates</h3>
-                  <p className="mb-6 text-blue-100">
-                    Get notified about our latest news, product launches, and important announcements.
-                  </p>
-                  <div className="flex space-x-4">
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      className="flex-1 px-4 py-2 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
-                    />
-                    <button className="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                      Subscribe
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Careers & Scholarships */}
-        <section className="px-6 py-16 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Careers & Scholarships</h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                We are building a team of forward-thinking innovators. Join us in shaping the future of banking.
-              </p>
-            </div>
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Careers */}
-              <div className={`transition-all duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <div className="h-16 w-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-6">
-                  <Users className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Career Opportunities</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Join our dynamic team and help us revolutionize the banking industry.
-                </p>
-                <ul className="space-y-3 mb-6">
-                  {careerOpportunities.map((opportunity, index) => (
-                    <li key={index} className="flex items-start space-x-3">
-                      <CheckCircle className="h-4 w-4 text-purple-500 mt-1 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">{opportunity}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl">
-                  View Open Positions
-                </button>
-              </div>
-
-              {/* Scholarships */}
-              <div className={`transition-all duration-1000 delay-300 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <div className="h-16 w-16 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-6">
-                  <GraduationCap className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Scholarship Programs</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Supporting the next generation of fintech innovators and leaders.
-                </p>
-                <ul className="space-y-3 mb-6">
-                  {scholarshipPrograms.map((program, index) => (
-                    <li key={index} className="flex items-start space-x-3">
-                      <CheckCircle className="h-4 w-4 text-green-500 mt-1 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">{program}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl">
-                  Apply for Scholarships
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="px-6 py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6">Ready to Join the Future of Banking?</h2>
-            <p className="text-lg text-blue-100 mb-8">
-              Experience the next generation of digital banking with Global Dot Bank. Secure, innovative, and designed for the modern world.
+        {/* Core Values */}
+        <section className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Core Values</h2>
+            <p className="text-center text-gray-600 dark:text-gray-400 mb-12">
+              Our values guide everything we do — from product development to customer service
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button onClick={() => window.location.href = "/register"} className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-all duration-300 shadow-xl hover:shadow-2xl">
-                Open Account Now
-              </button>
-              <button onClick={() => window.location.href = "/"} className="bg-transparent text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-white/10 transition-all duration-300 border-2 border-white">
-                Learn More
-              </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {coreValues.map((value, index) => {
+                const IconComponent = iconMap[value.icon];
+                return (
+                  <div key={index} className="p-6 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <IconComponent size={40} className="mb-4 text-blue-600 dark:text-blue-400" />
+                    <h4 className="text-xl font-bold mb-2">{value.title}</h4>
+                    <p className="text-gray-600 dark:text-gray-400">{value.description}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid md:grid-cols-4 gap-8">
-              <div className="col-span-2">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm border border-gray-200">
-                    <Image src="/logo.png" alt="Global Dot Bank Logo" width={40} height={40} className="object-contain" />
-                  </div>
-                  <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                    <NoTranslate>Global Dot Bank</NoTranslate>
-                  </span>
+        {/* Global Presence */}
+        <section className="py-16 bg-blue-50 dark:bg-gray-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Our Global Presence</h2>
+            <p className="text-center text-gray-600 dark:text-gray-400 mb-12">
+              With offices across three continents, we provide world-class banking services wherever you are
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {offices.map((office, index) => (
+                <div key={index} className="p-6 bg-white dark:bg-gray-900 rounded-xl shadow-sm">
+                  <Building size={24} className="mb-3 text-blue-600 dark:text-blue-400" />
+                  <h4 className="font-bold mb-2">{office.label}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{office.address}</p>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
-                  The future of borderless banking. Secure, transparent, and designed for the modern world.
-                </p>
-                <div className="flex space-x-4">
-                  <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    <Globe2 className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  </button>
-                  <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    <Mail className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  </button>
-                  <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    <Phone className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  </button>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Company</h3>
-                <ul className="space-y-2">
-                  <li><a href="/about" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">About Us</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Careers</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">News</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Contact</a></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Support</h3>
-                <ul className="space-y-2">
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Help Center</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Security</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Privacy Policy</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Terms of Service</a></li>
-                </ul>
-              </div>
+              ))}
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-700 mt-8 pt-8 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                © {new Date().getFullYear()} Global Dot Bank · All rights reserved. Operated by Dot Protocol Co., Ltd.
+          </div>
+        </section>
+
+        {/* Leadership Team */}
+        <section className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Leadership Team</h2>
+            <p className="text-center text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-12">
+              Our leaders combine legacy expertise from world-class financial institutions with a forward-thinking approach to innovation, compliance, and human connection.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {leadershipTeam.map((leader, index) => (
+                <div key={index} className="p-6 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white text-2xl font-bold mb-4">
+                    {leader.name.charAt(0)}
+                  </div>
+                  <h3 className="text-xl font-bold mb-1">{leader.name}</h3>
+                  <p className="text-blue-600 dark:text-blue-400 font-semibold text-sm mb-3">{leader.title}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{leader.bio}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Leadership Philosophy */}
+        <section className="py-16 bg-blue-100 dark:bg-blue-900/30">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Leadership Philosophy</h2>
+            <p className="text-lg text-gray-700 dark:text-gray-300 mb-4">
+              At Global Dot Bank, leadership is defined by vision, trust, and accountability.
+            </p>
+            <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">
+              Our leaders combine legacy expertise from world-class financial institutions with a forward-thinking approach to innovation, compliance, and human connection.
+            </p>
+            <p className="text-xl font-semibold italic">
+              Together, they embody GDB's commitment to "Banking Beyond Borders."
+            </p>
+          </div>
+        </section>
+
+        {/* Closing Statement */}
+        <section className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="p-8 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-2 border-blue-600 dark:border-blue-400 text-center">
+              <h2 className="text-3xl font-bold mb-4">Closing Statement</h2>
+              <p className="text-lg mb-4">
+                Global Dot Bank (GDB) stands as a beacon of trust and transformation in the global financial landscape.
+              </p>
+              <p className="text-lg font-semibold">
+                Guided by integrity, driven by innovation, and anchored in compliance — we are building a borderless future for banking.
               </p>
             </div>
+          </div>
+        </section>
+
+        {/* Simple Footer */}
+        <footer className="bg-gray-900 text-gray-300 py-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p className="text-sm">Global Dot Bank © 2025 — Licensed and Regulated.</p>
           </div>
         </footer>
       </div>
     </div>
   );
-} 
+}
