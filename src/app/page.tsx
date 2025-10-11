@@ -234,14 +234,25 @@ export default function Page() {
                 </span>
               </div>
               <div className="hidden md:flex items-center space-x-8">
-                <button onClick={scrollToFeatures} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">{t('navigation.features')}</button>
-                <button onClick={() => window.location.href = "/about"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</button>
-                <button onClick={() => window.location.href = "/investor-relations"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</button>
-                <button onClick={() => window.location.href = "/corporate-governance"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Corporate Governance</button>
-                <button onClick={() => window.location.href = "/help-center"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Help Center</button>
-                <button className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">{t('navigation.support')}</button>
-                <button onClick={() => window.location.href = "/login"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">{t('navigation.login')}</button>
-                <button onClick={() => window.location.href = "/register"} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-medium">{t('landing.openAccount')}</button>
+                <button onClick={scrollToFeatures} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Services</button>
+                <button onClick={() => document.getElementById('global-presence')?.scrollIntoView({ behavior: 'smooth' })} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Offices</button>
+                <button onClick={() => window.location.href = "/about"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About</button>
+                <button onClick={() => window.location.href = "/investor-relations"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investors</button>
+                <button onClick={() => window.location.href = "/corporate-governance"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Governance</button>
+                <button onClick={() => window.location.href = "/help-center"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Help</button>
+                
+                {/* Banking Dropdown */}
+                <div className="relative group">
+                  <button className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium flex items-center space-x-1">
+                    <span>Banking</span>
+                    <ChevronDown size={16} />
+                  </button>
+                  <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <button onClick={() => window.location.href = "/register"} className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">Create an account</button>
+                    <button onClick={() => window.location.href = "/login"} className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300">Login</button>
+                  </div>
+                </div>
+                
                 <LanguageSwitcher />
                 <button
                   onClick={() => setDarkMode(!darkMode)}
@@ -268,14 +279,17 @@ export default function Page() {
             {isMobileMenuOpen && (
               <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col space-y-4">
-                  <button onClick={scrollToFeatures} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">{t('navigation.features')}</button>
-                  <button onClick={() => window.location.href = "/about"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">About Us</button>
-                  <button onClick={() => window.location.href = "/investor-relations"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Investor Relations</button>
-                  <button onClick={() => window.location.href = "/corporate-governance"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Corporate Governance</button>
-                  <button onClick={() => window.location.href = "/help-center"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Help Center</button>
-                  <button className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">{t('navigation.support')}</button>
-                  <button onClick={() => window.location.href = "/login"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">{t('navigation.login')}</button>
-                  <button onClick={() => window.location.href = "/register"} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 font-medium text-left">{t('landing.openAccount')}</button>
+                  <button onClick={scrollToFeatures} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Services</button>
+                  <button onClick={() => document.getElementById('global-presence')?.scrollIntoView({ behavior: 'smooth' })} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Offices</button>
+                  <button onClick={() => window.location.href = "/about"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">About</button>
+                  <button onClick={() => window.location.href = "/investor-relations"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Investors</button>
+                  <button onClick={() => window.location.href = "/corporate-governance"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Governance</button>
+                  <button onClick={() => window.location.href = "/help-center"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Help</button>
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 px-2">Banking</p>
+                    <button onClick={() => window.location.href = "/register"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left px-2">Create an account</button>
+                    <button onClick={() => window.location.href = "/login"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left px-2 mt-2">Login</button>
+                  </div>
                 </div>
               </div>
             )}

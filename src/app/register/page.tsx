@@ -219,23 +219,23 @@ export default function AccountSelection() {
         </nav>
 
         {/* Main Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
               Choose Your Account Type
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Select the perfect account for your banking needs. Each account type 
               comes with unique features designed to enhance your financial experience.
             </p>
           </div>
 
           {/* Account Options */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
             {accountTypes.map((account) => (
               <div
                 key={account.id}
-                className={`relative p-8 rounded-2xl border-2 transition-all duration-300 cursor-pointer backdrop-blur-sm ${
+                className={`relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer backdrop-blur-sm ${
                   selectedAccount === account.id 
                     ? 'border-blue-500 shadow-xl scale-105 bg-white/90 dark:bg-gray-800/90' 
                     : getColorClasses(account.color)
@@ -259,18 +259,18 @@ export default function AccountSelection() {
                     </div>
                   </div>
 
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                     {account.name}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                     {account.description}
                   </p>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {account.features.map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-3">
-                        <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 dark:text-gray-300 text-sm">{feature}</span>
+                      <div key={index} className="flex items-center space-x-2">
+                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                        <span className="text-gray-700 dark:text-gray-300 text-xs">{feature}</span>
                       </div>
                     ))}
                   </div>
