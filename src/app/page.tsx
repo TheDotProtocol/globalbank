@@ -1,228 +1,177 @@
-"use client";
-import { useState, useEffect } from "react";
-import { Sun, Moon, ArrowRight, ShieldCheck, CheckCircle, Play, Award, Smartphone, DollarSign, TrendingUp, Globe, FileText, UserCheck, Clock, Menu, X, ChevronDown, ChevronUp, Lock, Users, Zap, Star, Building, CreditCard, PiggyBank, Calculator, Headphones, Shield, Globe2, BarChart3, Target, Gift, Calendar, Clock3, MapPin, Phone, Mail, ArrowUpRight, CheckSquare, Star as StarIcon, Award as AwardIcon, Zap as ZapIcon } from "lucide-react";
-import Image from "next/image";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { useTranslation, getCurrentLocale } from "@/lib/i18n";
-import { NoTranslate, Translate } from "@/components/TranslationWrapper";
-import TranslationPrompt from "@/components/TranslationPrompt";
+'use client';
 
-export default function Page() {
+import React, { useState, useEffect } from 'react';
+import { 
+  Shield, FileCheck, Award, Lock, Building, 
+  Globe, ArrowRightLeft, Briefcase, Vault,
+  Linkedin, Twitter, Newspaper, ChevronRight, ChevronDown,
+  Sun, Moon, Menu, X
+} from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+
+// Icon mapping
+const iconMap: { [key: string]: any } = {
+  'shield-check': Shield,
+  'file-check': FileCheck,
+  'award': Award,
+  'lock': Lock,
+  'building': Building,
+  'globe': Globe,
+  'arrow-right-left': ArrowRightLeft,
+  'briefcase': Briefcase,
+  'vault': Vault,
+  'linkedin': Linkedin,
+  'twitter': Twitter,
+  'newspaper': Newspaper
+};
+
+export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [activeSegment, setActiveSegment] = useState('individuals');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedFeatures, setExpandedFeatures] = useState<number[]>([]);
-  const [expandedAccounts, setExpandedAccounts] = useState<number[]>([]);
-  const [currentLocale, setCurrentLocale] = useState('en');
+  const [showBankingDropdown, setShowBankingDropdown] = useState(false);
 
-  useEffect(() => {
-    setIsLoaded(true);
-    try {
-      const locale = getCurrentLocale();
-      setCurrentLocale(locale);
-    } catch (error) {
-      console.warn('Error getting locale, using default:', error);
-      setCurrentLocale('en');
+  const theme = darkMode ? 'dark' : 'light';
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
     }
-  }, []);
-
-  const { t } = useTranslation(currentLocale as any);
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading Global Dot Bank...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const scrollToFeatures = () => {
-    const featuresSection = document.getElementById('features-section');
-    if (featuresSection) {
-      featuresSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    setIsMobileMenuOpen(false);
   };
 
-  const toggleFeature = (index: number) => {
-    setExpandedFeatures(prev => 
-      prev.includes(index) 
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
-    );
-  };
-
-  const toggleAccount = (index: number) => {
-    setExpandedAccounts(prev => 
-      prev.includes(index) 
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
-    );
-  };
-
-  const features = [
-    { 
-      title: "Instant Account Opening", 
-      shortDesc: "Open an account in minutes with just your phone number.",
-      expandedDesc: "Say goodbye to paperwork and long queues. With Global Dot Bank, your phone number is all you need to start. Complete your KYC digitally, get verified in minutes, and begin banking instantly from anywhere in the world. Whether you're an individual or a business, our onboarding is fast, secure, and fully remote.",
-      icon: Smartphone,
-      color: "from-blue-500 to-blue-600"
+  // Bank Data (embedded)
+  const bankData = {
+    hero: {
+      headline: "Banking Beyond Borders",
+      subheadline: "Global Dot Bank (GDB) delivers secure, intelligent, and borderless digital banking experiences — empowering customers in over 10 countries with the freedom to bank, spend, and invest globally.",
+      tagline: "One Account. One Card. All Currencies — Instantly.",
+      ctaPrimary: "Open Your Global Account",
+      ctaSecondary: "Explore Our Services",
     },
-    { 
-      title: "Transparent Fixed Deposits", 
-      shortDesc: "See clear, compliant FD terms & returns.",
-      expandedDesc: "We believe in transparency from day one. Our fixed deposit plans come with clear interest rates, maturity timelines, and legally compliant certificates that you can download anytime. No hidden fees, no surprises — just safe, steady growth for your savings.",
-      icon: DollarSign,
-      color: "from-green-500 to-green-600"
+    valueProposition: {
+      title: "Built for the Global Citizen",
+      subtitle: "Move, save, and invest — wherever life takes you.",
+      features: [
+        { title: "Digital-First Banking", description: "100% online onboarding with instant KYC verification.", icon: "globe" },
+        { title: "Transparent & Secure", description: "No hidden fees. No borders. Just pure banking freedom.", icon: "lock" },
+        { title: "Global Presence", description: "Offices in 10+ countries across 3 continents, ensuring world-class service no matter where you are.", icon: "building" },
+        { title: "Regulatory-Ready", description: "Registered & licensed in Thailand, with U.S. and E.U. banking licenses in progress.", icon: "shield-check" }
+      ]
     },
-    { 
-      title: "Seamless Transfers", 
-      shortDesc: "Transfer funds locally and globally with ease.",
-      expandedDesc: "Send and receive money across the globe with just a few taps. Whether it's paying vendors, receiving customer payments, or sending money to family, Global Dot Bank supports instant transfers across multiple currencies. Enjoy low fees, real-time status updates, and international reach.",
-      icon: TrendingUp,
-      color: "from-purple-500 to-purple-600"
+    trust: {
+      title: "Trusted by Over 2,100 Global Customers",
+      description: "Since 2024, Global Dot Bank has managed over USD 1.5 million in assets, supporting individuals and businesses through a stable, secure, and regulation-first digital ecosystem. GDB is building the next generation of global financial infrastructure — one trusted customer at a time.",
+      badges: [
+        { label: "2,100+ Customers", icon: "shield-check" },
+        { label: "$1.5M+ Assets", icon: "award" },
+        { label: "10+ Countries", icon: "globe" },
+        { label: "Licensed in Thailand", icon: "building" },
+        { label: "AML/CFT Compliant", icon: "file-check" }
+      ]
     },
-    { 
-      title: "Global Trust", 
-      shortDesc: "Backed by Dot Protocol Co., Ltd with international standards.",
-      expandedDesc: "Operated under Dot Protocol Co., Ltd — a registered and trusted technology company — Global Dot Bank meets international business and compliance standards. Our banking infrastructure is built for global scalability, regulatory clarity, and long-term trust.",
-      icon: Globe,
-      color: "from-indigo-500 to-indigo-600"
+    globalPresence: {
+      title: "Banking With a Global Footprint",
+      description: "Our regional offices across the United States, Asia, and Europe ensure you're always connected to world-class service and real-time financial access.",
+      stats: [
+        { value: "10+", label: "Countries" },
+        { value: "2,100+", label: "Customers" },
+        { value: "24/7", label: "Global Support" },
+        { value: "$1.5M+", label: "Assets Managed" }
+      ]
     },
-    { 
-      title: "Secure Banking", 
-      shortDesc: "Your data and funds protected with bank-grade security.",
-      expandedDesc: "Your privacy and funds are our top priority. We use end-to-end encryption, real-time fraud detection, biometric verification, and 2FA (two-factor authentication) to ensure that your account is protected 24/7. You bank, we secure.",
-      icon: ShieldCheck,
-      color: "from-red-500 to-red-600"
+    featureHighlights: {
+      title: "Experience Next-Generation Banking",
+      features: [
+        { icon: "arrow-right-left", title: "Instant Global Transfers (24/7)", description: "GDB-to-GDB real-time settlement network." },
+        { icon: "globe", title: "Multi-Currency Accounts", description: "Hold, send, and spend in USD, EUR, THB, SGD, AED, and INR." },
+        { icon: "briefcase", title: "Digital Debit Cards", description: "Manage and use your card anywhere in the world." },
+        { icon: "vault", title: "Wealth & Investment Access", description: "Diversify your portfolio with intelligent global investment tools." },
+        { icon: "shield-check", title: "24/7 AI Concierge Banking", description: "Your personal assistant for financial planning, insights, and support." }
+      ],
+      note: "We're also working closely with Visa and Mastercard to brand our upcoming line of Global Dot Bank debit and credit cards, giving you seamless access to the world's financial network."
     },
-    { 
-      title: "24/7 Support", 
-      shortDesc: "Real human support whenever you need it.",
-      expandedDesc: "No chatbots here. Global Dot Bank offers always-on support from trained professionals ready to assist you — day or night. Whether it's account help, transfer assistance, or onboarding guidance, we're just a message away.",
-      icon: UserCheck,
-      color: "from-orange-500 to-orange-600"
+    whyChoose: {
+      title: "Why Choose GDB",
+      subtitle: "A Smarter Way to Bank, Invest, and Transact Across Borders",
+      description: "At Global Dot Bank, we believe your money should move as freely as you do. We combine the trust of traditional banking with the innovation of modern fintech — giving you total control, transparency, and access across the world.",
+      reasons: [
+        { title: "Global Reach, Local Trust", description: "Licensed in Thailand with banking license applications active in the United States and European Union.", icon: "globe" },
+        { title: "Next-Gen Infrastructure", description: "Built on secure, real-time settlement systems.", icon: "award" },
+        { title: "Low Fees, High Transparency", description: "What you see is what you pay — no hidden charges.", icon: "lock" },
+        { title: "AI-Driven Banking", description: "Our intelligent systems simplify compliance, savings, and global transfers.", icon: "shield-check" },
+        { title: "Eco-Conscious Finance", description: "We integrate ESG-focused principles across our global operations.", icon: "building" }
+      ]
+    },
+    ecosystem: {
+      title: "Our Ecosystem",
+      subtitle: "One Bank. Infinite Possibilities.",
+      services: [
+        { icon: "globe", title: "Personal & Business Banking", description: "Open your global account with just a passport or business registration. Send and receive payments instantly between countries — in multiple currencies — under one unified dashboard." },
+        { icon: "arrow-right-left", title: "GDB Pay", description: "Our payment network is designed for speed and trust. Make international transfers, payrolls, and settlements instantly through the GDB-to-GDB real-time payment system, reducing costs by up to 60%." },
+        { icon: "vault", title: "GDB Wealth", description: "Access diversified investment tools — from ETFs and digital assets to savings bonds and global mutual funds. Track performance, optimize returns, and receive personalized recommendations through our AI Wealth Advisor." },
+        { icon: "briefcase", title: "GDB AI Concierge", description: "A 24/7 intelligent banking assistant that manages your transactions, predicts spending, and ensures your finances are always in balance — wherever you are in the world." }
+      ]
+    },
+    security: {
+      title: "Security & Trust",
+      subtitle: "Built on Integrity. Backed by Compliance.",
+      features: [
+        { title: "Regulatory Frameworks", description: "AML/CFT-compliant across all jurisdictions.", icon: "shield-check" },
+        { title: "Data Protection", description: "GDPR and PDPA certified.", icon: "lock" },
+        { title: "Security Infrastructure", description: "AES-256 encryption, zero-knowledge data storage, and multi-layer authentication.", icon: "file-check" },
+        { title: "Audit & Transparency", description: "Independent annual audits conducted under IFRS standards.", icon: "award" }
+      ],
+      tagline: "Your trust is our most valuable currency."
+    },
+    joinMovement: {
+      title: "Join the Movement",
+      subtitle: "Be Part of the Future of Banking",
+      description: "Over 2,100 customers already bank with us across 10+ countries — and counting. It's time to experience what true global banking feels like.",
+      ctaPrimary: "Open Your Global Account",
+      ctaSecondary: "Meet Our Global Team"
+    },
+    clientSegments: {
+      title: "Trusted by Leaders Worldwide",
+      segments: [
+        { id: "individuals", label: "Individuals", title: "Personal Banking Excellence", features: ["Premium global accounts with multi-currency support", "Competitive interest rates and investment options", "24/7 concierge banking support", "Advanced security and fraud protection", "Seamless mobile and web banking experience"] },
+        { id: "enterprises", label: "Enterprises", title: "Corporate Banking Solutions", features: ["Customized treasury and cash management", "Trade finance and letters of credit", "FX hedging and risk management tools", "Dedicated relationship managers", "API integration for automated workflows"] },
+        { id: "institutions", label: "Institutions", title: "Institutional Services", features: ["White-label banking infrastructure", "Regulatory compliance and reporting", "Liquidity and settlement services", "Prime brokerage and custody", "Bespoke financial engineering"] }
+      ]
+    },
+    footer: {
+      title: "Global Dot Bank — Banking Beyond Borders",
+      description: "A digital-first global bank built for people, businesses, and communities who believe that the world deserves a smarter, safer, and more transparent way to manage money.",
+      tagline: "One Account. One Card. All Currencies — Instantly.",
+      offices: [
+        { city: "United States (HQ)", address: "1075 Terra Bella Ave, Mountain View, CA, 94043" },
+        { city: "Dubai, UAE", address: "Level 29, Marina Plaza, Dubai Marina" },
+        { city: "Thailand (Asia HQ)", address: "23 Sukhumvit Soi 13, Khlong Toei Nuea, Bangkok 10110" },
+        { city: "Singapore", address: "20 Collyer Quay, #23-01, Raffles Place, 049319" },
+        { city: "Malaysia", address: "Level 36, Menara Citibank, Jalan Ampang, Kuala Lumpur 50450" }
+      ],
+      legal: [
+        { label: "Terms of Service", link: "#" },
+        { label: "Privacy Policy", link: "#" },
+        { label: "Regulatory Disclosures", link: "#" },
+        { label: "Security", link: "#" }
+      ],
+      social: [
+        { platform: "LinkedIn", link: "#", icon: "linkedin" },
+        { platform: "Twitter", link: "#", icon: "twitter" },
+        { platform: "Press", link: "#", icon: "newspaper" }
+      ],
+      copyright: "Global Dot Bank © 2025 — Licensed and Regulated."
     }
-  ];
-
-  const accountTypes = [
-    {
-      title: "Savings Account",
-      shortDesc: "Secure, seamless, and suited for your everyday needs.",
-      expandedDesc: "Experience smart, secure savings like never before. Our Savings Account gives you instant access, no hidden fees, and high interest rates that beat traditional banks. With instant mobile banking, smart spend tracking, and built-in budgeting tools, you can grow your money the modern way.",
-      benefits: [
-        "Higher-than-average interest rates",
-        "No minimum balance required",
-        "Instant e-KYC onboarding",
-        "Auto-sweep to FD for idle balances",
-        "Real-time mobile control of your money"
-      ],
-      icon: PiggyBank,
-      color: "from-green-500 to-emerald-600"
-    },
-    {
-      title: "Current Account",
-      shortDesc: "Built for businesses and professionals who move fast.",
-      expandedDesc: "Whether you're a freelancer, a founder, or a full-scale enterprise, our Current Account delivers unmatched flexibility and reliability. Enjoy multi-currency support, automated invoicing, seamless integrations with your accounting software, and lightning-fast transactions — all in one place.",
-      benefits: [
-        "Instant payments & global transfers",
-        "Zero hidden fees on monthly transactions",
-        "Dedicated relationship manager for business accounts",
-        "Free virtual business debit cards",
-        "API access for automation-ready businesses"
-      ],
-      icon: Building,
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      title: "Fixed Deposit Account",
-      shortDesc: "Lock in your funds. Watch your money grow faster, smarter.",
-      expandedDesc: "Get the highest fixed deposit returns in the market, with fully transparent terms. Whether short-term or long-term, we offer flexible tenures and attractive compound interest rates. Track your deposits in real-time and receive auto-reminders for maturity. Our FDs are 100% digital and can be auto-renewed or redeemed instantly.",
-      benefits: [
-        "Market-leading interest rates",
-        "Transparent, downloadable contracts",
-        "Auto-renew or break FD with no penalties (select tenures)",
-        "Secure digital certificates for every deposit",
-        "Start with as little as $100"
-      ],
-      icon: Calculator,
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      title: "Corporate Account",
-      shortDesc: "Enterprise-grade banking for companies of all sizes.",
-      expandedDesc: "Global Dot Bank's Corporate Account is designed for modern companies operating across borders. From startups to multinationals, we offer a full-suite solution with custom workflows, payroll automation, FX management, and treasury services.",
-      benefits: [
-        "Multi-user access with secure permissions",
-        "Built-in FX hedging tools",
-        "Real-time global transfers at low cost",
-        "Custom onboarding for regulated businesses",
-        "24/7 support with assigned corporate success manager"
-      ],
-      icon: Users,
-      color: "from-indigo-500 to-indigo-600"
-    },
-    {
-      title: "Junior Account",
-      shortDesc: "Banking for the next generation – safe, guided, and fun.",
-      expandedDesc: "Teach your children financial literacy the smart way. Junior Accounts are co-managed with parents and allow goal-based saving, smart card spending, and milestone rewards. It's more than a bank account — it's a learning platform for your child's future financial success.",
-      benefits: [
-        "Parental controls & joint oversight",
-        "Prepaid cards with spending limits",
-        "Goal tracking: Save for school, birthdays, more",
-        "Reward system for good saving habits",
-        "Safe & secure: zero online exposure"
-      ],
-      icon: Gift,
-      color: "from-pink-500 to-pink-600"
-    },
-    {
-      title: "Pension Account",
-      shortDesc: "Retire with dignity. Bank with peace of mind.",
-      expandedDesc: "Our Pension Account is crafted for retirees who want simplicity, safety, and consistent returns. Enjoy auto-deposit of pensions, FD-linked savings, and free withdrawal options tailored for senior citizens. Get priority support and seamless access to interest-earning schemes without the complexity of traditional banking.",
-      benefits: [
-        "Monthly interest payout options",
-        "Priority support for senior citizens",
-        "Medical emergency access fund",
-        "Simplified onboarding, even offline",
-        "Retirement planning dashboard"
-      ],
-      icon: Calendar,
-      color: "from-orange-500 to-orange-600"
-    }
-  ];
-
-  const stats = [
-    { number: "$1.5M+", label: "Assets Under Management", icon: DollarSign },
-    { number: "150+", label: "Countries Supported", icon: Globe2 },
-    { number: "99.9%", label: "Uptime Guarantee", icon: Shield },
-    { number: "24/7", label: "Customer Support", icon: Headphones }
-  ];
-
-  const trustIndicators = [
-    { title: "Bank-Grade Security", description: "256-bit encryption, biometric authentication, and real-time fraud detection", icon: Lock },
-    { title: "Global Compliance", description: "Meets international banking standards and regulatory requirements", icon: CheckSquare },
-    { title: "Instant Verification", description: "AI-powered KYC verification completed in under 5 minutes", icon: Zap },
-    { title: "Transparent Pricing", description: "No hidden fees, clear interest rates, and upfront cost structure", icon: Target }
-  ];
+  };
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
-        {/* Translation Prompt */}
-        <TranslationPrompt />
-        
-        {/* Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-200 to-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-indigo-200 to-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
-          <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-200 to-cyan-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-2000"></div>
-        </div>
-
+    <div className={darkMode ? 'dark' : ''}>
+      <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
         {/* Navigation */}
-        <nav className="relative z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 shadow-sm">
+        <nav className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-3">
@@ -230,16 +179,17 @@ export default function Page() {
                   <Image src="/logo.png" alt="Global Dot Bank Logo" width={40} height={40} className="object-contain" />
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                  <NoTranslate>Global Dot Bank</NoTranslate>
+                  Global Dot Bank
                 </span>
               </div>
+              
               <div className="hidden md:flex items-center space-x-8">
-                <button onClick={scrollToFeatures} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Services</button>
-                <button onClick={() => document.getElementById('global-presence')?.scrollIntoView({ behavior: 'smooth' })} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Offices</button>
-                <button onClick={() => window.location.href = "/about"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About</button>
-                <button onClick={() => window.location.href = "/investor-relations"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investors</button>
-                <button onClick={() => window.location.href = "/corporate-governance"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Governance</button>
-                <button onClick={() => window.location.href = "/help-center"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Help</button>
+                <button onClick={() => scrollToSection('services')} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Services</button>
+                <button onClick={() => scrollToSection('global-presence')} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Offices</button>
+                <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About</Link>
+                <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investors</Link>
+                <Link href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Governance</Link>
+                <Link href="/help-center" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Help</Link>
                 
                 {/* Banking Dropdown */}
                 <div className="relative group">
@@ -248,27 +198,18 @@ export default function Page() {
                     <ChevronDown size={16} />
                   </button>
                   <div className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                    <button onClick={() => window.location.href = "/register"} className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">Create an account</button>
-                    <button onClick={() => window.location.href = "/login"} className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300">Login</button>
+                    <Link href="/register" className="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">Create an account</Link>
+                    <Link href="/login" className="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300">Login</Link>
                   </div>
                 </div>
                 
-                <LanguageSwitcher />
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  aria-label="Toggle Dark Mode"
-                >
+                <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" aria-label="Toggle Dark Mode">
                   {darkMode ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
               </div>
+              
               <div className="md:hidden flex items-center space-x-2">
-                <LanguageSwitcher variant="buttons" />
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  aria-label="Toggle Dark Mode"
-                >
+                <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" aria-label="Toggle Dark Mode">
                   {darkMode ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
                 <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -276,19 +217,20 @@ export default function Page() {
                 </button>
               </div>
             </div>
+            
             {isMobileMenuOpen && (
               <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col space-y-4">
-                  <button onClick={scrollToFeatures} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Services</button>
-                  <button onClick={() => document.getElementById('global-presence')?.scrollIntoView({ behavior: 'smooth' })} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Offices</button>
-                  <button onClick={() => window.location.href = "/about"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">About</button>
-                  <button onClick={() => window.location.href = "/investor-relations"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Investors</button>
-                  <button onClick={() => window.location.href = "/corporate-governance"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Governance</button>
-                  <button onClick={() => window.location.href = "/help-center"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Help</button>
+                  <button onClick={() => scrollToSection('services')} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Services</button>
+                  <button onClick={() => scrollToSection('global-presence')} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Offices</button>
+                  <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">About</Link>
+                  <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Investors</Link>
+                  <Link href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Governance</Link>
+                  <Link href="/help-center" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left">Help</Link>
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 px-2">Banking</p>
-                    <button onClick={() => window.location.href = "/register"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left px-2">Create an account</button>
-                    <button onClick={() => window.location.href = "/login"} className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left px-2 mt-2">Login</button>
+                    <Link href="/register" className="block text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left px-2">Create an account</Link>
+                    <Link href="/login" className="block text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium text-left px-2 mt-2">Login</Link>
                   </div>
                 </div>
               </div>
@@ -297,285 +239,286 @@ export default function Page() {
         </nav>
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden py-20 lg:py-32">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className={`transition-all duration-1000 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <div className="inline-flex items-center space-x-2 bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-full px-4 py-2 mb-8 shadow-lg border border-gray-200/50">
-                  <ShieldCheck className="h-4 w-4 text-green-500" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('landing.backedBy')}</span>
-                </div>
-                <h1 className={`text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                  <Translate>{t('landing.heroTitle')}</Translate>
-                  <span className="block bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    <NoTranslate>Global Dot Bank</NoTranslate>
-                  </span>
-                  <span className="block text-sm text-gray-500 mt-2">🚀 <Translate>The Future of Borderless Banking is finally here</Translate></span>
-                </h1>
-                <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-2xl">
-                  {t('landing.heroDescription')}
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                  <button onClick={() => window.location.href = "/register"} className="group bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-xl hover:shadow-2xl flex items-center justify-center space-x-2 hover:scale-105">
-                    <span>{t('landing.openAccount')}</span>
-                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                  <button className="group bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-gray-200 dark:border-gray-600 flex items-center justify-center space-x-2 hover:scale-105">
-                    <Play className="h-5 w-5" />
-                    <span>{t('landing.learnMore')}</span>
-                  </button>
-                </div>
-                <div className="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>{t('landing.licensedTransparent')}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>{t('landing.globalCompliance')}</span>
-                  </div>
-                </div>
-              </div>
-              <div className={`transition-all duration-1000 delay-300 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-                <div className="relative">
-                  <div className="relative mx-auto w-80 h-96 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-2xl p-6">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl h-full p-4">
-                      <div className="flex justify-between items-center mb-6">
-                        <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm border border-gray-200">
-                          <Image src="/logo.png" alt="Global Dot Bank Logo" width={40} height={40} className="object-contain" />
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xs text-gray-500 dark:text-gray-400">Balance</div>
-                          <div className="text-lg font-bold text-gray-900 dark:text-white">$12,450.00</div>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                          <div className="text-xs text-gray-500 dark:text-gray-400">Recent Transaction</div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">+$2,500.00</div>
-                        </div>
-                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-                          <div className="text-xs text-gray-500 dark:text-gray-400">Account Status</div>
-                          <div className="text-sm font-medium text-green-500">Active</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute -top-4 -right-4 bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg border border-gray-200">
-                    <ShieldCheck className="h-6 w-6 text-green-500" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Trust Indicators */}
-        <section className="px-6 py-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-3xl font-bold mb-12 text-center text-gray-900 dark:text-white">Why Trust Global Dot Bank?</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {trustIndicators.map((indicator, index) => (
-                <div key={indicator.title} className={`text-center p-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-200/50 dark:border-gray-700/50 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} 
-                     style={{ transitionDelay: `${index * 100}ms` }}>
-                  <div className="h-16 w-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <indicator.icon className="h-8 w-8 text-white" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">{indicator.title}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">{indicator.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Account Types */}
-        <section className="px-6 py-16 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Choose Your Perfect Account</h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                From personal savings to corporate banking, we have the perfect account type for your financial needs
-              </p>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {accountTypes.map((account, index) => (
-                <div key={account.title} className={`p-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-200/50 dark:border-gray-700/50 cursor-pointer ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} 
-                     style={{ transitionDelay: `${index * 100}ms` }}
-                     onClick={() => toggleAccount(index)}>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`h-12 w-12 bg-gradient-to-r ${account.color} rounded-xl flex items-center justify-center`}>
-                      <account.icon className="h-6 w-6 text-white" />
-                    </div>
-                    <button className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                      {expandedAccounts.includes(index) ? <ChevronUp className="h-5 w-5 text-gray-500" /> : <ChevronDown className="h-5 w-5 text-gray-500" />}
-                    </button>
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{account.title}</h3>
-                  <p className="text-sm mb-4 text-gray-600 dark:text-gray-300">{account.shortDesc}</p>
-                  {expandedAccounts.includes(index) && (
-                    <div className="mt-4 space-y-4">
-                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{account.expandedDesc}</p>
-                      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">💡 Why we're better:</h4>
-                        <ul className="space-y-1">
-                          {account.benefits.map((benefit, benefitIndex) => (
-                            <li key={benefitIndex} className="text-xs text-blue-800 dark:text-blue-200 flex items-start">
-                              <span className="text-blue-600 dark:text-blue-300 mr-2">•</span>
-                              {benefit}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-                  <button onClick={(e) => { e.stopPropagation(); window.location.href = "/register"; }} className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl">
-                    Open {account.title}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section id="features-section" className="px-6 py-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Revolutionary Banking Features</h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Experience the future of banking with our cutting-edge features designed for the modern world
-              </p>
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <div key={feature.title} className={`p-6 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border border-gray-200/50 dark:border-gray-700/50 cursor-pointer ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`} 
-                     style={{ transitionDelay: `${index * 100}ms` }}
-                     onClick={() => toggleFeature(index)}>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`h-12 w-12 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center`}>
-                      <feature.icon className="h-6 w-6 text-white" />
-                    </div>
-                    <button className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                      {expandedFeatures.includes(index) ? <ChevronUp className="h-5 w-5 text-gray-500" /> : <ChevronDown className="h-5 w-5 text-gray-500" />}
-                    </button>
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">{feature.title}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{feature.shortDesc}</p>
-                  {expandedFeatures.includes(index) && (
-                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{feature.expandedDesc}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Stats Section */}
-        <section className="px-6 py-16 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-          <div className="max-w-7xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-12">Trusted by Thousands Worldwide</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {stats.map((stat, index) => (
-                <div key={stat.label} className="text-center">
-                  <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                    <stat.icon className="h-8 w-8 text-white" />
-                  </div>
-                  <div className="text-4xl font-bold mb-2">{stat.number}</div>
-                  <div className="text-blue-100">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="px-6 py-16 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Ready to Start Your Banking Journey?</h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
-              Join thousands of customers who trust Global Dot Bank for their financial needs. Open your account in minutes and experience the future of banking.
+        <section className="relative py-20 lg:py-32 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+              {bankData.hero.headline}
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 max-w-4xl mx-auto mb-6">
+              {bankData.hero.subheadline}
+            </p>
+            <p className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-white mb-10">
+              {bankData.hero.tagline}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button onClick={() => window.location.href = "/register"} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-xl hover:shadow-2xl">
-                Open Account Now
+              <Link href="/register" className="inline-flex items-center justify-center px-8 py-4 rounded-xl text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                {bankData.hero.ctaPrimary}
+                <ChevronRight size={20} className="ml-2" />
+              </Link>
+              <button onClick={() => scrollToSection('services')} className="inline-flex items-center justify-center px-8 py-4 rounded-xl text-lg font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300">
+                {bankData.hero.ctaSecondary}
+                <ChevronRight size={20} className="ml-2" />
               </button>
-              <button onClick={() => window.location.href = "/login"} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-gray-200 dark:border-gray-600">
-                Sign In
-              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Value Proposition */}
+        <section className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{bankData.valueProposition.title}</h2>
+            <p className="text-xl text-center text-gray-600 dark:text-gray-400 mb-12">{bankData.valueProposition.subtitle}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {bankData.valueProposition.features.map((feature, index) => {
+                const IconComponent = iconMap[feature.icon];
+                return (
+                  <div key={index} className="flex items-start space-x-4 p-6 rounded-xl bg-gray-50 dark:bg-gray-800 hover:shadow-lg transition-shadow">
+                    <IconComponent size={32} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-bold mb-2">{feature.title}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{feature.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Trust Section */}
+        <section className="py-16 bg-gray-50 dark:bg-gray-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{bankData.trust.title}</h2>
+            <p className="text-lg text-center text-gray-600 dark:text-gray-400 max-w-4xl mx-auto mb-12">{bankData.trust.description}</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              {bankData.trust.badges.map((badge, index) => {
+                const IconComponent = iconMap[badge.icon];
+                return (
+                  <div key={index} className="text-center p-6 bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                    <IconComponent size={32} className="mx-auto mb-3 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-semibold">{badge.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Global Presence */}
+        <section id="global-presence" className="py-16 bg-blue-50 dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{bankData.globalPresence.title}</h2>
+            <p className="text-lg text-center text-gray-600 dark:text-gray-400 max-w-4xl mx-auto mb-4">{bankData.globalPresence.description}</p>
+            <p className="text-center mb-12">
+              📍 Learn more on our{' '}
+              <Link href="/about" className="text-blue-600 dark:text-blue-400 underline font-semibold">About Us</Link> page.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {bankData.globalPresence.stats.map((stat, index) => (
+                <div key={index} className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+                  <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">{stat.value}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Feature Highlights */}
+        <section id="services" className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">{bankData.featureHighlights.title}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {bankData.featureHighlights.features.map((feature, index) => {
+                const IconComponent = iconMap[feature.icon];
+                return (
+                  <div key={index} className="p-8 bg-gray-50 dark:bg-gray-800 rounded-xl hover:shadow-lg transition-shadow">
+                    <IconComponent size={40} className="text-blue-600 dark:text-blue-400 mb-4" />
+                    <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                    <p className="text-gray-600 dark:text-gray-400">{feature.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="max-w-3xl mx-auto p-6 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-l-4 border-blue-600">
+              <p className="text-sm italic text-gray-700 dark:text-gray-300">{bankData.featureHighlights.note}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Choose GDB */}
+        <section className="py-16 bg-gray-50 dark:bg-gray-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{bankData.whyChoose.title}</h2>
+            <h3 className="text-xl font-semibold text-center mb-4">{bankData.whyChoose.subtitle}</h3>
+            <p className="text-lg text-center text-gray-600 dark:text-gray-400 max-w-4xl mx-auto mb-12">{bankData.whyChoose.description}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {bankData.whyChoose.reasons.map((reason, index) => {
+                const IconComponent = iconMap[reason.icon];
+                return (
+                  <div key={index} className="flex items-start space-x-4 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-sm">
+                    <IconComponent size={32} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-bold mb-2">{reason.title}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{reason.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Our Ecosystem */}
+        <section className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{bankData.ecosystem.title}</h2>
+            <p className="text-xl font-semibold text-center mb-12">{bankData.ecosystem.subtitle}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {bankData.ecosystem.services.map((service, index) => {
+                const IconComponent = iconMap[service.icon];
+                return (
+                  <div key={index} className="p-8 bg-gray-50 dark:bg-gray-800 rounded-xl hover:shadow-lg transition-shadow">
+                    <IconComponent size={40} className="text-blue-600 dark:text-blue-400 mb-4" />
+                    <h3 className="text-xl font-bold mb-3">{service.title}</h3>
+                    <p className="text-gray-600 dark:text-gray-400">{service.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Security & Trust */}
+        <section className="py-16 bg-green-50 dark:bg-green-900/20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">{bankData.security.title}</h2>
+            <p className="text-xl font-semibold text-center mb-12">{bankData.security.subtitle}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+              {bankData.security.features.map((feature, index) => {
+                const IconComponent = iconMap[feature.icon];
+                return (
+                  <div key={index} className="flex items-start space-x-4 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
+                    <IconComponent size={32} className="text-green-600 dark:text-green-400 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-bold mb-2">{feature.title}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{feature.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-center text-lg italic font-medium">{bankData.security.tagline}</p>
+          </div>
+        </section>
+
+        {/* Client Segments */}
+        <section className="py-16 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">{bankData.clientSegments.title}</h2>
+            <div className="flex justify-center space-x-4 mb-8">
+              {bankData.clientSegments.segments.map((segment) => (
+                <button
+                  key={segment.id}
+                  onClick={() => setActiveSegment(segment.id)}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                    activeSegment === segment.id
+                      ? 'bg-blue-600 text-white shadow-lg'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {segment.label}
+                </button>
+              ))}
+            </div>
+            {bankData.clientSegments.segments
+              .filter(segment => segment.id === activeSegment)
+              .map((segment) => (
+                <div key={segment.id} className="max-w-3xl mx-auto">
+                  <h3 className="text-2xl font-bold mb-6">{segment.title}</h3>
+                  <ul className="space-y-3">
+                    {segment.features.map((feature, index) => (
+                      <li key={index} className="flex items-start space-x-3">
+                        <ChevronRight size={20} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
+                        <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+          </div>
+        </section>
+
+        {/* Join the Movement */}
+        <section className="py-20 bg-blue-100 dark:bg-blue-900/30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{bankData.joinMovement.title}</h2>
+            <h3 className="text-xl font-semibold mb-4">{bankData.joinMovement.subtitle}</h3>
+            <p className="text-lg text-gray-700 dark:text-gray-300 max-w-3xl mx-auto mb-10">{bankData.joinMovement.description}</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/register" className="inline-flex items-center justify-center px-8 py-4 rounded-xl text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                {bankData.joinMovement.ctaPrimary}
+                <ChevronRight size={20} className="ml-2" />
+              </Link>
+              <Link href="/about" className="inline-flex items-center justify-center px-8 py-4 rounded-xl text-lg font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300">
+                {bankData.joinMovement.ctaSecondary}
+                <ChevronRight size={20} className="ml-2" />
+              </Link>
             </div>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid md:grid-cols-4 gap-8">
-              <div className="col-span-2">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm border border-gray-200">
-                    <Image src="/logo.png" alt="Global Dot Bank Logo" width={40} height={40} className="object-contain" />
+        <footer className="bg-gray-900 text-gray-300 py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+              <div>
+                <Image src="/logo.png" alt="Global Dot Bank" width={50} height={50} className="mb-4" />
+                <h3 className="text-lg font-bold text-white mb-2">{bankData.footer.title}</h3>
+                <p className="text-sm mb-3">{bankData.footer.description}</p>
+                <p className="text-sm italic">{bankData.footer.tagline}</p>
+              </div>
+              
+              <div>
+                <h4 className="text-white font-bold mb-4">Global Offices</h4>
+                {bankData.footer.offices.map((office, index) => (
+                  <div key={index} className="mb-3 text-sm">
+                    <div className="font-semibold text-gray-200">{office.city}</div>
+                    <div className="text-gray-400">{office.address}</div>
                   </div>
-                  <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                    <NoTranslate>Global Dot Bank</NoTranslate>
-                  </span>
-                </div>
-                <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">
-                  The future of borderless banking. Secure, transparent, and designed for the modern world.
-                </p>
+                ))}
+              </div>
+              
+              <div>
+                <h4 className="text-white font-bold mb-4">Legal</h4>
+                {bankData.footer.legal.map((item, index) => (
+                  <a key={index} href={item.link} className="block mb-2 text-sm hover:text-white transition-colors">
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+              
+              <div>
+                <h4 className="text-white font-bold mb-4">Connect</h4>
                 <div className="flex space-x-4">
-                  <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    <Globe2 className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  </button>
-                  <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    <Mail className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  </button>
-                  <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                    <Phone className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  </button>
+                  {bankData.footer.social.map((item, index) => {
+                    const IconComponent = iconMap[item.icon];
+                    return (
+                      <a key={index} href={item.link} className="hover:text-white transition-colors" aria-label={item.platform}>
+                        <IconComponent size={20} />
+                      </a>
+                    );
+                  })}
                 </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Products</h3>
-                <ul className="space-y-2">
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Savings Account</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Current Account</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Fixed Deposits</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Corporate Banking</a></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Company</h3>
-                <ul className="space-y-2">
-                  <li><a href="/about" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">About Us</a></li>
-                  <li><a href="/investor-relations" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Investor Relations</a></li>
-                  <li><a href="/corporate-governance" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Corporate Governance</a></li>
-                  <li><a href="/help-center" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Help Center</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Careers</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">News</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Contact</a></li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Support</h3>
-                <ul className="space-y-2">
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Help Center</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Contact Us</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Security</a></li>
-                  <li><a href="#" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Privacy Policy</a></li>
-                </ul>
               </div>
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-700 mt-8 pt-8 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                © {new Date().getFullYear()} Global Dot Bank · All rights reserved. Operated by Dot Protocol Co., Ltd.
-              </p>
+            
+            <div className="border-t border-gray-800 pt-6 text-center text-sm">
+              <p>{bankData.footer.copyright}</p>
             </div>
           </div>
         </footer>
       </div>
     </div>
   );
-} 
+}
