@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import New Design System */
+@import './newdesign.css';
+
 /* Custom 3D Card Flip Styles */
 .transform-style-preserve-3d {
   transform-style: preserve-3d;
