@@ -1,31 +1,34 @@
 'use client';
 
-import { useState } from 'react';
-import { 
-  ArrowLeft, 
-  CheckCircle, 
-  Shield, 
-  Globe, 
-  TrendingUp, 
-  CreditCard,
-  Smartphone,
-  Users,
-  Building,
-  Star,
-  Zap,
-  Lock,
-  Sun,
-  Moon,
-  DollarSign,
-  PiggyBank,
-  GraduationCap,
-  Heart
-} from 'lucide-react';
-import Image from "next/image";
+import React, { useState, useEffect } from 'react';
+import { CheckCircle, Shield, Zap, Globe, PiggyBank, TrendingUp, DollarSign, Building, GraduationCap, Heart, Sun, Moon } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 
-export default function AccountSelection() {
+export default function Register() {
   const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [showBankingDropdown, setShowBankingDropdown] = useState(false);
+
+  const theme = darkMode ? 'dark' : 'light';
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setDarkMode(savedTheme === 'dark');
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setDarkMode(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.body.className = theme;
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setDarkMode(!darkMode);
+  };
 
   const accountTypes = [
     {
@@ -40,7 +43,7 @@ export default function AccountSelection() {
         'Real-time mobile control of your money',
         'Smart spend tracking & budgeting tools'
       ],
-      icon: <PiggyBank className="h-8 w-8" />,
+      icon: <PiggyBank size={32} />,
       color: 'blue',
       popular: false
     },
@@ -56,7 +59,7 @@ export default function AccountSelection() {
         'API access for automation-ready businesses',
         'Multi-currency support & automated invoicing'
       ],
-      icon: <TrendingUp className="h-8 w-8" />,
+      icon: <TrendingUp size={32} />,
       color: 'green',
       popular: false
     },
@@ -72,7 +75,7 @@ export default function AccountSelection() {
         'Start with as little as $100',
         'Real-time deposit tracking & auto-reminders'
       ],
-      icon: <DollarSign className="h-8 w-8" />,
+      icon: <DollarSign size={32} />,
       color: 'purple',
       popular: true
     },
@@ -88,7 +91,7 @@ export default function AccountSelection() {
         '24/7 support with assigned corporate success manager',
         'Payroll automation & treasury services'
       ],
-      icon: <Building className="h-8 w-8" />,
+      icon: <Building size={32} />,
       color: 'indigo',
       popular: false
     },
@@ -104,7 +107,7 @@ export default function AccountSelection() {
         'Safe & secure: zero online exposure',
         'Financial literacy learning platform'
       ],
-      icon: <GraduationCap className="h-8 w-8" />,
+      icon: <GraduationCap size={32} />,
       color: 'yellow',
       popular: false
     },
@@ -120,157 +123,235 @@ export default function AccountSelection() {
         'Retirement planning dashboard',
         'Auto-deposit of pensions & FD-linked savings'
       ],
-      icon: <Heart className="h-8 w-8" />,
+      icon: <Heart size={32} />,
       color: 'red',
       popular: false
     }
   ];
 
   const getColorClasses = (color: string) => {
-    switch (color) {
-      case 'blue':
-        return 'border-blue-200 bg-blue-50 hover:border-blue-300 dark:border-blue-700 dark:bg-blue-900/20 dark:hover:border-blue-600';
-      case 'purple':
-        return 'border-purple-200 bg-purple-50 hover:border-purple-300 dark:border-purple-700 dark:bg-purple-900/20 dark:hover:border-purple-600';
-      case 'green':
-        return 'border-green-200 bg-green-50 hover:border-green-300 dark:border-green-700 dark:bg-green-900/20 dark:hover:border-green-600';
-      case 'indigo':
-        return 'border-indigo-200 bg-indigo-50 hover:border-indigo-300 dark:border-indigo-700 dark:bg-indigo-900/20 dark:hover:border-indigo-600';
-      case 'yellow':
-        return 'border-yellow-200 bg-yellow-50 hover:border-yellow-300 dark:border-yellow-700 dark:bg-yellow-900/20 dark:hover:border-yellow-600';
-      case 'red':
-        return 'border-red-200 bg-red-50 hover:border-red-300 dark:border-red-700 dark:bg-red-900/20 dark:hover:border-red-600';
-      default:
-        return 'border-gray-200 bg-gray-50 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800/50 dark:hover:border-gray-600';
-    }
+    const baseStyle = {
+      border: '2px solid',
+      borderRadius: '12px',
+      padding: '20px',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      backgroundColor: theme === 'light' ? '#ffffff' : '#1a1a1a'
+    };
+
+    const colors: { [key: string]: any } = {
+      blue: { borderColor: theme === 'light' ? '#3b82f6' : '#60a5fa', hoverBg: theme === 'light' ? '#eff6ff' : '#1e3a8a' },
+      green: { borderColor: theme === 'light' ? '#10b981' : '#34d399', hoverBg: theme === 'light' ? '#ecfdf5' : '#064e3b' },
+      purple: { borderColor: theme === 'light' ? '#a855f7' : '#c084fc', hoverBg: theme === 'light' ? '#faf5ff' : '#581c87' },
+      indigo: { borderColor: theme === 'light' ? '#6366f1' : '#818cf8', hoverBg: theme === 'light' ? '#eef2ff' : '#312e81' },
+      yellow: { borderColor: theme === 'light' ? '#f59e0b' : '#fbbf24', hoverBg: theme === 'light' ? '#fffbeb' : '#78350f' },
+      red: { borderColor: theme === 'light' ? '#ef4444' : '#f87171', hoverBg: theme === 'light' ? '#fef2f2' : '#7f1d1d' }
+    };
+
+    return { ...baseStyle, ...colors[color] };
   };
 
   const getIconColor = (color: string) => {
-    switch (color) {
-      case 'blue':
-        return 'text-blue-600 dark:text-blue-400';
-      case 'purple':
-        return 'text-purple-600 dark:text-purple-400';
-      case 'green':
-        return 'text-green-600 dark:text-green-400';
-      case 'indigo':
-        return 'text-indigo-600 dark:text-indigo-400';
-      case 'yellow':
-        return 'text-yellow-600 dark:text-yellow-400';
-      case 'red':
-        return 'text-red-600 dark:text-red-400';
-      default:
-        return 'text-gray-600 dark:text-gray-400';
-    }
+    const colors: { [key: string]: string } = {
+      blue: theme === 'light' ? '#3b82f6' : '#60a5fa',
+      green: theme === 'light' ? '#10b981' : '#34d399',
+      purple: theme === 'light' ? '#a855f7' : '#c084fc',
+      indigo: theme === 'light' ? '#6366f1' : '#818cf8',
+      yellow: theme === 'light' ? '#f59e0b' : '#fbbf24',
+      red: theme === 'light' ? '#ef4444' : '#f87171'
+    };
+    return colors[color];
   };
 
   const handleContinue = () => {
     if (selectedAccount) {
-      window.location.href = `/register/form?type=${selectedAccount}`;
+      window.location.href = `https://globaldot.bank/register/form?type=${selectedAccount}`;
     }
   };
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
-        {/* Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-300 to-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-300 to-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-1000"></div>
-          <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-gradient-to-r from-indigo-300 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-2000"></div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="relative z-50 bg-white/90 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm">
-                  <Image
-                    src="/logo.png"
-                    alt="Global Dot Bank Logo"
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
+    <div className={`App ${theme}`}>
+      {/* Header */}
+      <header className="app-header">
+        <div className="header-content">
+          <Link href="/" className="logo">
+            <Image 
+              src="/logo.png" 
+              alt="Global Dot Bank" 
+              width={160} 
+              height={40}
+              style={{ height: '40px', width: 'auto' }}
+            />
+          </Link>
+          
+          <nav className="nav-links">
+            <Link href="/#services" className="nav-link">Services</Link>
+            <Link href="/#offices" className="nav-link">Offices</Link>
+            <Link href="/about" className="nav-link">About</Link>
+            <Link href="/investor-relations" className="nav-link">Investors</Link>
+            <Link href="/corporate-governance" className="nav-link">Governance</Link>
+            <Link href="/help-center" className="nav-link">Help</Link>
+            
+            <div 
+              className="banking-dropdown" 
+              onMouseEnter={() => setShowBankingDropdown(true)}
+              onMouseLeave={() => setShowBankingDropdown(false)}
+              style={{ position: 'relative', display: 'inline-block' }}
+            >
+              <span className="nav-link" style={{ cursor: 'pointer' }}>
+                Banking ▾
+              </span>
+              {showBankingDropdown && (
+                <div className="dropdown-menu" style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: '0',
+                  backgroundColor: theme === 'light' ? '#ffffff' : '#1a1a1a',
+                  border: theme === 'light' ? '1px solid #e5e7eb' : '1px solid #374151',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  minWidth: '180px',
+                  marginTop: '8px',
+                  zIndex: 1000
+                }}>
+                  <Link 
+                    href="/register" 
+                    className="dropdown-item"
+                    style={{
+                      display: 'block',
+                      padding: '12px 20px',
+                      color: theme === 'light' ? '#374151' : '#f3f4f6',
+                      textDecoration: 'none',
+                      borderBottom: theme === 'light' ? '1px solid #f3f4f6' : '1px solid #374151'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.backgroundColor = theme === 'light' ? '#f3f4f6' : '#374151'}
+                    onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}
+                  >
+                    Create Account
+                  </Link>
+                  <a 
+                    href="https://globaldot.bank/login"
+                    className="dropdown-item"
+                    style={{
+                      display: 'block',
+                      padding: '12px 20px',
+                      color: theme === 'light' ? '#374151' : '#f3f4f6',
+                      textDecoration: 'none'
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.backgroundColor = theme === 'light' ? '#f3f4f6' : '#374151'}
+                    onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent'}
+                  >
+                    Login
+                  </a>
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                  Global Dot Bank
-                </span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <button 
-                  onClick={() => window.location.href = '/'}
-                  className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span>Back to Home</span>
-                </button>
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  aria-label="Toggle Dark Mode"
-                >
-                  {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                </button>
-              </div>
+              )}
             </div>
-          </div>
-        </nav>
+            
+            <button className="theme-toggle" onClick={toggleTheme}>
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </nav>
+        </div>
+      </header>
 
-        {/* Main Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+      <div style={{ 
+        backgroundColor: theme === 'light' ? '#f9fafb' : '#0a0a0a', 
+        color: theme === 'light' ? '#1f2937' : '#f3f4f6',
+        minHeight: '100vh',
+        paddingTop: '100px',
+        paddingBottom: '40px'
+      }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 20px' }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <h1 style={{ 
+              fontSize: '2.25rem', 
+              fontWeight: 'bold', 
+              marginBottom: '12px',
+              background: theme === 'light' 
+                ? 'linear-gradient(to right, #1e40af, #7c3aed)' 
+                : 'linear-gradient(to right, #60a5fa, #a78bfa)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}>
               Choose Your Account Type
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Select the perfect account for your banking needs. Each account type 
-              comes with unique features designed to enhance your financial experience.
+            <p style={{ fontSize: '1rem', color: theme === 'light' ? '#6b7280' : '#9ca3af', maxWidth: '700px', margin: '0 auto' }}>
+              Select the perfect account for your banking needs. Each account type comes with unique features designed to enhance your financial experience.
             </p>
           </div>
 
-          {/* Account Options */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+          {/* Account Grid */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+            gap: '24px', 
+            marginBottom: '48px' 
+          }}>
             {accountTypes.map((account) => (
               <div
                 key={account.id}
-                className={`relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer backdrop-blur-sm ${
-                  selectedAccount === account.id 
-                    ? 'border-blue-500 shadow-xl scale-105 bg-white/90 dark:bg-gray-800/90' 
-                    : getColorClasses(account.color)
-                }`}
+                style={{
+                  ...getColorClasses(account.color),
+                  borderColor: selectedAccount === account.id 
+                    ? (theme === 'light' ? '#2563eb' : '#60a5fa')
+                    : getColorClasses(account.color).borderColor,
+                  transform: selectedAccount === account.id ? 'scale(1.02)' : 'scale(1)',
+                  boxShadow: selectedAccount === account.id 
+                    ? '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' 
+                    : 'none',
+                  position: 'relative'
+                }}
                 onClick={() => setSelectedAccount(account.id)}
+                onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.backgroundColor = getColorClasses(account.color).hoverBg}
+                onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.backgroundColor = theme === 'light' ? '#ffffff' : '#1a1a1a'}
               >
                 {account.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                      Most Popular
-                    </span>
+                  <div style={{
+                    position: 'absolute',
+                    top: '-16px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'linear-gradient(to right, #a855f7, #ec4899)',
+                    color: 'white',
+                    padding: '6px 20px',
+                    borderRadius: '20px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600'
+                  }}>
+                    Most Popular
                   </div>
                 )}
 
-                <div className="text-center">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 ${
-                    selectedAccount === account.id ? 'bg-blue-100 dark:bg-blue-900/50' : 'bg-white dark:bg-gray-700'
-                  }`}>
-                    <div className={getIconColor(account.color)}>
-                      {account.icon}
-                    </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '50%',
+                    backgroundColor: theme === 'light' ? '#f3f4f6' : '#374151',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 16px auto',
+                    color: getIconColor(account.color)
+                  }}>
+                    {React.cloneElement(account.icon, { size: 24 })}
                   </div>
 
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '8px' }}>
                     {account.name}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                  <p style={{ fontSize: '0.875rem', color: theme === 'light' ? '#6b7280' : '#9ca3af', marginBottom: '16px' }}>
                     {account.description}
                   </p>
 
-                  <div className="space-y-2">
+                  <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {account.features.map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 dark:text-gray-300 text-xs">{feature}</span>
+                      <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                        <CheckCircle size={16} style={{ color: '#10b981', flexShrink: 0, marginTop: '2px' }} />
+                        <span style={{ fontSize: '0.8125rem', color: theme === 'light' ? '#4b5563' : '#d1d5db', lineHeight: '1.4' }}>
+                          {feature}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -280,54 +361,88 @@ export default function AccountSelection() {
           </div>
 
           {/* Continue Button */}
-          <div className="text-center">
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <button
               onClick={handleContinue}
               disabled={!selectedAccount}
-              className={`px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 ${
-                selectedAccount
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400'
-              }`}
+              style={{
+                padding: '12px 36px',
+                borderRadius: '10px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                border: 'none',
+                cursor: selectedAccount ? 'pointer' : 'not-allowed',
+                background: selectedAccount 
+                  ? 'linear-gradient(to right, #3b82f6, #8b5cf6)' 
+                  : theme === 'light' ? '#d1d5db' : '#4b5563',
+                color: 'white',
+                transition: 'all 0.3s ease',
+                boxShadow: selectedAccount ? '0 10px 15px -3px rgba(59, 130, 246, 0.3)' : 'none',
+                opacity: selectedAccount ? 1 : 0.5
+              }}
+              onMouseEnter={(e) => {
+                if (selectedAccount) {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 20px 25px -5px rgba(59, 130, 246, 0.3)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedAccount) {
+                  (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                  (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 15px -3px rgba(59, 130, 246, 0.3)';
+                }
+              }}
             >
               Continue to Registration
             </button>
           </div>
 
           {/* Trust Indicators */}
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
-              <div className="flex justify-center mb-4">
-                <Shield className="h-12 w-12 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+            <div style={{
+              textAlign: 'center',
+              padding: '20px',
+              backgroundColor: theme === 'light' ? '#ffffff' : '#1a1a1a',
+              borderRadius: '12px',
+              border: `1px solid ${theme === 'light' ? '#e5e7eb' : '#374151'}`
+            }}>
+              <Shield size={36} style={{ color: '#10b981', margin: '0 auto 12px auto' }} />
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '6px' }}>
                 Bank-Grade Security
               </h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p style={{ fontSize: '0.875rem', color: theme === 'light' ? '#6b7280' : '#9ca3af' }}>
                 Your data is protected with military-grade encryption
               </p>
             </div>
 
-            <div className="text-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
-              <div className="flex justify-center mb-4">
-                <Zap className="h-12 w-12 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <div style={{
+              textAlign: 'center',
+              padding: '20px',
+              backgroundColor: theme === 'light' ? '#ffffff' : '#1a1a1a',
+              borderRadius: '12px',
+              border: `1px solid ${theme === 'light' ? '#e5e7eb' : '#374151'}`
+            }}>
+              <Zap size={36} style={{ color: '#3b82f6', margin: '0 auto 12px auto' }} />
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '6px' }}>
                 Instant Setup
               </h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p style={{ fontSize: '0.875rem', color: theme === 'light' ? '#6b7280' : '#9ca3af' }}>
                 Get started in minutes with our streamlined process
               </p>
             </div>
 
-            <div className="text-center p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50">
-              <div className="flex justify-center mb-4">
-                <Globe className="h-12 w-12 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            <div style={{
+              textAlign: 'center',
+              padding: '20px',
+              backgroundColor: theme === 'light' ? '#ffffff' : '#1a1a1a',
+              borderRadius: '12px',
+              border: `1px solid ${theme === 'light' ? '#e5e7eb' : '#374151'}`
+            }}>
+              <Globe size={36} style={{ color: '#a855f7', margin: '0 auto 12px auto' }} />
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '6px' }}>
                 Global Access
               </h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p style={{ fontSize: '0.875rem', color: theme === 'light' ? '#6b7280' : '#9ca3af' }}>
                 Bank from anywhere in the world, 24/7
               </p>
             </div>
