@@ -495,3 +495,431 @@
   gap: 2rem;
 }
 
+/* Dashboard Header Extensions */
+.dashboard-header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.dashboard-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dashboard-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dashboard-logo {
+  width: 40px;
+  height: 40px;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1f2937, #4b5563);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: 'Playfair Display', serif;
+}
+
+.dashboard-menu-btn {
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dashboard-menu-btn:hover {
+  background: #f3f4f6;
+}
+
+.dashboard-welcome-text {
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.dashboard-icon-btn {
+  padding: 0.5rem;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dashboard-icon-btn:hover {
+  background: #f3f4f6;
+}
+
+.dashboard-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.dashboard-logout-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Dashboard Content */
+.dashboard-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.dashboard-welcome-section {
+  margin-bottom: 2rem;
+}
+
+.dashboard-page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.dashboard-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* Balance Card */
+.dashboard-balance-card {
+  background: linear-gradient(135deg, #2563eb 0%, #9333ea 100%);
+  color: #ffffff;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Quick Actions */
+.dashboard-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-action-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: left;
+}
+
+.dashboard-action-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.dashboard-action-icon {
+  padding: 0.5rem;
+  border-radius: 8px;
+  display: inline-flex;
+}
+
+.dashboard-action-icon-green {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.dashboard-action-icon-blue {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.dashboard-action-icon-purple {
+  background: #e9d5ff;
+  color: #7e22ce;
+}
+
+.dashboard-action-icon-yellow {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.dashboard-action-title {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-action-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Dashboard Account Item */
+.dashboard-account-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dashboard-account-item:hover {
+  background: #f3f4f6;
+}
+
+.dashboard-account-icon {
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.dashboard-account-name {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-account-number {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.dashboard-account-balance {
+  font-weight: 700;
+  color: #1f2937;
+  text-align: right;
+}
+
+.dashboard-account-currency {
+  font-size: 0.875rem;
+  color: #6b7280;
+  text-align: right;
+}
+
+/* Dashboard Transaction Item */
+.dashboard-transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.dashboard-transaction-item:hover {
+  background: #f3f4f6;
+}
+
+.dashboard-transaction-icon {
+  padding: 0.5rem;
+  border-radius: 8px;
+}
+
+.dashboard-transaction-icon-credit {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.dashboard-transaction-icon-debit {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.dashboard-transaction-description {
+  font-weight: 500;
+  color: #1f2937;
+  font-size: 0.875rem;
+  margin-bottom: 0.125rem;
+}
+
+.dashboard-transaction-date {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.dashboard-transaction-amount {
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.dashboard-transaction-amount-credit {
+  color: #065f46;
+}
+
+.dashboard-transaction-amount-debit {
+  color: #991b1b;
+}
+
+.dashboard-transaction-status {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Fixed Deposit Card */
+.dashboard-deposit-card {
+  padding: 1rem;
+  background: linear-gradient(135deg, #faf5ff 0%, #fce7f3 100%);
+  border-radius: 12px;
+  border: 1px solid #e9d5ff;
+}
+
+.dashboard-deposit-icon {
+  padding: 0.5rem;
+  background: #e9d5ff;
+  color: #7e22ce;
+  border-radius: 8px;
+  display: inline-flex;
+}
+
+.dashboard-deposit-amount {
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  font-size: 1.125rem;
+}
+
+.dashboard-deposit-details {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-btn {
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.dashboard-link {
+  color: #2563eb;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+}
+
+.dashboard-link:hover {
+  color: #1d4ed8;
+}
+
+/* Modal Styles */
+.dashboard-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.dashboard-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.dashboard-modal {
+  position: relative;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 1001;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.dashboard-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1rem;
+}
+
+/* Dashboard Loading State */
+.dashboard-loading {
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+/* Badge Extensions */
+.dashboard-badge-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.dashboard-badge-default {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .dashboard-quick-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .dashboard-page-title {
+    font-size: 1.5rem;
+  }
+  
+  .dashboard-content {
+    padding: 1rem;
+  }
+}
+
