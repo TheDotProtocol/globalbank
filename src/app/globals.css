@@ -4,6 +4,7 @@
 
 /* Import New Design System */
 @import './newdesign.css';
+@import './dashboard.css';
 
 /* Custom 3D Card Flip Styles */
 .transform-style-preserve-3d {
