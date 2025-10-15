@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-server';
 
-export const POST = requireAuth(async (request: NextRequest) => {
+export const POST = async (request: NextRequest) => {
   try {
     console.log('🚀 Demo International Transfer API called');
     
-    const user = (request as any).user;
-    console.log('✅ User authenticated:', { id: user.id, email: user.email });
+    // Skip authentication for demo
+    const user = { id: 'demo-user', firstName: 'Demo', lastName: 'User', email: 'demo@example.com' };
+    console.log('✅ Demo user set:', user);
     
     // Generate demo transfer data (no database operations)
     const transferData = {

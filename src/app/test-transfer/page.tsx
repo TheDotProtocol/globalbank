@@ -13,18 +13,11 @@ export default function TestTransferPage() {
     setResult(null);
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No authentication token found');
-        return;
-      }
-
-      console.log('🚀 Starting international transfer...');
+      console.log('🚀 Starting demo international transfer...');
 
       const response = await fetch('/api/transfers/international/demo', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({})
