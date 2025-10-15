@@ -4,10 +4,23 @@ import { prisma } from '@/lib/prisma';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
+    console.log('🚀 International transfer API called');
+    
     const user = (request as any).user;
+    console.log('✅ User authenticated:', { id: user.id, email: user.email });
+    
     const body = await request.json();
+    console.log('✅ Request body parsed:', Object.keys(body));
     
     console.log('International transfer request:', { userId: user.id, body });
+    
+    // Test database connectivity
+    console.log('🔍 Testing database connection...');
+    const dbTest = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true, email: true }
+    });
+    console.log('✅ Database connection successful:', dbTest ? 'Yes' : 'No');
     
     const { 
       sourceAccountId, 
