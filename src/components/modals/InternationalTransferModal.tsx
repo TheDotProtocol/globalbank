@@ -119,11 +119,20 @@ export default function InternationalTransferModal({
     
     try {
       const token = localStorage.getItem('token');
+      console.log('🔍 Token check:', token ? 'Token found' : 'No token');
+      console.log('🔍 Token length:', token ? token.length : 0);
+      
       if (!token) {
         showToast('Authentication required', 'error');
         return;
       }
 
+      console.log('🚀 Making API request to /api/transfers/international');
+      console.log('📤 Request headers:', {
+        'Authorization': `Bearer ${token?.substring(0, 20)}...`,
+        'Content-Type': 'application/json'
+      });
+      
       const response = await fetch('/api/transfers/international', {
         method: 'POST',
         headers: {
@@ -149,7 +158,11 @@ export default function InternationalTransferModal({
         })
       });
 
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
+      
       const data = await response.json();
+      console.log('📥 Response data:', data);
 
       if (response.ok) {
         showToast('International transfer initiated successfully', 'success');
