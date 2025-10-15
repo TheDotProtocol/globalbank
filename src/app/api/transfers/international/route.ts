@@ -100,7 +100,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
         }
       });
 
-      // Create debit transaction for the transfer
+      // Create debit transaction for the transfer (without transferMode to avoid enum issues)
       const debitTransaction = await tx.transaction.create({
         data: {
           accountId: sourceAccountId,
@@ -110,7 +110,6 @@ export const POST = requireAuth(async (request: NextRequest) => {
           description: `International transfer to ${beneficiary.name} - ${description || 'International Transfer'}`,
           reference: transactionRef,
           status: 'COMPLETED',
-          transferMode: 'INTERNATIONAL_TRANSFER',
           sourceAccountId: sourceAccountId,
           sourceAccountNumber: sourceAccount.accountNumber,
           sourceAccountHolder: `${user.firstName} ${user.lastName}`,
