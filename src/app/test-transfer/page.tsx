@@ -21,7 +21,7 @@ export default function TestTransferPage() {
 
       console.log('🚀 Starting international transfer...');
 
-      const response = await fetch('/api/transfers/international/simple', {
+      const response = await fetch('/api/transfers/international/demo', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -52,8 +52,15 @@ export default function TestTransferPage() {
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
-            Test International Transfer
+            Demo International Transfer
           </h1>
+          
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <p className="text-yellow-800">
+              <strong>Demo Mode:</strong> This is a demonstration of the international transfer system. 
+              No actual money movement occurs - it only generates a receipt.
+            </p>
+          </div>
           
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <h2 className="text-lg font-semibold text-blue-900 mb-2">
@@ -95,7 +102,7 @@ export default function TestTransferPage() {
             disabled={loading}
             className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Processing Transfer...' : 'Execute International Transfer'}
+            {loading ? 'Generating Demo Transfer...' : 'Generate Demo Transfer & Receipt'}
           </button>
 
           {error && (
