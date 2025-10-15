@@ -7,6 +7,8 @@ export const POST = requireAuth(async (request: NextRequest) => {
     const user = (request as any).user;
     const body = await request.json();
     
+    console.log('International transfer request:', { userId: user.id, body });
+    
     const { 
       sourceAccountId, 
       amount, 
@@ -66,6 +68,14 @@ export const POST = requireAuth(async (request: NextRequest) => {
     const convertedAmount = amount * exchangeRate;
 
     // Create international transfer record
+    console.log('Creating international transfer with data:', {
+      userId: user.id,
+      accountId: sourceAccountId,
+      amount,
+      currency,
+      beneficiary
+    });
+    
     const result = await prisma.$transaction(async (tx) => {
       // Deduct from source account
       const updatedSourceAccount = await tx.account.update({
@@ -112,6 +122,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
       });
 
       // Create international transfer record
+      console.log('Creating internationalTransfer record...');
       const internationalTransfer = await tx.internationalTransfer.create({
         data: {
           userId: user.id,
@@ -177,8 +188,17 @@ export const POST = requireAuth(async (request: NextRequest) => {
 
   } catch (error) {
     console.error('International transfer error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     return NextResponse.json(
-      { error: 'Failed to process international transfer' },
+      { 
+        error: 'Failed to process international transfer',
+        details: error.message,
+        type: error.name
+      },
       { status: 500 }
     );
   }
