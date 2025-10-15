@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import PDFReceiptGenerator from '@/components/PDFReceiptGenerator';
 
 export default function TestTransferPage() {
   const [loading, setLoading] = useState(false);
@@ -109,7 +110,27 @@ export default function TestTransferPage() {
               </div>
               
               <div className="mt-4">
-                <h4 className="font-semibold text-green-800">Receipt Details:</h4>
+                <h4 className="font-semibold text-green-800 mb-3">Receipt Details:</h4>
+                <div className="mb-4">
+                  <PDFReceiptGenerator receiptData={{
+                    transactionRef: result.receipt?.reference,
+                    date: new Date(result.receipt?.timestamp),
+                    fromAccount: result.receipt?.sourceAccount?.accountNumber,
+                    toBeneficiary: result.receipt?.beneficiary?.name,
+                    toBank: result.receipt?.beneficiary?.bankName,
+                    toSwift: result.receipt?.beneficiary?.swiftCode,
+                    toAccount: result.receipt?.beneficiary?.accountNumber,
+                    amount: result.receipt?.amount,
+                    currency: result.receipt?.currency,
+                    exchangeRate: result.receipt?.exchangeRate,
+                    convertedAmount: result.receipt?.convertedAmount,
+                    transferFee: result.receipt?.transferFee,
+                    totalAmount: result.receipt?.totalAmount,
+                    description: result.receipt?.description,
+                    estimatedDelivery: new Date(result.receipt?.estimatedDelivery),
+                    status: result.receipt?.status
+                  }} />
+                </div>
                 <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-64">
                   {JSON.stringify(result.receipt, null, 2)}
                 </pre>
