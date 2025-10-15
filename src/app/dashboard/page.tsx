@@ -39,6 +39,7 @@ import MultiCurrencyDisplay, { CurrencyConverter } from '@/components/MultiCurre
 import BankBuggerAI from '@/components/BankBuggerAI';
 import { exportStatement, exportTransactions, exportFixedDeposits, exportFixedDepositCertificate } from '@/lib/export-new';
 import TransferModal from '@/components/modals/TransferModal';
+import InternationalTransferModal from '@/components/modals/InternationalTransferModal';
 import Image from "next/image";
 import Sidebar from '@/components/Sidebar';
 import InterestRatesDisplay from '@/components/InterestRatesDisplay';
@@ -116,6 +117,7 @@ export default function Dashboard() {
   const [newCardModalOpen, setNewCardModalOpen] = useState(false);
   const [fixedDepositModalOpen, setFixedDepositModalOpen] = useState(false);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [internationalTransferModalOpen, setInternationalTransferModalOpen] = useState(false);
   const [accountDetailsModalOpen, setAccountDetailsModalOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<AccountDetails | null>(null);
   const [certificateModalOpen, setCertificateModalOpen] = useState(false);
@@ -256,6 +258,9 @@ export default function Dashboard() {
         break;
       case 'transfer':
         setTransferModalOpen(true);
+        break;
+      case 'international-transfer':
+        setInternationalTransferModalOpen(true);
         break;
       case 'new-card':
         setNewCardModalOpen(true);
@@ -718,6 +723,21 @@ export default function Dashboard() {
               </button>
 
               <button
+                onClick={() => handleQuickAction('international-transfer')}
+                className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg">
+                    <Globe className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white">International</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">Global transfer</div>
+                  </div>
+                </div>
+              </button>
+
+              <button
                 onClick={() => handleQuickAction('new-card')}
                 className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-700/50 hover:shadow-lg transition-all duration-300 text-left"
               >
@@ -962,6 +982,18 @@ export default function Dashboard() {
             accounts={accounts}
             onSuccess={() => {
               setTransferModalOpen(false);
+              fetchDashboardData();
+            }}
+          />
+        )}
+
+        {internationalTransferModalOpen && (
+          <InternationalTransferModal
+            isOpen={internationalTransferModalOpen}
+            onClose={() => setInternationalTransferModalOpen(false)}
+            accounts={accounts}
+            onSuccess={() => {
+              setInternationalTransferModalOpen(false);
               fetchDashboardData();
             }}
           />
