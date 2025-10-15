@@ -74,4 +74,4 @@ export const POST = async (request: NextRequest) => {
       type: error instanceof Error ? error.name : 'UnknownError'
     }, { status: 500 });
   }
-});
+};
