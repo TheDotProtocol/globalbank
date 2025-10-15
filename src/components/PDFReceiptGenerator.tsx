@@ -43,19 +43,19 @@ const PDFReceiptGenerator: React.FC<PDFReceiptGeneratorProps> = ({ receiptData }
     // Add logo (we'll use text for now, but you can add actual logo)
     doc.setFontSize(28);
     doc.setTextColor(255, 255, 255);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Global Dot Bank', 20, 30);
     
     // Add tagline
     doc.setFontSize(10);
     doc.setTextColor(200, 200, 255);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('International Banking Excellence', 20, 40);
     
     // Receipt Title with underline
     doc.setFontSize(22);
     doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('International Transfer Receipt', pageWidth / 2, 70, { align: 'center' });
     
     // Add decorative line
@@ -72,13 +72,13 @@ const PDFReceiptGenerator: React.FC<PDFReceiptGeneratorProps> = ({ receiptData }
     
     doc.setFontSize(14);
     doc.setTextColor(primaryColor);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Transaction Reference:', 25, 95);
     doc.text(receiptData.transactionRef, 25, 100);
     
     // Date and Status in right column
     doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.text(`Date: ${format(new Date(receiptData.date), 'PPP p')}`, pageWidth - 120, 95);
     doc.text(`Status: ${receiptData.status}`, pageWidth - 120, 100);
@@ -92,42 +92,42 @@ const PDFReceiptGenerator: React.FC<PDFReceiptGeneratorProps> = ({ receiptData }
     
     doc.setFontSize(16);
     doc.setTextColor(primaryColor);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Transfer Details', 25, 135);
     
     // From Account
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('From Account:', 25, 150);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(receiptData.fromAccount, 90, 150);
     
     // Beneficiary Details
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('Beneficiary Name:', 25, 160);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(receiptData.toBeneficiary, 90, 160);
     
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('Beneficiary Bank:', 25, 170);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(receiptData.toBank, 90, 170);
     
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('SWIFT/BIC Code:', 25, 180);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(receiptData.toSwift, 90, 180);
     
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('Beneficiary Account:', 25, 190);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(receiptData.toAccount, 90, 190);
     
     if (receiptData.description) {
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.text('Description:', 25, 200);
-      doc.setFont(undefined, 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text(receiptData.description, 90, 200);
     }
     
@@ -140,33 +140,33 @@ const PDFReceiptGenerator: React.FC<PDFReceiptGeneratorProps> = ({ receiptData }
     
     doc.setFontSize(16);
     doc.setTextColor(primaryColor);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Amount Summary', 25, 235);
     
     // Amount details with better formatting
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     
     const amountY = 250;
     doc.text('Transfer Amount:', 25, amountY);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(`$${receiptData.amount.toLocaleString()} ${receiptData.currency}`, 120, amountY);
     
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('Exchange Rate:', 25, amountY + 10);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(`1 ${receiptData.currency} = ${receiptData.exchangeRate} USD`, 120, amountY + 10);
     
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('Converted Amount:', 25, amountY + 20);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(`$${receiptData.convertedAmount.toLocaleString()} USD`, 120, amountY + 20);
     
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('International Fee (2%):', 25, amountY + 30);
     doc.setTextColor(220, 38, 38); // Red for fee
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(`-$${receiptData.transferFee.toLocaleString()} USD`, 120, amountY + 30);
     
     // Total Amount (highlighted with border)
@@ -176,17 +176,17 @@ const PDFReceiptGenerator: React.FC<PDFReceiptGeneratorProps> = ({ receiptData }
     doc.setLineWidth(2);
     doc.rect(20, amountY + 40, pageWidth - 40, 15, 'S');
     doc.setTextColor(primaryColor);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.text('Total Debit:', 25, amountY + 50);
     doc.text(`$${receiptData.totalAmount.toLocaleString()} USD`, 120, amountY + 50);
     
     // Delivery Information
     doc.setTextColor(0, 0, 0);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(11);
     doc.text('Estimated Delivery:', 20, amountY + 70);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(format(new Date(receiptData.estimatedDelivery), 'PPP'), 120, amountY + 70);
     
     // Professional Footer
@@ -197,9 +197,9 @@ const PDFReceiptGenerator: React.FC<PDFReceiptGeneratorProps> = ({ receiptData }
     // Company info
     doc.setFontSize(10);
     doc.setTextColor(255, 255, 255);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Global Dot Bank', 20, footerY + 12);
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.text('International Banking Excellence', 20, footerY + 20);
     
