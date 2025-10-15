@@ -188,16 +188,22 @@ export const POST = requireAuth(async (request: NextRequest) => {
 
   } catch (error) {
     console.error('International transfer error:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorName = error instanceof Error ? error.name : 'UnknownError';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
     console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
+      message: errorMessage,
+      stack: errorStack,
+      name: errorName
     });
+    
     return NextResponse.json(
       { 
         error: 'Failed to process international transfer',
-        details: error.message,
-        type: error.name
+        details: errorMessage,
+        type: errorName
       },
       { status: 500 }
     );
