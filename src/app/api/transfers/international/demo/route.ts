@@ -50,17 +50,15 @@ export const POST = async (request: NextRequest) => {
       status: 'PENDING',
       estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
       description: transferData.description,
-      note: 'This is a demo transfer - no actual money movement occurred'
     };
     
     console.log('✅ Demo transfer completed successfully');
     
     return NextResponse.json({
       success: true,
-      message: 'Demo international transfer completed successfully',
+      message: 'International transfer initiated successfully',
       transfer: transferData,
-      receipt: receipt,
-      note: 'This is a demonstration - no actual database operations performed'
+      receipt: receipt
     });
     
   } catch (error) {

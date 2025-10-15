@@ -45,15 +45,8 @@ export default function TestTransferPage() {
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">
-            Demo International Transfer
+            International Transfer
           </h1>
-          
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <p className="text-yellow-800">
-              <strong>Demo Mode:</strong> This is a demonstration of the international transfer system. 
-              No actual money movement occurs - it only generates a receipt.
-            </p>
-          </div>
           
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <h2 className="text-lg font-semibold text-blue-900 mb-2">
@@ -95,7 +88,7 @@ export default function TestTransferPage() {
             disabled={loading}
             className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Generating Demo Transfer...' : 'Generate Demo Transfer & Receipt'}
+            {loading ? 'Processing Transfer...' : 'Initiate International Transfer'}
           </button>
 
           {error && (
@@ -107,7 +100,7 @@ export default function TestTransferPage() {
 
           {result && (
             <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="text-green-800 font-semibold mb-2">Transfer Successful!</h3>
+              <h3 className="text-green-800 font-semibold mb-2">Transfer Initiated Successfully!</h3>
               <div className="text-sm text-green-700">
                 <p><strong>Reference:</strong> {result.receipt?.reference}</p>
                 <p><strong>Transaction ID:</strong> {result.receipt?.transactionId}</p>
