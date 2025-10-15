@@ -377,6 +377,15 @@ enum BankTransferStatus {
   REVERSED
 }
 
+enum TransferStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REVERSED
+}
+
 enum PaymentStatus {
   PENDING
   PROCESSING
