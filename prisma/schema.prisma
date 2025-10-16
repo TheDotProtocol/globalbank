@@ -210,14 +210,19 @@ model CorporateBank {
   bankName          String
   accountHolderName String
   accountNumber     String    @unique
-  swiftCode         String
-  bicCode           String
+  swiftCode         String?
+  bicCode           String?
   accountType       String
   currency          String    @default("THB")
   transferFee       Decimal   @default(50)
   isActive          Boolean   @default(true)
   apiEndpoint       String?
   apiKey            String?
+  routingNumber     String?
+  iban              String?
+  country           String?
+  city              String?
+  address           String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
