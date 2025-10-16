@@ -82,7 +82,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
       }
     });
 
-    console.log('🏦 Total bank balance: $' + totalBalance._sum.balance.toLocaleString());
+    console.log('🏦 Total bank balance: $' + (totalBalance._sum.balance || 0).toLocaleString());
 
     return NextResponse.json({
       success: true,
@@ -101,7 +101,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
         description: transaction.description
       },
       bankStats: {
-        totalBalance: totalBalance._sum.balance
+        totalBalance: totalBalance._sum.balance || 0
       }
     });
 
