@@ -11,12 +11,12 @@ export const POST = async (request: NextRequest) => {
     // Generate demo transfer data (no database operations)
     const transferData = {
       sourceAccountNumber: '0506115866',
-      amount: 3000,
+      amount: 4000,
       currency: 'USD',
       exchangeRate: 1,
-      convertedAmount: 3000,
-      transferFee: 60, // 2% of 3000
-      totalAmount: 3060,
+      convertedAmount: 4000,
+      transferFee: 80, // 2% of 4000
+      totalAmount: 4080,
       beneficiary: {
         name: 'Rosemarie Bajado',
         country: 'Philippines',
@@ -44,7 +44,7 @@ export const POST = async (request: NextRequest) => {
       beneficiary: transferData.beneficiary,
       sourceAccount: {
         accountNumber: transferData.sourceAccountNumber,
-        accountHolder: `${user.firstName} ${user.lastName}`
+        accountHolder: 'Arun'
       },
       timestamp: new Date().toISOString(),
       status: 'PENDING',

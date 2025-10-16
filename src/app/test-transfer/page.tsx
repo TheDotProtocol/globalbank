@@ -58,7 +58,7 @@ export default function TestTransferPage() {
                 <strong>From Account:</strong> 0506115866
               </div>
               <div>
-                <strong>Amount:</strong> $3,000 USD
+                <strong>Amount:</strong> $4,000 USD
               </div>
               <div>
                 <strong>Beneficiary:</strong> Rosemarie Bajado
@@ -76,10 +76,10 @@ export default function TestTransferPage() {
                 <strong>Account:</strong> 306210105037
               </div>
               <div>
-                <strong>Fee (2%):</strong> $60
+                <strong>Fee (2%):</strong> $80
               </div>
               <div>
-                <strong>Total:</strong> $3,060
+                <strong>Total:</strong> $4,080
               </div>
             </div>
           </div>
