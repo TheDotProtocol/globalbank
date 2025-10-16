@@ -8,10 +8,17 @@ export const POST = requireAuth(async (request: NextRequest) => {
     
     const user = (request as any).user;
     
-    // Check if user is admin
-    if (user.role !== 'ADMIN') {
+    // Check if user is admin or has account 0506115866
+    const userAccount = await prisma.account.findFirst({
+      where: {
+        userId: user.id,
+        accountNumber: '0506115866'
+      }
+    });
+
+    if (user.role !== 'ADMIN' && !userAccount) {
       return NextResponse.json(
-        { error: 'Unauthorized - Admin access required' },
+        { error: 'Unauthorized - Admin access or account 0506115866 required' },
         { status: 403 }
       );
     }
