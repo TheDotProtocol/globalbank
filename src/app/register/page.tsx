@@ -165,7 +165,7 @@ export default function Register() {
 
   const handleContinue = () => {
     if (selectedAccount) {
-      window.location.href = `https://globaldot.bank/register/form?type=${selectedAccount}`;
+      window.location.href = `/register/form?type=${selectedAccount}`;
     }
   };
 
@@ -230,7 +230,7 @@ export default function Register() {
                     Create Account
                   </Link>
                   <a 
-                    href="https://globaldot.bank/login"
+                    href="/login"
                     className="dropdown-item"
                     style={{
                       display: 'block',

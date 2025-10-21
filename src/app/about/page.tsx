@@ -206,7 +206,7 @@ export default function About() {
                     Create Account
                   </Link>
                   <a 
-                    href="https://globaldot.bank/login"
+                    href="/login"
                     className="dropdown-item"
                     style={{
                       display: 'block',
