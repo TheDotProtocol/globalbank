@@ -47,10 +47,8 @@ export const POST = requireAuth(async (request: NextRequest) => {
       );
     }
 
-    // Check balance
-    const balance = typeof sourceAccount.balance === 'string' 
-      ? parseFloat(sourceAccount.balance) 
-      : sourceAccount.balance;
+    // Check balance - convert Prisma Decimal to number
+    const balance = parseFloat(sourceAccount.balance.toString());
 
     const transferFee = transferAmount * 0.01; // 1% fee for Thai bank transfers
     const totalAmount = transferAmount + transferFee;
@@ -87,7 +85,9 @@ export const POST = requireAuth(async (request: NextRequest) => {
     await prisma.account.update({
       where: { id: sourceAccountId },
       data: {
-        balance: balance - totalAmount
+        balance: {
+          decrement: totalAmount
+        }
       }
     });
 

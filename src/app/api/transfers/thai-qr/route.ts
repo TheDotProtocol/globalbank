@@ -54,10 +54,8 @@ export const POST = requireAuth(async (request: NextRequest) => {
       );
     }
 
-    // Check balance
-    const balance = typeof sourceAccount.balance === 'string' 
-      ? parseFloat(sourceAccount.balance) 
-      : sourceAccount.balance;
+    // Check balance - convert Prisma Decimal to number
+    const balance = parseFloat(sourceAccount.balance.toString());
 
     // No fee for PromptPay transfers
     const totalAmount = transferAmount;
@@ -93,7 +91,9 @@ export const POST = requireAuth(async (request: NextRequest) => {
     await prisma.account.update({
       where: { id: sourceAccountId },
       data: {
-        balance: balance - totalAmount
+        balance: {
+          decrement: totalAmount
+        }
       }
     });
 
