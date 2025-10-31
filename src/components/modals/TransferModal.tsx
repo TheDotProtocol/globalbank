@@ -426,7 +426,7 @@ export default function TransferModal({ isOpen, onClose, accounts, onSuccess }: 
           </button>
         </div>
 
-        {step === 1 ? (
+        {step === 1 && (
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Transfer Type Selection */}
             <div>
@@ -714,7 +714,9 @@ export default function TransferModal({ isOpen, onClose, accounts, onSuccess }: 
               </button>
             </div>
           </form>
-        ) : (
+        )}
+
+        {step === 2 && (
           <div className="space-y-4">
             <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
               <h3 className="font-medium text-gray-900 dark:text-white mb-3">Transfer Details</h3>
@@ -894,8 +896,9 @@ export default function TransferModal({ isOpen, onClose, accounts, onSuccess }: 
               </button>
             </div>
           </div>
-        ) : step === 3 && successData ? (
-          // Success Step - PromptPay Receipt
+        )}
+
+        {step === 3 && successData && (
           <div className="space-y-4">
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
               <div className="flex items-center justify-center mb-4">
@@ -963,7 +966,7 @@ export default function TransferModal({ isOpen, onClose, accounts, onSuccess }: 
               </button>
             </div>
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );
