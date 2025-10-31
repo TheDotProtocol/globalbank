@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, ArrowRight, AlertCircle, QrCode, Building2 } from 'lucide-react';
+import { X, ArrowRight, AlertCircle, QrCode, Building2, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import QRCode from 'qrcode';
+import PromptPayReceipt from '@/components/PromptPayReceipt';
 
 // Thai Banks List
 const THAI_BANKS = [
@@ -57,6 +58,7 @@ export default function TransferModal({ isOpen, onClose, accounts, onSuccess }: 
   const [step, setStep] = useState(1);
   const [transferDetails, setTransferDetails] = useState<any>(null);
   const [qrCode, setQrCode] = useState<string>('');
+  const [successData, setSuccessData] = useState<any>(null);
   const { showToast } = useToast();
 
   if (!isOpen) return null;
@@ -322,8 +324,57 @@ export default function TransferModal({ isOpen, onClose, accounts, onSuccess }: 
 
       if (response.ok) {
         showToast('Transfer completed successfully', 'success');
-        onSuccess();
-        handleClose();
+        
+        // For PromptPay transfers, show success step with receipt
+        if (transferType === 'THAI_QR' && data.transaction) {
+          const sourceAccount = accounts.find(acc => acc.id === formData.sourceAccountId);
+          
+          // Fetch user data for receipt
+          try {
+            const userResponse = await fetch('/api/user/profile', {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            const userData = await userResponse.json();
+            const userName = userData.user 
+              ? `${userData.user.firstName || ''} ${userData.user.lastName || ''}`.trim()
+              : 'Account Holder';
+            
+            setSuccessData({
+              transactionId: data.transaction.reference,
+              date: new Date(),
+              senderName: userName || 'Account Holder',
+              senderAccount: sourceAccount?.accountNumber || '',
+              promptPayId: formData.promptPayPhone || formData.promptPayId,
+              amount: parseFloat(formData.amount),
+              fee: data.transaction.fee || 0,
+              reason: formData.reason,
+              qrCode: qrCode
+            });
+            setStep(3); // Go to success step
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+            // Fallback without user name
+            setSuccessData({
+              transactionId: data.transaction.reference,
+              date: new Date(),
+              senderName: 'Account Holder',
+              senderAccount: sourceAccount?.accountNumber || '',
+              promptPayId: formData.promptPayPhone || formData.promptPayId,
+              amount: parseFloat(formData.amount),
+              fee: data.transaction.fee || 0,
+              reason: formData.reason,
+              qrCode: qrCode
+            });
+            setStep(3);
+          }
+        } else {
+          // For other transfers, close immediately
+          onSuccess();
+          handleClose();
+        }
       } else {
         showToast(data.error || 'Transfer failed', 'error');
       }
@@ -353,6 +404,7 @@ export default function TransferModal({ isOpen, onClose, accounts, onSuccess }: 
     setStep(1);
     setTransferDetails(null);
     setQrCode('');
+    setSuccessData(null);
     setLoading(false);
     onClose();
   };
@@ -364,7 +416,7 @@ export default function TransferModal({ isOpen, onClose, accounts, onSuccess }: 
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {step === 1 ? 'Transfer Money' : 'Confirm Transfer'}
+            {step === 1 ? 'Transfer Money' : step === 2 ? 'Confirm Transfer' : 'Transfer Completed'}
           </h2>
           <button
             onClick={handleClose}
@@ -842,7 +894,76 @@ export default function TransferModal({ isOpen, onClose, accounts, onSuccess }: 
               </button>
             </div>
           </div>
-        )}
+        ) : step === 3 && successData ? (
+          // Success Step - PromptPay Receipt
+          <div className="space-y-4">
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-green-100 dark:bg-green-900/50 rounded-full p-3">
+                  <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-green-800 dark:text-green-200 text-center mb-2">
+                Transfer Completed Successfully!
+              </h3>
+              <p className="text-sm text-green-700 dark:text-green-300 text-center">
+                Your PromptPay transfer has been processed
+              </p>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Transaction Details</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Transaction ID:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{successData.transactionId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Amount:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{successData.amount.toFixed(2)} Baht</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Fee:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{successData.fee.toFixed(2)} Baht</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">PromptPay ID:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {successData.promptPayId.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3') || 
+                     successData.promptPayId.replace(/(\d{1})(\d{4})(\d{4})(\d{4})/, '$1-$2-$3-$4')}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Date:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {new Date(successData.date).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <PromptPayReceipt
+                receiptData={successData}
+                onDownload={() => {
+                  showToast('Receipt downloaded successfully', 'success');
+                }}
+              />
+            </div>
+
+            <div className="flex space-x-3 pt-2">
+              <button
+                onClick={() => {
+                  onSuccess();
+                  handleClose();
+                }}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
