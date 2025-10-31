@@ -91,31 +91,8 @@ export const POST = requireAuth(async (request: NextRequest) => {
       }
     });
 
-    // Update bank total balance (if exists)
-    try {
-      const bankBalance = await prisma.account.aggregate({
-        _sum: {
-          balance: true
-        },
-        where: {
-          isActive: true
-        }
-      });
-
-      // Update admin balance record if exists
-      const adminBalance = await prisma.adminBalance.findFirst();
-      if (adminBalance) {
-        await prisma.adminBalance.update({
-          where: { id: adminBalance.id },
-          data: {
-            totalBalance: bankBalance._sum.balance || 0
-          }
-        });
-      }
-    } catch (error) {
-      // Admin balance might not exist, continue
-      console.log('Could not update admin balance:', error);
-    }
+    // Bank total balance is calculated dynamically from account aggregation
+    // No need to update a separate admin balance table
 
     return NextResponse.json({
       success: true,
