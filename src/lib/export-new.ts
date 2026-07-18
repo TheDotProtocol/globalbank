@@ -90,7 +90,7 @@ export class ExportManager {
     doc.setFont('helvetica', 'normal');
     doc.text('A Dot Protocol Company', 40, 28);
     doc.text('Address: 1075 Terra Bella Ave, Mountain View CA, 94043', 14, 38);
-    doc.text('Website: https://globaldotbank.org', 14, 44);
+    doc.text('Website: https://globaldotbank.com', 14, 44);
     doc.text('Email: banking@globaldotbank.org', 14, 50);
     
     doc.setFontSize(16);
@@ -160,7 +160,7 @@ export class ExportManager {
     doc.setFont('helvetica', 'normal');
     doc.text('A Dot Protocol Company', 40, 28);
     doc.text('Address: 1075 Terra Bella Ave, Mountain View CA, 94043', 14, 38);
-    doc.text('Website: https://globaldotbank.org', 14, 44);
+    doc.text('Website: https://globaldotbank.com', 14, 44);
     doc.text('Email: banking@globaldotbank.org', 14, 50);
     
     // 2. Customer Information Section
@@ -321,7 +321,7 @@ export class ExportManager {
     doc.setFont('helvetica', 'normal');
     doc.text('A Dot Protocol Company', 40, 28);
     doc.text('Address: 1075 Terra Bella Ave, Mountain View CA, 94043', 14, 38);
-    doc.text('Website: https://globaldotbank.org', 14, 44);
+    doc.text('Website: https://globaldotbank.com', 14, 44);
     doc.text('Email: banking@globaldotbank.org', 14, 50);
     
     // Document Title - Center aligned
@@ -494,7 +494,7 @@ export async function exportTransactions(transactions: any[], format: 'pdf' | 'c
     doc.setFont('helvetica', 'normal');
     doc.text('A Dot Protocol Company', 40, 28);
     doc.text('Address: 1075 Terra Bella Ave, Mountain View CA, 94043', 14, 38);
-    doc.text('Website: https://globaldotbank.org', 14, 44);
+    doc.text('Website: https://globaldotbank.com', 14, 44);
     doc.text('Email: banking@globaldotbank.org', 14, 50);
     
     // Document Title

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateToken } from '@/lib/jwt';
 import { sendEmail } from '@/lib/email';
+import { getAppUrl } from '@/lib/app-url';
 
 // Send verification email
 export const POST = async (request: NextRequest) => {
@@ -44,7 +45,7 @@ export const POST = async (request: NextRequest) => {
     });
 
     // Send verification email
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${getAppUrl()}/verify-email?token=${verificationToken}`;
     
     await sendEmail({
       to: user.email,

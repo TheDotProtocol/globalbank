@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
 import { requireAuth } from '@/lib/auth-server';
+import { getAppUrl } from '@/lib/app-url';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
@@ -79,7 +80,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     });
 
     // Send verification email to new address
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email-change?token=${verificationToken}&email=${encodeURIComponent(newEmail)}`;
+    const verificationUrl = `${getAppUrl()}/verify-email-change?token=${verificationToken}&email=${encodeURIComponent(newEmail)}`;
     
     await sendEmail({
       to: newEmail,

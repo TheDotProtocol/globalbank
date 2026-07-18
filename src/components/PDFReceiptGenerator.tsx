@@ -121,7 +121,7 @@ export function generateInternationalReceiptPDF(receiptData: InternationalReceip
   doc.setFontSize(8);
   doc.setTextColor(255, 255, 255);
   doc.text('Global Dot Bank | support@globaldotbank.org | This is a system-generated confirmation slip.', 20, pageHeight - 20);
-  doc.text(`UTR: ${receiptData.utr} | Verify at globaldotbank.org`, 20, pageHeight - 12);
+  doc.text(`UTR: ${receiptData.utr} | Verify at globaldotbank.com`, 20, pageHeight - 12);
 
   doc.save(`Transfer_Confirmation_${receiptData.utr}.pdf`);
 }

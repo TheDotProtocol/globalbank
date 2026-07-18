@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
+import { getAppUrl } from '@/lib/app-url';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-07-30.basil',
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
       currency: 'usd',
       payment_method: paymentMethodId,
       confirm: true,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
+      return_url: `${getAppUrl()}/dashboard?success=true`,
       metadata: {
         accountId,
         userId: account.userId,

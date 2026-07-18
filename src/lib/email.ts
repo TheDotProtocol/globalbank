@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { getAppUrl } from '@/lib/app-url';
 
 // Email configuration for Resend
 const transporter = nodemailer.createTransport({
@@ -101,7 +102,7 @@ export const emailTemplates = {
           </div>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/kyc/verification" 
+            <a href="${getAppUrl()}/kyc/verification" 
                style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
               Complete KYC Verification
             </a>
@@ -147,7 +148,7 @@ What's Next?
 - Generate virtual cards for secure payments
 - Use e-checks for digital payments
 
-Complete KYC verification: ${process.env.NEXT_PUBLIC_APP_URL}/kyc/verification
+Complete KYC verification: ${getAppUrl()}/kyc/verification
 
 If you have any questions, our support team is here to help.
 
@@ -186,7 +187,7 @@ The Global Dot Bank Team
           </div>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
+            <a href="${getAppUrl()}/dashboard" 
                style="background: #0ea5e9; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
               Access Your Dashboard
             </a>
@@ -234,7 +235,7 @@ The Global Dot Bank Team
           ` : ''}
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/kyc/verification" 
+            <a href="${getAppUrl()}/kyc/verification" 
                style="background: #f59e0b; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
               Complete KYC Verification
             </a>
@@ -280,7 +281,7 @@ The Global Dot Bank Team
           </div>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}" 
+            <a href="${getAppUrl()}" 
                style="background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
               View Transaction Details
             </a>
@@ -312,7 +313,7 @@ Amount: $${amount.toFixed(2)}
 Description: ${description}
 Date: ${new Date().toLocaleDateString()}
 
-View transaction details: ${process.env.NEXT_PUBLIC_APP_URL}
+View transaction details: ${getAppUrl()}
 
 If you didn't authorize this transaction, please contact our support team immediately.
 
@@ -341,7 +342,7 @@ The Global Dot Bank Team
           </div>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" 
+            <a href="${getAppUrl()}/profile" 
                style="background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
               Review Security Settings
             </a>
@@ -373,7 +374,7 @@ Type: ${alertType}
 Details: ${details}
 Time: ${new Date().toLocaleString()}
 
-Review security settings: ${process.env.NEXT_PUBLIC_APP_URL}/profile
+Review security settings: ${getAppUrl()}/profile
 
 If this activity was not authorized by you, please contact our support team immediately.
 
@@ -401,7 +402,7 @@ The Global Dot Bank Team
           </div>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL}/profile" 
+            <a href="${getAppUrl()}/profile" 
                style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
               View KYC Status
             </a>
@@ -432,7 +433,7 @@ Hello ${userName}!
 Status: ${status}
 Date: ${new Date().toLocaleDateString()}
 
-View KYC status: ${process.env.NEXT_PUBLIC_APP_URL}/profile
+View KYC status: ${getAppUrl()}/profile
 
 Thank you for your patience during the verification process.
 

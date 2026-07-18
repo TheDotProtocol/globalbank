@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendPasswordResetEmail } from '@/lib/email';
 import crypto from 'crypto';
+import { getAppUrl } from '@/lib/app-url';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     // Store reset token in database (you might want to add a resetToken field to User model)
     // For now, we'll just send the email
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
+    const resetUrl = `${getAppUrl()}/reset-password?token=${resetToken}`;
 
     // Send email using the email library
     await sendPasswordResetEmail(email, resetUrl);
