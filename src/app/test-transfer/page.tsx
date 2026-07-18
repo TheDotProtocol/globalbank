@@ -55,7 +55,7 @@ export default function TestTransferPage() {
             </h2>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <strong>From Account:</strong> 0506115866
+                <strong>From Account:</strong> 1703095866
               </div>
               <div>
                 <strong>Amount:</strong> $4,000 USD
@@ -114,14 +114,17 @@ export default function TestTransferPage() {
                 <div className="mb-4">
                   <PDFReceiptGenerator receiptData={{
                     transactionRef: result.receipt?.reference,
+                    utr: result.receipt?.utr || result.receipt?.reference || 'N/A',
                     date: new Date(result.receipt?.timestamp),
                     fromAccount: result.receipt?.sourceAccount?.accountNumber,
+                    fromAccountHolder: result.receipt?.sourceAccount?.holderName || 'Account Holder',
                     toBeneficiary: result.receipt?.beneficiary?.name,
                     toBank: result.receipt?.beneficiary?.bankName,
                     toSwift: result.receipt?.beneficiary?.swiftCode,
                     toAccount: result.receipt?.beneficiary?.accountNumber,
                     amount: result.receipt?.amount,
                     currency: result.receipt?.currency,
+                    targetCurrency: result.receipt?.targetCurrency || result.receipt?.currency,
                     exchangeRate: result.receipt?.exchangeRate,
                     convertedAmount: result.receipt?.convertedAmount,
                     transferFee: result.receipt?.transferFee,

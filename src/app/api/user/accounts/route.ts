@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth-server';
+import { generateAccountNumber } from '@/lib/account-number';
 
 export const GET = requireAuth(async (request: NextRequest) => {
   try {
@@ -118,7 +119,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
     }
 
     // Generate unique account number
-    const accountNumber = `050611${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+    const accountNumber = generateAccountNumber();
 
     // Create new account
     const newAccount = await prisma.account.create({

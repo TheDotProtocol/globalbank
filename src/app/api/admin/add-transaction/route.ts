@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireSuperAdmin, blockDemoInProduction } from '@/lib/admin-auth';
 
-export const POST = async (request: NextRequest) => {
+export const POST = requireSuperAdmin(async (request: NextRequest) => {
+  const blocked = blockDemoInProduction();
+  if (blocked) return blocked;
   try {
     const body = await request.json();
     const { userEmail, amount, description, transactionType = 'CREDIT' } = body;
@@ -109,4 +112,4 @@ export const POST = async (request: NextRequest) => {
       { status: 500 }
     );
   }
-}; 
+}); 

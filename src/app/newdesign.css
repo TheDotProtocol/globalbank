@@ -945,3 +945,287 @@ body.dark {
   }
 }
 
+/* Page Layout */
+.page-content {
+  padding-top: 80px;
+  min-height: calc(100vh - 80px);
+}
+
+.auth-page-content {
+  padding-top: 100px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  padding-bottom: 4rem;
+}
+
+.light .auth-page-content {
+  background: var(--bg-light-secondary);
+}
+
+.dark .auth-page-content {
+  background: var(--bg-dark-primary);
+}
+
+/* Auth Card */
+.auth-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 3rem;
+  border: 1px solid;
+}
+
+.light .auth-card {
+  background: var(--bg-light-primary);
+  border-color: var(--border-light);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+.dark .auth-card {
+  background: var(--bg-dark-secondary);
+  border-color: var(--border-dark);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.auth-card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.light .auth-card-title {
+  color: var(--text-light-primary);
+}
+
+.dark .auth-card-title {
+  color: var(--text-dark-primary);
+}
+
+.auth-card-subtitle {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+.light .auth-card-subtitle {
+  color: var(--text-light-muted);
+}
+
+.dark .auth-card-subtitle {
+  color: var(--text-dark-muted);
+}
+
+.auth-alert {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-alert-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.auth-alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 500;
+}
+
+.auth-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.light .auth-link {
+  color: var(--accent-light);
+}
+
+.dark .auth-link {
+  color: var(--accent-dark);
+}
+
+.auth-submit-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  margin: 2rem 0;
+  gap: 1rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+}
+
+.light .auth-divider::before,
+.light .auth-divider::after {
+  background: var(--border-light);
+}
+
+.dark .auth-divider::before,
+.dark .auth-divider::after {
+  background: var(--border-dark);
+}
+
+.auth-divider span {
+  font-size: 0.875rem;
+}
+
+/* Admin login — slightly wider card, generous field spacing */
+.admin-login-card {
+  max-width: 520px;
+  padding: 3rem 3.5rem;
+}
+
+.admin-login-card .dashboard-form-group {
+  margin-bottom: 1.75rem;
+}
+
+.admin-login-card .dashboard-form-input {
+  padding: 0.875rem 1.125rem;
+  font-size: 1.0625rem;
+  min-height: 52px;
+}
+
+.admin-login-card .auth-submit-btn {
+  margin-top: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  min-height: 52px;
+}
+
+.light .auth-divider span {
+  color: var(--text-light-muted);
+}
+
+.dark .auth-divider span {
+  color: var(--text-dark-muted);
+}
+
+/* Content sections for inner pages */
+.content-section {
+  padding: 80px 7.6923%;
+}
+
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.content-card {
+  padding: 2rem;
+  border: 1px solid;
+  margin-bottom: 1.5rem;
+}
+
+.light .content-card {
+  background: var(--bg-light-primary);
+  border-color: var(--border-light);
+}
+
+.dark .content-card {
+  background: var(--bg-dark-secondary);
+  border-color: var(--border-dark);
+}
+
+/* Mobile Navigation */
+.mobile-menu-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid;
+  border-radius: 0;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.light .mobile-menu-toggle {
+  border-color: var(--border-light);
+  color: var(--text-light-primary);
+}
+
+.dark .mobile-menu-toggle {
+  border-color: var(--border-dark);
+  color: var(--text-dark-primary);
+}
+
+.mobile-nav-menu {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .desktop-nav .nav-link,
+  .desktop-nav .banking-dropdown {
+    display: none;
+  }
+
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-nav-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 1rem 7.6923% 1.5rem;
+    border-top: 1px solid;
+  }
+
+  .light .mobile-nav-menu {
+    background: rgba(255, 255, 255, 0.98);
+    border-color: var(--border-light);
+  }
+
+  .dark .mobile-nav-menu {
+    background: rgba(0, 0, 0, 0.98);
+    border-color: var(--border-dark);
+  }
+
+  .mobile-nav-link {
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 1px solid;
+  }
+
+  .light .mobile-nav-link {
+    color: var(--text-light-primary);
+    border-color: var(--border-light);
+  }
+
+  .dark .mobile-nav-link {
+    color: var(--text-dark-secondary);
+    border-color: var(--border-dark);
+  }
+}
+

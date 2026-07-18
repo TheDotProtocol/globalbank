@@ -1,16 +1,16 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Sun, Moon, ArrowRight, ShieldCheck, CheckCircle, Award, Globe, Users, Zap, Star, Building, Target, Calendar, TrendingUp, Heart, Leaf, BookOpen, GraduationCap, Newspaper, ArrowUpRight, CheckSquare, MapPin, Phone, Mail, BarChart3, FileText, PieChart, DollarSign, TrendingDown, Users2, Shield, FileBarChart, CalendarDays, Download, ChevronRight, ChevronDown, ChevronUp, Menu, X, Play, Eye, Gavel, Scale, Lock, UserCheck, FileCheck, AlertTriangle, CheckCircle2, ClipboardCheck, EyeOff, MessageSquare, HelpCircle, CreditCard, Wallet, Calculator, Headphones, MessageCircle, ExternalLink, FileDown, Search, Clock, Globe2, Smartphone, Monitor, Tablet } from "lucide-react";
-import Image from "next/image";
+import { useState } from "react";
+import { ArrowRight, ShieldCheck, CheckCircle, Award, Globe, Users, Zap, Star, Building, Target, Calendar, TrendingUp, Heart, Leaf, BookOpen, GraduationCap, Newspaper, ArrowUpRight, CheckSquare, MapPin, Phone, Mail, BarChart3, FileText, PieChart, DollarSign, TrendingDown, Users2, Shield, FileBarChart, CalendarDays, Download, ChevronRight, ChevronDown, ChevronUp, Play, Eye, Gavel, Scale, Lock, UserCheck, FileCheck, AlertTriangle, CheckCircle2, ClipboardCheck, EyeOff, MessageSquare, HelpCircle, CreditCard, Wallet, Calculator, Headphones, MessageCircle, ExternalLink, FileDown, Search, Clock, Globe2, Smartphone, Monitor, Tablet } from "lucide-react";
 import Link from "next/link";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useTranslation, getCurrentLocale } from "@/lib/i18n";
 import { NoTranslate, Translate } from "@/components/TranslationWrapper";
 import TranslationPrompt from "@/components/TranslationPrompt";
+import MarketingLayout from "@/components/layout/MarketingLayout";
+import PageHero from "@/components/layout/PageHero";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function HelpCenterPage() {
-  const [darkMode, setDarkMode] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
     faq: false,
     rates: false,
@@ -19,17 +19,7 @@ export default function HelpCenterPage() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const { t } = useTranslation(getCurrentLocale());
-
-  useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    setDarkMode(isDark);
-  }, []);
-
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    document.documentElement.classList.toggle('dark', newDarkMode);
-  };
+  const { theme } = useTheme();
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => ({
@@ -96,102 +86,31 @@ export default function HelpCenterPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
-      {/* Header */}
-      <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Image
-                src="/logo.png"
-                alt="Global Dot Bank"
-                width={40}
-                height={40}
-                className="h-10 w-auto"
-              />
-              <span className="ml-3 text-xl font-bold text-gray-900 dark:text-white">
-                Global Dot Bank
-              </span>
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</Link>
-              <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</Link>
-              <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</Link>
-              <Link href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Corporate Governance</Link>
-              <Link href="/help-center" className="text-blue-600 dark:text-blue-400 font-semibold">Help Center</Link>
-              <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</Link>
-            </div>
-
-            {/* Right side controls */}
-            <div className="flex items-center space-x-4">
-              <LanguageSwitcher />
-              <button
-                onClick={toggleDarkMode}
-                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
-
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Navigation */}
-          {mobileMenuOpen && (
-            <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex flex-col space-y-4">
-                <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</Link>
-                <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">About Us</Link>
-                <Link href="/investor-relations" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Investor Relations</Link>
-                <Link href="/corporate-governance" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Corporate Governance</Link>
-                <Link href="/help-center" className="text-blue-600 dark:text-blue-400 font-semibold">Help Center</Link>
-                <Link href="/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Login</Link>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              Help Center
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8">
-              Find answers to your questions, download forms, and get the support you need
-            </p>
-            
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="text"
-                  placeholder="Search for help articles, FAQs, or topics..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
+    <MarketingLayout>
+      <PageHero
+        title="Help Center"
+        subtitle="Find answers to your questions, download forms, and get the support you need"
+        theme={theme}
+        backgroundImage="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?crop=entropy&cs=srgb&fm=jpg&q=85"
+      >
+        <div className="content-container" style={{ marginTop: '2rem' }}>
+          <div style={{ position: 'relative', maxWidth: '640px', margin: '0 auto' }}>
+            <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} size={20} />
+            <input
+              type="text"
+              placeholder="Search for help articles, FAQs, or topics..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="dashboard-form-input"
+              style={{ paddingLeft: '3rem' }}
+            />
           </div>
         </div>
-      </section>
+      </PageHero>
 
       {/* Main Content */}
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="content-section">
+        <div className="content-container">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Sidebar Navigation */}
             <div className="lg:col-span-1">
@@ -438,55 +357,7 @@ export default function HelpCenterPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Global Dot Bank</h3>
-              <p className="text-gray-400 text-sm">
-                Next-generation digital banking solutions for a connected world.
-              </p>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Products</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li>Savings Account</li>
-                <li>Current Account</li>
-                <li>Fixed Deposits</li>
-                <li>Corporate Banking</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                <li><Link href="/investor-relations" className="hover:text-white transition-colors">Investor Relations</Link></li>
-                <li><Link href="/corporate-governance" className="hover:text-white transition-colors">Corporate Governance</Link></li>
-                <li><Link href="/help-center" className="hover:text-white transition-colors">Help Center</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/help-center" className="hover:text-white transition-colors">Help Center</Link></li>
-                <li>Security</li>
-                <li>Privacy Policy</li>
-                <li>Terms of Service</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2025 Global Dot Bank. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-
       <TranslationPrompt />
-    </div>
+    </MarketingLayout>
   );
 } 

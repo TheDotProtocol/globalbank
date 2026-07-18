@@ -9,11 +9,37 @@ export const GET = requireAuth(async (request: NextRequest) => {
     const { searchParams } = new URL(request.url);
     const accountId = searchParams.get('accountId');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const days = searchParams.get('days');
+    const type = searchParams.get('type');
+    const status = searchParams.get('status');
 
     const where: any = { userId: user.id };
     if (accountId) {
       where.accountId = accountId;
+    }
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+    if (type && type !== 'all') {
+      if (type === 'INTEREST') {
+        where.description = { contains: 'Interest', mode: 'insensitive' };
+      } else if (type === 'TRANSFER') {
+        where.OR = [
+          { type: 'TRANSFER' },
+          { transferMode: { not: null } },
+        ];
+      } else {
+        where.type = type;
+      }
+    }
+    if (days) {
+      const daysNum = parseInt(days);
+      if (!isNaN(daysNum) && daysNum > 0) {
+        const since = new Date();
+        since.setDate(since.getDate() - daysNum);
+        where.createdAt = { gte: since };
+      }
     }
 
     const [transactions, totalCount] = await Promise.all([
@@ -36,7 +62,12 @@ export const GET = requireAuth(async (request: NextRequest) => {
     ]);
 
     return NextResponse.json({
-      transactions,
+      transactions: transactions.map((tx) => ({
+        ...tx,
+        amount: Number(tx.amount),
+        transferFee: tx.transferFee ? Number(tx.transferFee) : null,
+        netAmount: tx.netAmount ? Number(tx.netAmount) : null,
+      })),
       pagination: {
         page,
         limit,

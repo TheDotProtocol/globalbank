@@ -4,233 +4,136 @@ import React from 'react';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 
-interface PDFReceiptGeneratorProps {
-  receiptData: {
-    transactionRef: string;
-    date: Date;
-    fromAccount: string;
-    toBeneficiary: string;
-    toBank: string;
-    toSwift: string;
-    toAccount: string;
-    amount: number;
-    currency: string;
-    exchangeRate: number;
-    convertedAmount: number;
-    transferFee: number;
-    totalAmount: number;
-    description?: string;
-    estimatedDelivery: Date;
-    status: string;
-  };
+export interface InternationalReceiptData {
+  transactionRef: string;
+  utr: string;
+  date: Date | string;
+  fromAccount: string;
+  fromAccountHolder: string;
+  toBeneficiary: string;
+  toBank: string;
+  toSwift: string;
+  toAccount: string;
+  toCountry?: string;
+  amount: number;
+  currency: string;
+  targetCurrency: string;
+  exchangeRate: number;
+  convertedAmount: number;
+  transferFee: number;
+  totalAmount: number;
+  description?: string;
+  estimatedDelivery?: Date | string;
+  completedAt?: Date | string;
+  status: string;
 }
 
-const PDFReceiptGenerator: React.FC<PDFReceiptGeneratorProps> = ({ receiptData }) => {
-  const generatePDF = async () => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    
-    // Colors
-    const primaryColor = '#1e40af'; // Blue
-    const secondaryColor = '#64748b'; // Gray
-    const accentColor = '#059669'; // Green
-    
-    // Header Section with gradient effect
-    doc.setFillColor(30, 64, 175); // Darker blue
-    doc.rect(0, 0, pageWidth, 50, 'F');
-    
-    // Add logo (we'll use text for now, but you can add actual logo)
-    doc.setFontSize(28);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Global Dot Bank', 20, 30);
-    
-    // Add tagline
+interface PDFReceiptGeneratorProps {
+  receiptData: InternationalReceiptData;
+  className?: string;
+}
+
+export function generateInternationalReceiptPDF(receiptData: InternationalReceiptData): void {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const primaryColor = '#1e40af';
+
+  doc.setFillColor(30, 64, 175);
+  doc.rect(0, 0, pageWidth, 50, 'F');
+  doc.setFontSize(28);
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Global Dot Bank', 20, 28);
+  doc.setFontSize(10);
+  doc.setTextColor(200, 200, 255);
+  doc.setFont('helvetica', 'normal');
+  doc.text('International Transfer Confirmation', 20, 40);
+
+  doc.setFontSize(20);
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Transfer Confirmation Slip', pageWidth / 2, 65, { align: 'center' });
+
+  doc.setDrawColor(30, 64, 175);
+  doc.setLineWidth(1);
+  doc.line(40, 70, pageWidth - 40, 70);
+
+  let y = 82;
+  const addRow = (label: string, value: string, bold = false) => {
     doc.setFontSize(10);
-    doc.setTextColor(200, 200, 255);
     doc.setFont('helvetica', 'normal');
-    doc.text('International Banking Excellence', 20, 40);
-    
-    // Receipt Title with underline
-    doc.setFontSize(22);
+    doc.setTextColor(100, 100, 100);
+    doc.text(label, 20, y);
+    doc.setFont('helvetica', bold ? 'bold' : 'normal');
     doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text('International Transfer Receipt', pageWidth / 2, 70, { align: 'center' });
-    
-    // Add decorative line
-    doc.setDrawColor(primaryColor);
-    doc.setLineWidth(2);
-    doc.line(60, 75, pageWidth - 60, 75);
-    
-    // Transaction Reference (highlighted box)
-    doc.setFillColor(240, 248, 255);
-    doc.rect(20, 85, pageWidth - 40, 20, 'F');
-    doc.setDrawColor(primaryColor);
-    doc.setLineWidth(1);
-    doc.rect(20, 85, pageWidth - 40, 20, 'S');
-    
-    doc.setFontSize(14);
-    doc.setTextColor(primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Transaction Reference:', 25, 95);
-    doc.text(receiptData.transactionRef, 25, 100);
-    
-    // Date and Status in right column
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.text(`Date: ${format(new Date(receiptData.date), 'PPP p')}`, pageWidth - 120, 95);
-    doc.text(`Status: ${receiptData.status}`, pageWidth - 120, 100);
-    
-    // Transfer Details Section with background
-    doc.setFillColor(248, 250, 252);
-    doc.rect(20, 120, pageWidth - 40, 80, 'F');
-    doc.setDrawColor(primaryColor);
-    doc.setLineWidth(1);
-    doc.rect(20, 120, pageWidth - 40, 80, 'S');
-    
-    doc.setFontSize(16);
-    doc.setTextColor(primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Transfer Details', 25, 135);
-    
-    // From Account
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'normal');
-    doc.text('From Account:', 25, 150);
-    doc.setFont('helvetica', 'bold');
-    doc.text(receiptData.fromAccount, 90, 150);
-    
-    // Beneficiary Details
-    doc.setFont('helvetica', 'normal');
-    doc.text('Beneficiary Name:', 25, 160);
-    doc.setFont('helvetica', 'bold');
-    doc.text(receiptData.toBeneficiary, 90, 160);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('Beneficiary Bank:', 25, 170);
-    doc.setFont('helvetica', 'bold');
-    doc.text(receiptData.toBank, 90, 170);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('SWIFT/BIC Code:', 25, 180);
-    doc.setFont('helvetica', 'bold');
-    doc.text(receiptData.toSwift, 90, 180);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('Beneficiary Account:', 25, 190);
-    doc.setFont('helvetica', 'bold');
-    doc.text(receiptData.toAccount, 90, 190);
-    
-    if (receiptData.description) {
-      doc.setFont('helvetica', 'normal');
-      doc.text('Description:', 25, 200);
-      doc.setFont('helvetica', 'bold');
-      doc.text(receiptData.description, 90, 200);
-    }
-    
-    // Amount Summary Section with professional styling
-    doc.setFillColor(248, 250, 252);
-    doc.rect(20, 220, pageWidth - 40, 60, 'F');
-    doc.setDrawColor(primaryColor);
-    doc.setLineWidth(1);
-    doc.rect(20, 220, pageWidth - 40, 60, 'S');
-    
-    doc.setFontSize(16);
-    doc.setTextColor(primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Amount Summary', 25, 235);
-    
-    // Amount details with better formatting
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'normal');
-    
-    const amountY = 250;
-    doc.text('Transfer Amount:', 25, amountY);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`$${receiptData.amount.toLocaleString()} ${receiptData.currency}`, 120, amountY);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('Exchange Rate:', 25, amountY + 10);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`1 ${receiptData.currency} = ${receiptData.exchangeRate} USD`, 120, amountY + 10);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('Converted Amount:', 25, amountY + 20);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`$${receiptData.convertedAmount.toLocaleString()} USD`, 120, amountY + 20);
-    
-    doc.setFont('helvetica', 'normal');
-    doc.text('International Fee (2%):', 25, amountY + 30);
-    doc.setTextColor(220, 38, 38); // Red for fee
-    doc.setFont('helvetica', 'bold');
-    doc.text(`-$${receiptData.transferFee.toLocaleString()} USD`, 120, amountY + 30);
-    
-    // Total Amount (highlighted with border)
-    doc.setFillColor(240, 248, 255);
-    doc.rect(20, amountY + 40, pageWidth - 40, 15, 'F');
-    doc.setDrawColor(primaryColor);
-    doc.setLineWidth(2);
-    doc.rect(20, amountY + 40, pageWidth - 40, 15, 'S');
-    doc.setTextColor(primaryColor);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('Total Debit:', 25, amountY + 50);
-    doc.text(`$${receiptData.totalAmount.toLocaleString()} USD`, 120, amountY + 50);
-    
-    // Delivery Information
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(11);
-    doc.text('Estimated Delivery:', 20, amountY + 70);
-    doc.setFont('helvetica', 'bold');
-    doc.text(format(new Date(receiptData.estimatedDelivery), 'PPP'), 120, amountY + 70);
-    
-    // Professional Footer
-    const footerY = pageHeight - 40;
-    doc.setFillColor(30, 64, 175); // Dark blue footer
-    doc.rect(0, footerY, pageWidth, 40, 'F');
-    
-    // Company info
-    doc.setFontSize(10);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Global Dot Bank', 20, footerY + 12);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.text('International Banking Excellence', 20, footerY + 20);
-    
-    // Contact info
-    doc.text('support@globaldotbank.org', pageWidth - 100, footerY + 12);
-    doc.text('+1 (555) 123-4567', pageWidth - 100, footerY + 20);
-    
-    // Security and authenticity
-    doc.setFontSize(7);
-    doc.setTextColor(200, 200, 255);
-    doc.text('SECURITY: This receipt contains encrypted transaction data.', 20, footerY + 30);
-    doc.text('Verify authenticity at globaldotbank.org/verify', pageWidth - 120, footerY + 30);
-    
-    // Generation timestamp
-    doc.setFontSize(6);
-    doc.setTextColor(180, 180, 255);
-    doc.text(`Generated on ${format(new Date(), 'PPP p')}`, pageWidth / 2, footerY + 38, { align: 'center' });
-    
-    // Save the PDF
-    doc.save(`International_Transfer_Receipt_${receiptData.transactionRef}.pdf`);
+    doc.text(value, 80, y);
+    y += 8;
   };
 
+  doc.setFillColor(240, 248, 255);
+  doc.rect(15, 75, pageWidth - 30, 28, 'F');
+  y = 85;
+  addRow('UTR Number:', receiptData.utr, true);
+  addRow('Reference:', receiptData.transactionRef, true);
+  addRow('Status:', receiptData.status.toUpperCase(), true);
+  addRow('Date:', format(new Date(receiptData.date), 'dd MMM yyyy, HH:mm'), false);
+  y += 6;
+
+  doc.setFontSize(12);
+  doc.setTextColor(30, 64, 175);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Sender Details', 20, y);
+  y += 10;
+  addRow('Account Holder:', receiptData.fromAccountHolder);
+  addRow('Account Number:', receiptData.fromAccount);
+  y += 4;
+
+  doc.setFontSize(12);
+  doc.setTextColor(30, 64, 175);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Beneficiary Details', 20, y);
+  y += 10;
+  addRow('Name:', receiptData.toBeneficiary);
+  addRow('Bank:', receiptData.toBank);
+  addRow('SWIFT/BIC:', receiptData.toSwift);
+  addRow('Account Number:', receiptData.toAccount);
+  if (receiptData.toCountry) addRow('Country:', receiptData.toCountry);
+  y += 4;
+
+  doc.setFontSize(12);
+  doc.setTextColor(30, 64, 175);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Amount Details', 20, y);
+  y += 10;
+  addRow('Transfer Amount:', `$${receiptData.amount.toFixed(2)} ${receiptData.currency}`);
+  addRow('Exchange Rate:', `1 ${receiptData.currency} = ${receiptData.exchangeRate} ${receiptData.targetCurrency}`);
+  addRow('Converted Amount:', `${receiptData.targetCurrency === 'INR' ? '₹' : ''}${receiptData.convertedAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} ${receiptData.targetCurrency}`, true);
+  addRow('Transfer Fee (2%):', `$${receiptData.transferFee.toFixed(2)}`);
+  addRow('Total Debited:', `$${receiptData.totalAmount.toFixed(2)} ${receiptData.currency}`, true);
+  if (receiptData.description) addRow('Description:', receiptData.description);
+  if (receiptData.completedAt) {
+    addRow('Completed:', format(new Date(receiptData.completedAt), 'dd MMM yyyy, HH:mm'));
+  }
+
+  doc.setFillColor(30, 64, 175);
+  doc.rect(0, pageHeight - 35, pageWidth, 35, 'F');
+  doc.setFontSize(8);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Global Dot Bank | support@globaldotbank.org | This is a system-generated confirmation slip.', 20, pageHeight - 20);
+  doc.text(`UTR: ${receiptData.utr} | Verify at globaldotbank.org`, 20, pageHeight - 12);
+
+  doc.save(`Transfer_Confirmation_${receiptData.utr}.pdf`);
+}
+
+const PDFReceiptGenerator: React.FC<PDFReceiptGeneratorProps> = ({ receiptData, className }) => {
   return (
     <button
-      onClick={generatePDF}
-      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+      type="button"
+      onClick={() => generateInternationalReceiptPDF(receiptData)}
+      className={className || 'btn-primary'}
     >
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-      <span>Download PDF Receipt</span>
+      Download Confirmation Slip (PDF)
     </button>
   );
 };

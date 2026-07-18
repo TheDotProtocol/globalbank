@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
+import { generateCheckNumber } from '@/lib/account-number';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
@@ -58,10 +59,8 @@ export const POST = requireAuth(async (request: NextRequest) => {
       );
     }
 
-    // Generate unique check number (format: xxxxx050611)
-    const baseCheckNumber = '050611';
-    const randomPrefix = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-    const checkNumber = `${randomPrefix}${baseCheckNumber}`;
+    // Generate unique check number (format: xxxxx170309)
+    const checkNumber = generateCheckNumber();
 
     // Generate unique check ID
     const checkId = `CHK_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

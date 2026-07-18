@@ -39,9 +39,9 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
   try {
     console.log('🔍 Creating Saleena Thamani transfers...');
 
-    // Find Saleena Thamani's account (0506118608)
+    // Find Saleena Thamani's account (1703098608)
     const saleenaAccount = await prisma.account.findFirst({
-      where: { accountNumber: '0506118608' },
+      where: { accountNumber: '1703098608' },
       include: { user: true }
     });
 
@@ -56,25 +56,25 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
 
     // Find destination accounts
     const account1 = await prisma.account.findFirst({
-      where: { accountNumber: '0506110982' },
+      where: { accountNumber: '1703090982' },
       include: { user: true }
     });
 
     const account2 = await prisma.account.findFirst({
-      where: { accountNumber: '0506113754' },
+      where: { accountNumber: '1703093754' },
       include: { user: true }
     });
 
     if (!account1) {
       return NextResponse.json(
-        { error: 'Destination account 0506110982 not found' },
+        { error: 'Destination account 1703090982 not found' },
         { status: 404 }
       );
     }
 
     if (!account2) {
       return NextResponse.json(
-        { error: 'Destination account 0506113754 not found' },
+        { error: 'Destination account 1703093754 not found' },
         { status: 404 }
       );
     }
@@ -93,7 +93,7 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
       );
     }
 
-    // Create first transfer: 0506118608 to 0506110982
+    // Create first transfer: 1703098608 to 1703090982
     const transfer1 = await prisma.transaction.create({
       data: {
         userId: saleenaAccount.userId,
@@ -111,7 +111,7 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
       }
     });
 
-    // Create second transfer: 0506118608 to 0506113754
+    // Create second transfer: 1703098608 to 1703093754
     const transfer2 = await prisma.transaction.create({
       data: {
         userId: saleenaAccount.userId,

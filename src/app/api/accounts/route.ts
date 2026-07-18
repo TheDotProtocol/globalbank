@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { generateAccountNumber } from '@/lib/account-number';
 
 // GET - Get user accounts
 export async function GET(request: NextRequest) {
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate unique account number
-    const accountNumber = `050611${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+    const accountNumber = generateAccountNumber();
 
     const account = await prisma.account.create({
       data: {

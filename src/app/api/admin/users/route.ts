@@ -11,8 +11,11 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
     const limit = parseInt(searchParams.get('limit') || '20');
     const search = searchParams.get('search') || '';
     const kycStatus = searchParams.get('kycStatus') || '';
+    const branchId = searchParams.get('branchId') || '';
+    const country = searchParams.get('country') || '';
+    const city = searchParams.get('city') || '';
+    const lite = searchParams.get('lite') === '1';
 
-    // Build where clause
     const where: any = {};
     
     if (search) {
@@ -28,14 +31,46 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
       where.kycStatus = kycStatus.toUpperCase();
     }
 
-    // Get users with complete data including cards
-    const [users, totalCount] = await Promise.all([
-      prisma.user.findMany({
+    if (branchId) where.branchId = branchId;
+
+    if (country || city) {
+      const matchingBranches = await prisma.branch.findMany({
+        where: {
+          ...(country ? { country: { contains: country, mode: 'insensitive' } } : {}),
+          ...(city ? { city: { contains: city, mode: 'insensitive' } } : {}),
+        },
+        select: { id: true },
+      });
+      where.branchId = { in: matchingBranches.map((b) => b.id) };
+    }
+
+    const users = await prisma.user.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        select: {
+        select: lite
+          ? {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              phone: true,
+              kycStatus: true,
+              emailVerified: true,
+              createdAt: true,
+              branchId: true,
+              accounts: {
+                select: {
+                  id: true,
+                  accountNumber: true,
+                  accountType: true,
+                  balance: true,
+                  cards: { select: { id: true } },
+                },
+              },
+            }
+          : {
           id: true,
           firstName: true,
           lastName: true,
@@ -45,6 +80,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
           emailVerified: true,
           createdAt: true,
           updatedAt: true,
+          branchId: true,
           accounts: {
             select: {
               id: true,
@@ -61,7 +97,6 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
                   cardType: true,
                   status: true,
                   expiryDate: true,
-                  cvv: true,
                   isVirtual: true,
                   isActive: true,
                   dailyLimit: true,
@@ -78,15 +113,7 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
               status: true,
               documentUrl: true,
               fileName: true,
-              fileSize: true,
-              mimeType: true,
-              s3Key: true,
-              rejectionReason: true,
-              verifiedAt: true,
-              verifiedBy: true,
-              notes: true,
               createdAt: true,
-              updatedAt: true
             }
           },
           fixedDeposits: {
@@ -101,13 +128,23 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
             }
           }
         }
-      }),
-      prisma.user.count({ where })
-    ]);
+      });
+    const totalCount = await prisma.user.count({ where });
 
-    // Get transactions separately
+    const branchIds = [...new Set(users.map((u) => u.branchId).filter(Boolean))] as string[];
+    const branches = branchIds.length
+      ? await prisma.branch.findMany({
+          where: { id: { in: branchIds } },
+          select: { id: true, name: true, country: true, city: true },
+        })
+      : [];
+    const branchMap = new Map(branches.map((b) => [b.id, b]));
+
+    // Get transactions separately (skip for lite dashboard list)
     const userIds = users.map(user => user.id);
-    const transactions = await prisma.transaction.findMany({
+    const transactions = lite
+      ? []
+      : await prisma.transaction.findMany({
       where: { userId: { in: userIds } },
       select: {
         id: true,
@@ -138,15 +175,16 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
         kycStatus: user.kycStatus,
         emailVerified: user.emailVerified,
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        updatedAt: 'updatedAt' in user ? user.updatedAt : user.createdAt,
+        branch: user.branchId ? branchMap.get(user.branchId) || null : null,
         accounts: user.accounts.map(account => ({
           ...account,
           cards: account.cards,
-          transactions: userTransactions.filter(tx => tx.userId === user.id)
+          ...(lite ? {} : { transactions: userTransactions.filter(tx => tx.userId === user.id) }),
         })),
-        kycDocuments: user.kycDocuments,
-        fixedDeposits: user.fixedDeposits,
-        recentTransactions: userTransactions.slice(0, 5),
+        kycDocuments: lite ? [] : ('kycDocuments' in user ? user.kycDocuments : []),
+        fixedDeposits: lite ? [] : ('fixedDeposits' in user ? user.fixedDeposits : []),
+        recentTransactions: lite ? [] : userTransactions.slice(0, 5),
         totalBalance,
         totalCards,
         totalTransactions

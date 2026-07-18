@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email';
+import { generateAccountNumber } from '@/lib/account-number';
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create default savings account
-    const accountNumber = `050611${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+    const accountNumber = generateAccountNumber();
     const account = await prisma.account.create({
       data: {
         userId: user.id,

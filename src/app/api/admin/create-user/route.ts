@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { generateCardNumber, generateCVV, maskCardNumber } from '@/lib/cardUtils';
+import { generateAccountNumber } from '@/lib/account-number';
+import { requireSuperAdmin, blockDemoInProduction } from '@/lib/admin-auth';
 
-export const POST = async (request: NextRequest) => {
+export const POST = requireSuperAdmin(async (request: NextRequest) => {
+  const blocked = blockDemoInProduction();
+  if (blocked) return blocked;
   try {
     const { 
       email, 
@@ -55,7 +59,7 @@ export const POST = async (request: NextRequest) => {
     const account = await prisma.account.create({
       data: {
         userId: user.id,
-        accountNumber: `GB${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+        accountNumber: generateAccountNumber(),
         accountType: 'CHECKING',
         balance: balance,
         currency: 'USD',
@@ -149,4 +153,4 @@ export const POST = async (request: NextRequest) => {
       { status: 500 }
     );
   }
-}; 
+}); 

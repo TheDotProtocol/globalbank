@@ -1,34 +1,11 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
-import Logo from '@/components/Logo';
+import LegalPageLayout from '@/components/layout/LegalPageLayout';
 
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-3">
-              <Logo variant="icon" className="h-8 w-8" />
-              <span className="text-xl font-bold text-gray-900">Global Dot Bank</span>
-            </div>
-            <button 
-              onClick={() => window.history.back()}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back</span>
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-2xl shadow-sm p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Privacy Policy</h1>
+    <LegalPageLayout title="Privacy Policy" subtitle="How Global Dot Bank protects and handles your personal data">
+      <h1 className="section-title" style={{ fontSize: '2rem', marginBottom: '2rem' }}>Privacy Policy</h1>
           
           <div className="prose prose-lg max-w-none">
             <p className="text-gray-600 mb-6">
@@ -177,8 +154,6 @@ export default function PrivacyPolicy() {
               </div>
             </section>
           </div>
-        </div>
-      </div>
-    </div>
+    </LegalPageLayout>
   );
 } 

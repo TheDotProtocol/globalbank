@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
-import { uploadFileToS3 } from '@/lib/s3';
+import { uploadFileToStorage } from '@/lib/storage';
 
 export const POST = requireAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
   try {
@@ -65,18 +65,18 @@ export const POST = requireAuth(async (request: NextRequest, { params }: { param
     const buffer = await signatureFile.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);
     
-    const s3Result = await uploadFileToS3(
+    const storageResult = await uploadFileToStorage(
       fileBuffer, 
-      `echeck-signatures/${checkId}/${signatureFile.name}`, 
+      signatureFile.name, 
       user.id, 
-      'SIGNATURE'
+      'SIGNATURE',
+      'echeck'
     );
 
-    // Update check with signature URL
     const updatedCheck = await prisma.eCheck.update({
       where: { id: checkId },
       data: {
-        signatureUrl: s3Result.url,
+        signatureUrl: storageResult.url,
         status: 'SIGNED',
         updatedAt: new Date()
       }

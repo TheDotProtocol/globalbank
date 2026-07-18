@@ -260,7 +260,7 @@ export const bankData = {
       { platform: "Twitter", link: "#", icon: "twitter" },
       { platform: "Press", link: "#", icon: "newspaper" }
     ],
-    copyright: "Global Dot Bank © 2025 — Licensed and Regulated."
+    copyright: "Global Dot Bank © 2026 — Licensed and Regulated."
   }
 };
 

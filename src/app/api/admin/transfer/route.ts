@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
-export async function POST(request: NextRequest) {
+export const POST = requireAdminAuth(async (request: NextRequest) => {
   try {
     const { fromAccountNumber, toAccountNumber, amount, description } = await request.json();
 
@@ -104,4 +105,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}); 

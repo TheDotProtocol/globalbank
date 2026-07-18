@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
-import { uploadFileToS3 } from '@/lib/s3';
+import { uploadFileToStorage } from '@/lib/storage';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
@@ -106,7 +106,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
 
     console.log('✅ File validation passed, processing files...');
 
-    // Process files with S3 upload and Base64 fallback
+    // Process files with Storage upload and Base64 fallback
     const documents = await Promise.all([
       processDocument(governmentId, user.id, 'ID_PROOF'),
       processDocument(proofOfAddress, user.id, 'ADDRESS_PROOF'),
@@ -193,7 +193,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
       success: true,
       message: 'KYC documents submitted successfully',
       documentsCount: documents.length,
-      storageMethod: 'S3 with Base64 fallback'
+      storageMethod: 'Supabase Storage with Base64 fallback'
     });
 
   } catch (error: any) {
@@ -209,19 +209,19 @@ export const POST = requireAuth(async (request: NextRequest) => {
   }
 });
 
-// Helper function to process document with S3 upload and Base64 fallback
+// Helper function to process document with Storage upload and Base64 fallback
 async function processDocument(file: File, userId: string, documentType: string) {
   try {
-    console.log(`📤 Attempting S3 upload for ${documentType}...`);
+    console.log(`📤 Attempting Storage upload for ${documentType}...`);
     
-    // Convert file to buffer for S3 upload
+    // Convert file to buffer for Storage upload
     const buffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);
     
-    // Try S3 upload first
-    const s3Result = await uploadFileToS3(fileBuffer, file.name, userId, documentType);
+    // Try Storage upload first
+    const s3Result = await uploadFileToStorage(fileBuffer, file.name, userId, documentType, 'kyc');
     
-    console.log(`✅ S3 upload successful for ${documentType}:`, s3Result.key);
+    console.log(`✅ Storage upload successful for ${documentType}:`, s3Result.key);
     
     return {
       documentType,
@@ -230,11 +230,11 @@ async function processDocument(file: File, userId: string, documentType: string)
       fileName: file.name,
       fileSize: file.size,
       mimeType: file.type,
-      storageMethod: 'S3'
+      storageMethod: 'Supabase'
     };
     
   } catch (s3Error) {
-    console.warn(`⚠️ S3 upload failed for ${documentType}, falling back to Base64:`, s3Error);
+    console.warn(`⚠️ Storage upload failed for ${documentType}, falling back to Base64:`, s3Error);
     
     // Fallback to Base64
     try {

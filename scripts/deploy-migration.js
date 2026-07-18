@@ -1,18 +1,22 @@
 const { PrismaClient } = require('@prisma/client');
 const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-
-const prisma = new PrismaClient();
 
 async function runDeploymentMigration() {
+  let prisma;
+
   try {
     console.log('🚀 Starting deployment migration...');
-    
-    // Check if we're in production
-    const isProduction = process.env.NODE_ENV === 'production';
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    
+
+    if (!process.env.DATABASE_URL) {
+      console.warn('⚠️ DATABASE_URL is not set — skipping database migration.');
+      console.warn('   Add DATABASE_URL in Vercel → Project → Settings → Environment Variables (Production + Preview).');
+      console.warn('   Build will continue; the app requires DATABASE_URL at runtime.');
+      return;
+    }
+
+    prisma = new PrismaClient();
+
     // Generate Prisma client first
     console.log('🔧 Generating Prisma client...');
     execSync('npx prisma generate', { stdio: 'inherit' });
@@ -247,7 +251,7 @@ async function runDeploymentMigration() {
     console.error('Stack trace:', error.stack);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    if (prisma) await prisma.$disconnect();
   }
 }
 

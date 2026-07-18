@@ -8,10 +8,10 @@ export const GET = requireAuth(async (request: NextRequest) => {
     // Create a simple certificate object
     const certificate = {
       certificateNumber: 'FD-TEST123-456789',
-      customerName: 'Baby Tau',
+      customerName: 'Easaan Arun Kumar',
       customerEmail: 'babyaccount@globaldotbank.org',
       customerAddress: 'Address not provided',
-      accountNumber: '0506118609',
+      accountNumber: '1703098609',
       accountType: 'SAVINGS',
       depositAmount: 100000,
       interestRate: 5.5,

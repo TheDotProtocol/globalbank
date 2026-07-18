@@ -61,8 +61,7 @@ export async function POST(request: NextRequest) {
       where: { id: userId },
       data: {
         kycStatus: 'PENDING',
-        // Add Sumsub applicant ID to user record
-        // You might want to add a sumsubApplicantId field to your schema
+        sumsubApplicantId: applicant.id,
       }
     });
 

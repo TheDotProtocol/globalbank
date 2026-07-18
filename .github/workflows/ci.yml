@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npx prisma validate
+
+      - run: npm run lint -- --max-warnings 0 || true
+
+      - run: npm run build
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/test
+          JWT_SECRET: ci-test-secret-key-min-32-chars-long
+          SKIP_ENV_VALIDATION: 'true'
+
+  auth-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: node scripts/test-admin-auth.js

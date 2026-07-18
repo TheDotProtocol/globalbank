@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  User, Shield, Lock, Eye, EyeOff, CheckCircle, XCircle,
-  AlertCircle, Settings, CreditCard, FileText, Bell, Save,
-  Sun, Moon, ArrowLeft, Mail, Phone
+  User, Shield, Lock, CheckCircle, XCircle,
+  AlertCircle, FileText, Save,
+  Mail, Phone
 } from 'lucide-react';
-import Image from "next/image";
+import DashboardPageShell from '@/components/layout/DashboardPageShell';
 import KYCUploadForm from '@/components/KYCUploadForm';
 import KYCDocumentsDisplay from '@/components/KYCDocumentsDisplay';
 
@@ -29,11 +29,10 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState('profile');
+  const [profileTab, setProfileTab] = useState('profile');
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const [profileForm, setProfileForm] = useState({
@@ -196,112 +195,51 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className={darkMode ? "dark" : ""}>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-300">Loading profile...</p>
+      <DashboardPageShell activeTab="profile" title="Profile Settings" subtitle="Loading...">
+        <div className="dashboard-card">
+          <div className="dashboard-loading-wrap">
+            <div className="dashboard-spinner" />
+            <p>Loading profile...</p>
           </div>
         </div>
-      </div>
+      </DashboardPageShell>
     );
   }
 
   return (
-    <div className={darkMode ? "dark" : ""}>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-gray-900 dark:text-white transition-all duration-500 relative overflow-hidden">
-        {/* Background Elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-300 to-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-96 h-96 bg-gradient-to-r from-purple-300 to-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-1000"></div>
-          <div className="absolute -bottom-20 left-1/4 w-96 h-96 bg-gradient-to-r from-indigo-300 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-8 animate-pulse delay-2000"></div>
+    <DashboardPageShell
+      activeTab="profile"
+      title="Profile Settings"
+      subtitle="Manage your account information and security settings"
+    >
+      {message && (
+        <div className={`dashboard-alert ${
+          message.type === 'success' ? 'dashboard-alert-success' : 'dashboard-alert-error'
+        }`}>
+          {message.text}
         </div>
+      )}
 
-        {/* Navigation */}
-        <nav className="relative z-50 bg-white/90 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 relative bg-white rounded-lg p-1 shadow-sm">
-                  <Image
-                    src="/logo.png"
-                    alt="Global Dot Bank Logo"
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-                  Global Dot Bank
-                </span>
-              </div>
-              <div className="flex items-center space-x-4">
-                <button 
-                  onClick={() => window.location.href = '/dashboard'}
-                  className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span>Back to Dashboard</span>
-                </button>
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  aria-label="Toggle Dark Mode"
-                >
-                  {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
+      <div className="dashboard-tabs">
+        {[
+          { id: 'profile', label: 'Profile', icon: User },
+          { id: 'security', label: 'Security', icon: Shield },
+          { id: 'kyc', label: 'KYC Verification', icon: FileText }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setProfileTab(tab.id)}
+            className={`dashboard-tab ${profileTab === tab.id ? 'active' : ''}`}
+          >
+            <tab.icon className="h-4 w-4" />
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
 
-        {/* Main Content */}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Profile Settings
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Manage your account information and security settings
-            </p>
-          </div>
-
-          {/* Message Display */}
-          {message && (
-            <div className={`mb-6 p-4 rounded-lg ${
-              message.type === 'success' 
-                ? 'bg-green-100 dark:bg-green-900/20 border border-green-400 dark:border-green-600 text-green-700 dark:text-green-300'
-                : 'bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300'
-            }`}>
-              {message.text}
-            </div>
-          )}
-
-          {/* Tab Navigation */}
-          <div className="flex space-x-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-1 mb-8 border border-gray-200/50 dark:border-gray-700/50">
-            {[
-              { id: 'profile', label: 'Profile', icon: User },
-              { id: 'security', label: 'Security', icon: Shield },
-              { id: 'kyc', label: 'KYC Verification', icon: FileText }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <tab.icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Content */}
-          <div className="bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-200/50 dark:border-gray-700/50">
-            {activeTab === 'profile' && (
+      <div className="dashboard-card">
+            {profileTab === 'profile' && (
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Personal Information</h2>
                 <form onSubmit={handleProfileUpdate} className="space-y-6">
@@ -460,7 +398,7 @@ export default function ProfilePage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+                    className="btn-primary dashboard-form-submit"
                   >
                     {saving ? (
                       <>
@@ -478,7 +416,7 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {activeTab === 'security' && (
+            {profileTab === 'security' && (
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Security Settings</h2>
                 <form onSubmit={handlePasswordChange} className="space-y-6">
@@ -542,7 +480,7 @@ export default function ProfilePage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+                    className="btn-primary dashboard-form-submit"
                   >
                     {saving ? (
                       <>
@@ -560,7 +498,7 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {activeTab === 'kyc' && (
+            {profileTab === 'kyc' && (
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">KYC Verification</h2>
                 <div className="mb-6">
@@ -603,8 +541,6 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </div>
+    </DashboardPageShell>
   );
 } 

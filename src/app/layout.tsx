@@ -74,7 +74,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="google" content="notranslate" />
       </head>
-      <body className={`${inter.className} h-full bg-gray-50`}>
+      <body className={`${inter.className} h-full`}>
         <ToastProvider>
           {children}
         </ToastProvider>

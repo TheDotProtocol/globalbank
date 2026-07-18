@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdminAuth } from '@/lib/admin-auth';
 
-export async function GET(request: NextRequest) {
+export const GET = requireAdminAuth(async (request: NextRequest) => {
   try {
-    // Get all KYC documents with user information
     const documents = await prisma.kycDocument.findMany({
       include: {
         user: {
@@ -13,25 +13,17 @@ export async function GET(request: NextRequest) {
             lastName: true,
             email: true,
             phone: true,
-            kycStatus: true
+            kycStatus: true,
+            branch: { select: { name: true, country: true, city: true } },
           }
         }
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { createdAt: 'desc' }
     });
 
-    return NextResponse.json({
-      success: true,
-      documents
-    });
-
+    return NextResponse.json({ success: true, documents });
   } catch (error) {
-    console.error('Failed to fetch KYC documents:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch KYC documents' },
-      { status: 500 }
-    );
+    console.error('KYC documents error:', error);
+    return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 });
   }
-} 
+});

@@ -7,12 +7,10 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
     console.log('🔍 Fetching admin dashboard statistics...');
 
     // Fetch basic statistics first
-    const [totalUsers, totalAccounts, totalTransactions, totalCards] = await Promise.all([
-      prisma.user.count(),
-      prisma.account.count(),
-      prisma.transaction.count(),
-      prisma.card.count()
-    ]);
+    const totalUsers = await prisma.user.count();
+    const totalAccounts = await prisma.account.count();
+    const totalTransactions = await prisma.transaction.count();
+    const totalCards = await prisma.card.count();
 
     console.log('✅ Basic stats fetched:', { totalUsers, totalAccounts, totalTransactions, totalCards });
 
@@ -38,9 +36,10 @@ export const GET = requireAdminAuth(async (request: NextRequest) => {
     }
 
     try {
-      pendingKYC = await prisma.kycDocument.count({
-        where: { status: 'PENDING' }
-      });
+      const pendingResult = await prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(*)::bigint AS count FROM users WHERE "kycStatus"::text = 'PENDING'
+      `;
+      pendingKYC = Number(pendingResult[0]?.count ?? 0);
       console.log('✅ Pending KYC count:', pendingKYC);
     } catch (error) {
       console.warn('⚠️ Pending KYC count failed:', error);

@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CheckCircle, XCircle, Mail, ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import MarketingLayout from '@/components/layout/MarketingLayout';
 
 function VerifyEmailContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'pending'>('pending');
@@ -25,13 +26,11 @@ function VerifyEmailContent() {
   const verifyEmail = async (verificationToken: string) => {
     try {
       setStatus('loading');
-      
+
       const response = await fetch('/api/auth/verify-email', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ token: verificationToken })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: verificationToken }),
       });
 
       const data = await response.json();
@@ -39,14 +38,9 @@ function VerifyEmailContent() {
       if (response.ok) {
         setStatus('success');
         setMessage('Email verified successfully! Redirecting to dashboard...');
-        
-        // Store token and redirect
         localStorage.setItem('token', data.token);
         showToast('Email verified successfully!', 'success');
-        
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 2000);
+        setTimeout(() => router.push('/dashboard'), 2000);
       } else {
         setStatus('error');
         setMessage(data.error || 'Verification failed');
@@ -61,20 +55,17 @@ function VerifyEmailContent() {
   const resendVerification = async () => {
     try {
       setStatus('loading');
-      
-      // Get email from localStorage or prompt user
       const email = localStorage.getItem('pendingEmail');
       if (!email) {
         setMessage('Please enter your email address to resend verification');
+        setStatus('error');
         return;
       }
 
       const response = await fetch('/api/auth/verify-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
@@ -94,95 +85,86 @@ function VerifyEmailContent() {
     }
   };
 
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-          <div className="text-center">
-            <LoadingSpinner />
-            <h2 className="mt-4 text-xl font-semibold text-gray-900">Verifying Email...</h2>
-            <p className="mt-2 text-gray-600">Please wait while we verify your email address.</p>
-          </div>
+  const renderContent = () => {
+    if (status === 'loading') {
+      return (
+        <div className="auth-card" style={{ textAlign: 'center' }}>
+          <LoadingSpinner />
+          <h2 className="auth-card-title" style={{ fontSize: '1.5rem', marginTop: '1rem' }}>Verifying Email...</h2>
+          <p className="auth-card-subtitle">Please wait while we verify your email address.</p>
         </div>
+      );
+    }
+
+    return (
+      <div className="auth-card" style={{ textAlign: 'center' }}>
+        {status === 'success' && (
+          <>
+            <CheckCircle size={64} style={{ color: '#059669', margin: '0 auto' }} />
+            <h2 className="auth-card-title" style={{ fontSize: '1.5rem', marginTop: '1rem' }}>Email Verified!</h2>
+            <p className="auth-card-subtitle">{message}</p>
+          </>
+        )}
+
+        {status === 'error' && (
+          <>
+            <XCircle size={64} style={{ color: '#dc2626', margin: '0 auto' }} />
+            <h2 className="auth-card-title" style={{ fontSize: '1.5rem', marginTop: '1rem' }}>Verification Failed</h2>
+            <p className="auth-card-subtitle">{message}</p>
+            <button type="button" onClick={resendVerification} className="btn-primary auth-submit-btn" style={{ marginTop: '1rem' }}>
+              <Mail size={16} />
+              Resend Verification Email
+            </button>
+          </>
+        )}
+
+        {status === 'pending' && !token && (
+          <>
+            <Mail size={64} style={{ margin: '0 auto', opacity: 0.8 }} />
+            <h2 className="auth-card-title" style={{ fontSize: '1.5rem', marginTop: '1rem' }}>Check Your Email</h2>
+            <p className="auth-card-subtitle">
+              We&apos;ve sent a verification email to your inbox. Please click the verification link to continue.
+            </p>
+            <button type="button" onClick={resendVerification} className="btn-primary auth-submit-btn" style={{ marginTop: '1rem' }}>
+              <Mail size={16} />
+              Resend Verification Email
+            </button>
+          </>
+        )}
+
+        <button
+          type="button"
+          onClick={() => router.push('/login')}
+          className="auth-link"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', marginTop: '1.5rem', background: 'none', border: 'none', cursor: 'pointer' }}
+        >
+          Back to Login
+          <ArrowRight size={16} />
+        </button>
       </div>
     );
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <div className="text-center">
-          {status === 'success' && (
-            <div className="mb-6">
-              <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
-              <h2 className="mt-4 text-xl font-semibold text-gray-900">Email Verified!</h2>
-              <p className="mt-2 text-gray-600">{message}</p>
-            </div>
-          )}
-
-          {status === 'error' && (
-            <div className="mb-6">
-              <XCircle className="mx-auto h-16 w-16 text-red-500" />
-              <h2 className="mt-4 text-xl font-semibold text-gray-900">Verification Failed</h2>
-              <p className="mt-2 text-gray-600">{message}</p>
-              
-              <button
-                onClick={resendVerification}
-                className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Resend Verification Email
-              </button>
-            </div>
-          )}
-
-          {status === 'pending' && !token && (
-            <div className="mb-6">
-              <Mail className="mx-auto h-16 w-16 text-blue-500" />
-              <h2 className="mt-4 text-xl font-semibold text-gray-900">Check Your Email</h2>
-              <p className="mt-2 text-gray-600">
-                We've sent a verification email to your inbox. Please click the verification link to continue.
-              </p>
-              
-              <button
-                onClick={resendVerification}
-                className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Resend Verification Email
-              </button>
-            </div>
-          )}
-
-          <div className="mt-6">
-            <button
-              onClick={() => router.push('/login')}
-              className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-            >
-              Back to Login
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <MarketingLayout variant="auth" showFooter={false}>
+      {renderContent()}
+    </MarketingLayout>
   );
 }
 
 export default function VerifyEmail() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-          <div className="text-center">
+    <Suspense
+      fallback={
+        <MarketingLayout variant="auth" showFooter={false}>
+          <div className="auth-card" style={{ textAlign: 'center' }}>
             <LoadingSpinner />
-            <h2 className="mt-4 text-xl font-semibold text-gray-900">Loading...</h2>
-            <p className="mt-2 text-gray-600">Please wait while we load the verification page.</p>
+            <h2 className="auth-card-title" style={{ fontSize: '1.5rem', marginTop: '1rem' }}>Loading...</h2>
           </div>
-        </div>
-      </div>
-    }>
+        </MarketingLayout>
+      }
+    >
       <VerifyEmailContent />
     </Suspense>
   );
-} 
+}

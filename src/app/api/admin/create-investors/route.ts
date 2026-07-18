@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { generateAccountNumber } from '@/lib/account-number';
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -26,7 +27,7 @@ export const POST = async (request: NextRequest) => {
     const account1 = await prisma.account.create({
       data: {
         userId: user1.id,
-        accountNumber: `GB${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+        accountNumber: generateAccountNumber(),
         accountType: 'CHECKING',
         balance: 150001,
         currency: 'USD',
@@ -82,7 +83,7 @@ export const POST = async (request: NextRequest) => {
     const account2 = await prisma.account.create({
       data: {
         userId: user2.id,
-        accountNumber: `GB${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+        accountNumber: generateAccountNumber(),
         accountType: 'CHECKING',
         balance: 300000,
         currency: 'USD',

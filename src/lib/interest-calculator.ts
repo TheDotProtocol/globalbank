@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { generateUTR } from '@/lib/reference-generator';
 
 export interface InterestRate {
   accountType: string;
@@ -172,6 +173,7 @@ export class InterestCalculator {
         });
 
         // Create interest transaction with minimal required fields
+        const utr = generateUTR();
         await tx.transaction.create({
           data: {
             id: `int-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -181,6 +183,7 @@ export class InterestCalculator {
             amount: interestAmount,
             description: 'Monthly Interest Payment',
             reference: `INT-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            utr,
             status: 'COMPLETED'
           }
         });

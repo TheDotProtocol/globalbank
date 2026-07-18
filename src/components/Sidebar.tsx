@@ -1,6 +1,5 @@
 "use client";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { 
   Home, 
@@ -19,6 +18,7 @@ interface SidebarProps {
   activeTab?: string;
   setActiveTab?: (tab: string) => void;
   isMobile?: boolean;
+  theme?: 'light' | 'dark';
 }
 
 export default function Sidebar({ 
@@ -26,116 +26,50 @@ export default function Sidebar({
   setSidebarOpen, 
   activeTab = 'overview',
   setActiveTab,
-  isMobile = false 
+  isMobile = false,
+  theme = 'light',
 }: SidebarProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const navigationItems = [
-    {
-      id: 'overview',
-      label: 'Overview',
-      icon: Home,
-      onClick: () => {
-        if (setActiveTab) {
-          setActiveTab('overview');
-        } else {
-          router.push('/dashboard');
-        }
-        if (isMobile) setSidebarOpen(false);
-      }
-    },
-    {
-      id: 'profile',
-      label: 'Profile',
-      icon: User,
-      onClick: () => {
-        router.push('/profile');
-        if (isMobile) setSidebarOpen(false);
-      }
-    },
-    {
-      id: 'cards',
-      label: 'Cards',
-      icon: CreditCard,
-      onClick: () => {
-        router.push('/dashboard/cards');
-        if (isMobile) setSidebarOpen(false);
-      }
-    },
-    {
-      id: 'transactions',
-      label: 'Transactions',
-      icon: FileText,
-      onClick: () => {
-        router.push('/dashboard/transactions');
-        if (isMobile) setSidebarOpen(false);
-      }
-    },
-    {
-      id: 'fixed-deposits',
-      label: 'Fixed Deposits',
-      icon: TrendingUp,
-      onClick: () => {
-        router.push('/dashboard/fixed-deposits');
-        if (isMobile) setSidebarOpen(false);
-      }
-    },
-    {
-      id: 'e-checks',
-      label: 'E-Checks',
-      icon: FileText,
-      onClick: () => {
-        router.push('/dashboard/e-checks');
-        if (isMobile) setSidebarOpen(false);
-      }
-    },
-    {
-      id: 'kyc',
-      label: 'KYC Verification',
-      icon: UserCheck,
-      onClick: () => {
-        router.push('/kyc/verification');
-        if (isMobile) setSidebarOpen(false);
-      }
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: Settings,
-      onClick: () => {
-        router.push('/dashboard/settings');
-        if (isMobile) setSidebarOpen(false);
-      }
-    }
+    { id: 'overview', label: 'Overview', icon: Home, href: '/dashboard' },
+    { id: 'profile', label: 'Profile', icon: User, href: '/profile' },
+    { id: 'cards', label: 'Cards', icon: CreditCard, href: '/dashboard/cards' },
+    { id: 'transactions', label: 'Transactions', icon: FileText, href: '/dashboard/transactions' },
+    { id: 'fixed-deposits', label: 'Fixed Deposits', icon: TrendingUp, href: '/dashboard/fixed-deposits' },
+    { id: 'e-checks', label: 'E-Checks', icon: FileText, href: '/dashboard/e-checks' },
+    { id: 'kyc', label: 'KYC Verification', icon: UserCheck, href: '/kyc/verification' },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
   ];
 
-  const getActiveState = (itemId: string) => {
-    if (itemId === 'overview' && activeTab === 'overview') return true;
-    if (itemId === 'fixed-deposits' && activeTab === 'fixed-deposits') return true;
-    if (itemId === 'e-checks' && activeTab === 'e-checks') return true;
-    if (itemId === 'transactions' && window.location.pathname.includes('/transactions')) return true;
-    if (itemId === 'cards' && window.location.pathname.includes('/cards')) return true;
-    if (itemId === 'profile' && window.location.pathname.includes('/profile')) return true;
-    if (itemId === 'kyc' && window.location.pathname.includes('/kyc')) return true;
-    if (itemId === 'settings' && window.location.pathname.includes('/settings')) return true;
-    return false;
+  const getActiveState = (itemId: string, href: string) => {
+    if (itemId === 'overview') {
+      return pathname === '/dashboard' && activeTab === 'overview';
+    }
+    return pathname.startsWith(href);
+  };
+
+  const handleNav = (item: typeof navigationItems[0]) => {
+    if (item.id === 'overview' && setActiveTab) {
+      setActiveTab('overview');
+    }
+    router.push(item.href);
+    if (isMobile) setSidebarOpen(false);
   };
 
   const sidebarContent = (
-    <nav className="p-4 space-y-2">
+    <nav className="dashboard-sidebar-nav">
       {navigationItems.map((item) => {
-        const isActive = getActiveState(item.id);
+        const isActive = getActiveState(item.id, item.href);
         return (
           <button
             key={item.id}
-            onClick={item.onClick}
-            className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-              isActive 
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' 
-                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
+            type="button"
+            onClick={() => handleNav(item)}
+            className={`dashboard-sidebar-link ${isActive ? 'active' : ''}`}
           >
-            <item.icon className="h-5 w-5" />
+            <item.icon size={18} />
             <span>{item.label}</span>
           </button>
         );
@@ -147,18 +81,13 @@ export default function Sidebar({
     return (
       <>
         {sidebarOpen && (
-          <div className="fixed inset-0 z-40 lg:hidden">
-            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
-            <div className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out">
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center space-x-3">
-                  <div className="h-8 w-8 relative bg-white rounded-lg p-1 shadow-sm">
-                    <Image src="/logo.png" alt="Logo" width={32} height={32} className="object-contain" />
-                  </div>
-                  <span className="text-lg font-bold">Menu</span>
-                </div>
-                <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-                  <X className="h-5 w-5" />
+          <div className="dashboard-mobile-overlay">
+            <div className="dashboard-mobile-backdrop" onClick={() => setSidebarOpen(false)} />
+            <div className={`dashboard-mobile-sidebar ${theme}`}>
+              <div className="dashboard-mobile-sidebar-header">
+                <Image src="/logo.png" alt="Logo" width={120} height={30} style={{ height: '30px', width: 'auto' }} />
+                <button type="button" onClick={() => setSidebarOpen(false)} className="dashboard-icon-btn">
+                  <X size={20} />
                 </button>
               </div>
               {sidebarContent}
@@ -170,8 +99,8 @@ export default function Sidebar({
   }
 
   return (
-    <div className="hidden lg:block fixed left-0 top-16 h-full w-64 bg-white dark:bg-gray-800 shadow-xl border-r border-gray-200 dark:border-gray-700">
+    <aside className={`dashboard-sidebar ${theme}`}>
       {sidebarContent}
-    </div>
+    </aside>
   );
-} 
+}

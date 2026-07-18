@@ -29,6 +29,7 @@
     "@radix-ui/react-toast": "^1.2.14",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.4.0",
+    "@supabase/supabase-js": "^2.110.7",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^6.4.17",

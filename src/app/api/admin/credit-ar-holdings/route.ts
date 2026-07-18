@@ -8,25 +8,25 @@ export const POST = requireAuth(async (request: NextRequest) => {
     
     const user = (request as any).user;
     
-    // Check if user is admin or has account 0506115866
+    // Check if user is admin or has account 1703095866
     const userAccount = await prisma.account.findFirst({
       where: {
         userId: user.id,
-        accountNumber: '0506115866'
+        accountNumber: '1703095866'
       }
     });
 
     if (user.role !== 'ADMIN' && !userAccount) {
       return NextResponse.json(
-        { error: 'Unauthorized - Admin access or account 0506115866 required' },
+        { error: 'Unauthorized - Admin access or account 1703095866 required' },
         { status: 403 }
       );
     }
 
-    // First, check current balance of account 0506115866
+    // First, check current balance of account 1703095866
     const account = await prisma.account.findFirst({
       where: {
-        accountNumber: '0506115866'
+        accountNumber: '1703095866'
       },
       include: {
         user: true
@@ -35,7 +35,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
 
     if (!account) {
       return NextResponse.json(
-        { error: 'Account 0506115866 not found' },
+        { error: 'Account 1703095866 not found' },
         { status: 404 }
       );
     }

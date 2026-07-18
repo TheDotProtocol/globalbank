@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Login successful',
         sessionToken: result.sessionToken,
-        admin: AdminAuth.getAdminInfo()
+        role: result.role,
+        admin: AdminAuth.getAdminInfo(result.sessionToken)
       });
     } else {
       return NextResponse.json(

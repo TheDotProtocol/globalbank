@@ -106,10 +106,10 @@ export const GET = requireAuth(async (request: NextRequest) => {
       steps.push(`Step ${currentStep}: Creating certificate object`);
       const certificate = {
         certificateNumber: `FD-${fixedDepositId.slice(-8).toUpperCase()}-${Date.now().toString().slice(-6)}`,
-        customerName: `Baby Tau`,
+        customerName: `Easaan Arun Kumar`,
         customerEmail: `babyaccount@globaldotbank.org`,
         customerAddress: "Address not provided",
-        accountNumber: "0506118609",
+        accountNumber: "1703098609",
         accountType: "SAVINGS",
         depositAmount: 100000,
         interestRate: 5.5,
@@ -156,7 +156,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
         steps,
         certificate: {
           certificateNumber: `FD-${fixedDepositId.slice(-8).toUpperCase()}-${Date.now().toString().slice(-6)}`,
-          customerName: 'Baby Tau',
+          customerName: 'Easaan Arun Kumar',
           depositAmount: 100000,
           interestRate: 5.5
         }

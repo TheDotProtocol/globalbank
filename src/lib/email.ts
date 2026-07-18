@@ -729,7 +729,7 @@ function generateApprovalEmail({ firstName, lastName, documentType, adminNotes }
         </div>
         <div class="footer">
           <p>This is an automated message. Please do not reply to this email.</p>
-          <p>© 2025 Global Dot Bank. All rights reserved.</p>
+          <p>© 2026 Global Dot Bank. All rights reserved.</p>
         </div>
       </div>
     </body>
@@ -784,7 +784,7 @@ function generateRejectionEmail({ firstName, lastName, documentType, adminNotes 
         </div>
         <div class="footer">
           <p>This is an automated message. Please do not reply to this email.</p>
-          <p>© 2025 Global Dot Bank. All rights reserved.</p>
+          <p>© 2026 Global Dot Bank. All rights reserved.</p>
         </div>
       </div>
     </body>

@@ -4,6 +4,7 @@
  */
 
 import { prisma } from './prisma';
+import { generateAccountNumber } from './account-number';
 
 export interface UserFeatures {
   // Core Banking
@@ -177,9 +178,7 @@ export class UserStandardization {
    * Generate unique account number
    */
   private static generateAccountNumber(): string {
-    const timestamp = Date.now().toString();
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    return `GB${timestamp.slice(-8)}${random}`;
+    return generateAccountNumber();
   }
   
   /**

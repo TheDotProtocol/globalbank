@@ -1,32 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireSuperAdmin, blockDemoInProduction } from '@/lib/admin-auth';
 
-export const POST = async (request: NextRequest) => {
+export const POST = requireSuperAdmin(async (request: NextRequest) => {
+  const blocked = blockDemoInProduction();
+  if (blocked) return blocked;
   try {
-    console.log('💰 Adding transaction for Baby Tau account...');
+    console.log('💰 Adding transaction for Easaan Arun Kumar account...');
     
-    // Find Baby Tau user by email
+    // Find Easaan Arun Kumar user by email
     const user = await prisma.user.findUnique({
       where: { email: 'babyaccount@globaldotbank.org' }
     });
     
     if (!user) {
       return NextResponse.json(
-        { error: 'Baby Tau user not found' },
+        { error: 'Easaan Arun Kumar user not found' },
         { status: 404 }
       );
     }
     
     console.log(`✅ Found user: ${user.firstName} ${user.lastName}`);
     
-    // Find Baby Tau's account
+    // Find Easaan Arun Kumar's account
     const account = await prisma.account.findFirst({
       where: { userId: user.id }
     });
     
     if (!account) {
       return NextResponse.json(
-        { error: 'Baby Tau account not found' },
+        { error: 'Easaan Arun Kumar account not found' },
         { status: 404 }
       );
     }
@@ -106,4 +109,4 @@ export const POST = async (request: NextRequest) => {
       { status: 500 }
     );
   }
-}; 
+}); 

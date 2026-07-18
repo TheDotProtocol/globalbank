@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
+import { generateTransferReference, generateUTR } from '@/lib/reference-generator';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
@@ -84,6 +85,10 @@ export const POST = requireAuth(async (request: NextRequest) => {
         }
       });
 
+      const transferRef = generateTransferReference();
+      const debitUtr = generateUTR();
+      const creditUtr = generateUTR();
+
       // Create debit transaction
       const debitTransaction = await tx.transaction.create({
         data: {
@@ -92,8 +97,15 @@ export const POST = requireAuth(async (request: NextRequest) => {
           type: 'DEBIT',
           amount: amount,
           description: `Transfer to ${destinationAccount.accountNumber} - ${description || 'Internal Transfer'}`,
-          reference: `TRF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          status: 'COMPLETED'
+          reference: transferRef,
+          utr: debitUtr,
+          status: 'COMPLETED',
+          transferMode: 'INTERNAL_TRANSFER',
+          sourceAccountNumber: sourceAccount.accountNumber,
+          sourceAccountHolder: `${user.firstName} ${user.lastName}`,
+          destinationAccountNumber: destinationAccount.accountNumber,
+          destinationAccountHolder: `${destinationAccount.user.firstName} ${destinationAccount.user.lastName}`,
+          netAmount: amount,
         }
       });
 
@@ -105,8 +117,15 @@ export const POST = requireAuth(async (request: NextRequest) => {
           type: 'CREDIT',
           amount: amount,
           description: `Transfer from ${sourceAccount.accountNumber} - ${description || 'Internal Transfer'}`,
-          reference: `TRF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          status: 'COMPLETED'
+          reference: transferRef,
+          utr: creditUtr,
+          status: 'COMPLETED',
+          transferMode: 'INTERNAL_TRANSFER',
+          sourceAccountNumber: sourceAccount.accountNumber,
+          sourceAccountHolder: `${user.firstName} ${user.lastName}`,
+          destinationAccountNumber: destinationAccount.accountNumber,
+          destinationAccountHolder: `${destinationAccount.user.firstName} ${destinationAccount.user.lastName}`,
+          netAmount: amount,
         }
       });
 
