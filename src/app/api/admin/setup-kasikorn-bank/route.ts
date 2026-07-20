@@ -57,7 +57,7 @@ export const POST = requireAdminAuth(async (request: NextRequest) => {
         accountHolderName: 'The Dotprotocol Co ., Ltd',
         accountNumber: '198-1-64757-9',
         swiftCode: 'KASITHBK',
-        bicCode: 'KASITHBK',
+        bicCode: 'KASITHBKXXX',
         accountType: 'CURRENT',
         currency: 'THB',
         isActive: true,

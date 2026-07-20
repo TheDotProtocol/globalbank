@@ -1,6 +1,131 @@
 const { PrismaClient } = require('@prisma/client');
 const { execSync } = require('child_process');
 
+async function applyRegulatorySchema(prisma) {
+  console.log('🏛️ Applying regulatory schema (audit, settlement, reports)...');
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id TEXT PRIMARY KEY,
+      "actorType" TEXT NOT NULL,
+      "actorId" TEXT,
+      "actorEmail" TEXT,
+      action TEXT NOT NULL,
+      "entityType" TEXT NOT NULL,
+      "entityId" TEXT,
+      "beforeState" JSONB,
+      "afterState" JSONB,
+      "ipAddress" TEXT,
+      "userAgent" TEXT,
+      metadata JSONB,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS ledger_accounts (
+      id TEXT PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      balance DECIMAL(65,30) NOT NULL DEFAULT 0,
+      "isActive" BOOLEAN NOT NULL DEFAULT true,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS settlement_records (
+      id TEXT PRIMARY KEY,
+      "transactionId" TEXT UNIQUE,
+      reference TEXT UNIQUE NOT NULL,
+      type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      amount DECIMAL(65,30) NOT NULL,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      "settledAt" TIMESTAMP(3),
+      "externalRef" TEXT,
+      metadata JSONB,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS ledger_entries (
+      id TEXT PRIMARY KEY,
+      "journalId" TEXT NOT NULL,
+      "ledgerAccountId" TEXT NOT NULL REFERENCES ledger_accounts(id),
+      debit DECIMAL(65,30) NOT NULL DEFAULT 0,
+      credit DECIMAL(65,30) NOT NULL DEFAULT 0,
+      currency TEXT NOT NULL DEFAULT 'USD',
+      description TEXT NOT NULL,
+      "transactionId" TEXT,
+      "settlementId" TEXT REFERENCES settlement_records(id),
+      "createdBy" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS regulatory_reports (
+      id TEXT PRIMARY KEY,
+      "reportType" TEXT NOT NULL,
+      jurisdiction TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'DRAFT',
+      reference TEXT UNIQUE NOT NULL,
+      "transactionIds" JSONB,
+      "userId" TEXT,
+      "filedBy" TEXT NOT NULL,
+      "filedAt" TIMESTAMP(3),
+      content JSONB NOT NULL,
+      notes TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS pending_manual_entries (
+      id TEXT PRIMARY KEY,
+      "createdBy" TEXT NOT NULL,
+      "approvedBy" TEXT,
+      status TEXT NOT NULL DEFAULT 'PENDING_APPROVAL',
+      "entryType" TEXT NOT NULL,
+      payload JSONB NOT NULL,
+      notes TEXT,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "approvedAt" TIMESTAMP(3),
+      "executedAt" TIMESTAMP(3)
+    );
+  `);
+
+  const accounts = [
+    { code: '1100', name: 'Settlement Suspense', type: 'ASSET' },
+    { code: '2100', name: 'Customer Deposits', type: 'LIABILITY' },
+    { code: '2200', name: 'Nostro Payable', type: 'LIABILITY' },
+    { code: '4100', name: 'Fee Income', type: 'REVENUE' },
+    { code: '5100', name: 'Operating Expenses', type: 'EXPENSE' },
+  ];
+
+  for (const acct of accounts) {
+    const existing = await prisma.ledgerAccount.findUnique({ where: { code: acct.code } }).catch(() => null);
+    if (!existing) {
+      try {
+        await prisma.ledgerAccount.create({
+          data: { code: acct.code, name: acct.name, type: acct.type, currency: 'USD' },
+        });
+      } catch (_) {
+        /* may already exist */
+      }
+    }
+  }
+
+  console.log('✅ Regulatory schema ready');
+}
+
 async function runDeploymentMigration() {
   let prisma;
 
@@ -227,6 +352,13 @@ async function runDeploymentMigration() {
       }
       
       console.log('✅ Comprehensive schema fixes applied successfully');
+
+      await applyRegulatorySchema(prisma);
+    }
+    
+    // Ensure regulatory tables exist even when migrations succeed
+    if (prisma) {
+      await applyRegulatorySchema(prisma);
     }
     
     // Test KYC documents query specifically
@@ -260,4 +392,4 @@ if (require.main === module) {
   runDeploymentMigration();
 }
 
-module.exports = { runDeploymentMigration }; 
+module.exports = { runDeploymentMigration, applyRegulatorySchema }; 

@@ -16,7 +16,7 @@ interface AddMoneyModalProps {
   onSuccess: () => void;
 }
 
-type PaymentMethod = 'card' | 'bank_transfer' | 'thai_qr';
+type PaymentMethod = 'card' | 'bank_transfer' | 'thai_qr' | 'india_upi';
 
 function CardPaymentForm({ amount, setAmount, selectedAccount, setSelectedAccount, onSuccess, onClose, accounts }: any) {
   const stripe = useStripe();
@@ -424,7 +424,7 @@ function ThaiQRPaymentForm({ amount, setAmount, selectedAccount, setSelectedAcco
 
       if (response.ok) {
         const data = await response.json();
-        if (data.status === 'completed') {
+        if (data.payment?.status === 'COMPLETED') {
           setPaymentStatus('completed');
           showToast('Payment confirmed! Money added to your account.', 'success');
           setTimeout(() => {
@@ -497,6 +497,14 @@ function ThaiQRPaymentForm({ amount, setAmount, selectedAccount, setSelectedAcco
               <li>5. Complete the transfer</li>
             </ol>
           </div>
+
+          {transferDetails.demoMode && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-xs text-amber-800">
+                Demo mode: auto-completes ~2 minutes after generation until K Bank API is connected.
+              </p>
+            </div>
+          )}
 
           <div className="flex space-x-3">
             <button
@@ -579,6 +587,189 @@ function ThaiQRPaymentForm({ amount, setAmount, selectedAccount, setSelectedAcco
           className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? 'Generating QR...' : 'Generate Thai QR'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function IndiaUPIPaymentForm({ amount, setAmount, selectedAccount, setSelectedAccount, onSuccess, onClose, accounts }: any) {
+  const [loading, setLoading] = useState(false);
+  const [qrCode, setQrCode] = useState<string>('');
+  const [transferDetails, setTransferDetails] = useState<any>(null);
+  const { showToast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!amount || !selectedAccount) {
+      showToast('Please fill in all fields', 'error');
+      return;
+    }
+
+    const numAmount = parseFloat(amount);
+    if (numAmount <= 0) {
+      showToast('Please enter a valid amount', 'error');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        showToast('Please log in to continue', 'error');
+        return;
+      }
+
+      const response = await fetch('/api/payments/india-qr', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ amount: numAmount, accountId: selectedAccount }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create India UPI payment');
+      }
+
+      const data = await response.json();
+      setQrCode(data.qrCode);
+      setTransferDetails(data.transferDetails);
+      showToast(data.message || 'India UPI payment generated!', 'success');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to create India UPI payment', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkPaymentStatus = async () => {
+    if (!transferDetails?.reference) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/payments/india-qr/status/${transferDetails.reference}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.payment?.status === 'COMPLETED') {
+          showToast('Payment confirmed! Money added to your account.', 'success');
+          setTimeout(() => {
+            onSuccess();
+            onClose();
+          }, 2000);
+        } else if (data.payment?.demoMode && data.payment?.demoAutoCompleteInMs) {
+          showToast(`Demo: auto-completes in ~${Math.ceil(data.payment.demoAutoCompleteInMs / 60000)} min`, 'success');
+        } else {
+          showToast(data.payment?.message || 'Payment still pending', 'success');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+    }
+  };
+
+  if (qrCode && transferDetails) {
+    return (
+      <div className="space-y-4">
+        <div className="text-center">
+          <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+            <QrCode className="w-8 h-8 text-orange-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">India UPI Payment</h3>
+          <p className="text-gray-600 mb-4">
+            Scan with GPay, PhonePe, Paytm, or any UPI app. Use reference in payment note.
+          </p>
+        </div>
+
+        <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+          <div className="text-center">
+            <Image
+              src={qrCode}
+              alt="India UPI QR Code"
+              width={192}
+              height={192}
+              className="mx-auto w-48 h-48 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="font-medium text-gray-700">Bank:</span><span>{transferDetails.bankName}</span></div>
+            <div className="flex justify-between"><span className="font-medium text-gray-700">Account:</span><span>{transferDetails.accountNumber}</span></div>
+            <div className="flex justify-between"><span className="font-medium text-gray-700">IFSC:</span><span>{transferDetails.ifsc}</span></div>
+            {transferDetails.upiVpa && transferDetails.upiVpa !== 'Pending from bank' && (
+              <div className="flex justify-between"><span className="font-medium text-gray-700">UPI VPA:</span><span>{transferDetails.upiVpa}</span></div>
+            )}
+            <div className="flex justify-between"><span className="font-medium text-gray-700">Amount:</span><span>₹{transferDetails.amount}</span></div>
+            <div className="flex justify-between"><span className="font-medium text-gray-700">Reference:</span><span className="font-mono">{transferDetails.reference}</span></div>
+          </div>
+
+          {transferDetails.demoMode && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-xs text-amber-800">
+                Demo mode: auto-completes ~2 minutes after generation until India bank API is connected.
+              </p>
+            </div>
+          )}
+
+          <div className="flex space-x-3">
+            <button type="button" onClick={checkPaymentStatus} className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700">
+              Check Payment Status
+            </button>
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Select Account</label>
+        <select
+          value={selectedAccount}
+          onChange={(e) => setSelectedAccount(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+          required
+        >
+          <option value="">Choose an account</option>
+          {accounts.map((account: any) => (
+            <option key={account.id} value={account.id}>
+              {account.accountType} - {account.accountNumber} (${account.balance})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Amount (INR)</label>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="0.00"
+          min="1"
+          step="0.01"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+          required
+        />
+      </div>
+
+      <div className="flex space-x-3 pt-4">
+        <button type="button" onClick={onClose} className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+          Cancel
+        </button>
+        <button type="submit" disabled={loading} className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50">
+          {loading ? 'Generating...' : 'Generate UPI QR'}
         </button>
       </div>
     </form>
@@ -801,7 +992,7 @@ export default function AddMoneyModal({ isOpen, onClose, accounts, onSuccess }: 
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Payment Method
           </label>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setPaymentMethod('card')}
@@ -825,6 +1016,18 @@ export default function AddMoneyModal({ isOpen, onClose, accounts, onSuccess }: 
             >
               <Smartphone className="w-5 h-5" />
               <span className="text-sm font-medium">Thai QR</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('india_upi')}
+              className={`flex items-center justify-center space-x-2 p-3 border rounded-lg transition-colors ${
+                paymentMethod === 'india_upi'
+                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+            >
+              <QrCode className="w-5 h-5" />
+              <span className="text-sm font-medium">India UPI</span>
             </button>
             <button
               type="button"
@@ -856,6 +1059,16 @@ export default function AddMoneyModal({ isOpen, onClose, accounts, onSuccess }: 
           </Elements>
         ) : paymentMethod === 'thai_qr' ? (
           <ThaiQRPaymentForm
+            amount={amount}
+            setAmount={setAmount}
+            selectedAccount={selectedAccount}
+            setSelectedAccount={setSelectedAccount}
+            onSuccess={onSuccess}
+            onClose={onClose}
+            accounts={accounts}
+          />
+        ) : paymentMethod === 'india_upi' ? (
+          <IndiaUPIPaymentForm
             amount={amount}
             setAmount={setAmount}
             selectedAccount={selectedAccount}

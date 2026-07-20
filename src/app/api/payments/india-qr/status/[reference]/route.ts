@@ -20,7 +20,7 @@ export const GET = requireAuth(async (
       where: {
         reference,
         userId: user.id,
-        paymentMethod: 'THAI_QR',
+        paymentMethod: 'INDIA_UPI',
       },
       include: {
         account: {
@@ -33,7 +33,7 @@ export const GET = requireAuth(async (
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
     }
 
-    const demoResult = await tryDemoAutoCompleteInboundPayment(payment, 'TH');
+    const demoResult = await tryDemoAutoCompleteInboundPayment(payment, 'IN');
 
     if (demoResult.expired) {
       return NextResponse.json({
@@ -82,11 +82,11 @@ export const GET = requireAuth(async (
             ? 'Payment completed'
             : isDemoPaymentRail()
               ? demoResult.message || 'Payment pending — demo auto-complete in progress'
-              : 'Payment pending — awaiting K Bank confirmation',
+              : 'Payment pending — awaiting bank confirmation',
       },
     });
   } catch (error: unknown) {
-    console.error('Thai QR status error:', error);
+    console.error('India UPI status error:', error);
     return NextResponse.json({ error: 'Failed to check payment status' }, { status: 500 });
   }
 });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AdminAuth } from '@/lib/admin-auth';
+import { writeAuditLog } from '@/lib/regulatory/audit-log';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +17,15 @@ export async function POST(request: NextRequest) {
     const result = await AdminAuth.verifyCredentials(username, password);
 
     if (result.success && result.sessionToken) {
+      await writeAuditLog({
+        actorType: 'ADMIN',
+        actorId: username,
+        actorEmail: username,
+        action: 'ADMIN_LOGIN_SUCCESS',
+        entityType: 'AdminSession',
+        entityId: null,
+        request,
+      });
       return NextResponse.json({
         success: true,
         message: 'Login successful',
@@ -24,6 +34,14 @@ export async function POST(request: NextRequest) {
         admin: AdminAuth.getAdminInfo(result.sessionToken)
       });
     } else {
+      await writeAuditLog({
+        actorType: 'ADMIN',
+        actorId: username,
+        action: 'ADMIN_LOGIN_FAILED',
+        entityType: 'AdminSession',
+        entityId: null,
+        request,
+      });
       return NextResponse.json(
         { 
           success: false,

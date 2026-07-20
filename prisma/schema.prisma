@@ -422,6 +422,7 @@ enum PaymentMethod {
   CARD
   BANK_TRANSFER
   THAI_QR
+  INDIA_UPI
   WIRE_TRANSFER
   MOBILE_PAYMENT
 }
@@ -540,4 +541,177 @@ enum ComplianceAction {
   REJECT
   REPORT
   ESCALATE
+}
+
+// ─── Regulatory infrastructure (RBI / BOT readiness) ───────────────────────
+
+enum ActorType {
+  USER
+  ADMIN
+  SYSTEM
+  COMPLIANCE
+}
+
+enum LedgerAccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum SettlementType {
+  INTERNAL
+  INTERNATIONAL
+  EXTERNAL_IN
+  EXTERNAL_OUT
+  FEE
+  MANUAL
+}
+
+enum SettlementStatus {
+  PENDING
+  SETTLED
+  FAILED
+  REVERSED
+  HELD
+}
+
+enum RegulatoryReportType {
+  SAR
+  STR
+  CTR
+  AML_MONTHLY
+  SUSPICIOUS_ACTIVITY
+}
+
+enum ReportStatus {
+  DRAFT
+  PENDING_REVIEW
+  SUBMITTED
+  ACKNOWLEDGED
+  CLOSED
+}
+
+enum ManualEntryStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  EXECUTED
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  actorType   ActorType
+  actorId     String?
+  actorEmail  String?
+  action      String
+  entityType  String
+  entityId    String?
+  beforeState Json?
+  afterState  Json?
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model LedgerAccount {
+  id        String            @id @default(cuid())
+  code      String            @unique
+  name      String
+  type      LedgerAccountType
+  currency  String            @default("USD")
+  balance   Decimal           @default(0)
+  isActive  Boolean           @default(true)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  entries   LedgerEntry[]
+
+  @@map("ledger_accounts")
+}
+
+model SettlementRecord {
+  id            String           @id @default(cuid())
+  transactionId String?          @unique
+  reference     String           @unique
+  type          SettlementType
+  status        SettlementStatus @default(PENDING)
+  amount        Decimal
+  currency      String           @default("USD")
+  settledAt     DateTime?
+  externalRef   String?
+  metadata      Json?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  entries       LedgerEntry[]
+
+  @@index([status])
+  @@index([type])
+  @@map("settlement_records")
+}
+
+model LedgerEntry {
+  id              String           @id @default(cuid())
+  journalId       String
+  ledgerAccountId String
+  debit           Decimal          @default(0)
+  credit          Decimal          @default(0)
+  currency        String           @default("USD")
+  description     String
+  transactionId   String?
+  settlementId    String?
+  createdBy       String
+  createdAt       DateTime         @default(now())
+  ledgerAccount   LedgerAccount    @relation(fields: [ledgerAccountId], references: [id])
+  settlement      SettlementRecord? @relation(fields: [settlementId], references: [id])
+
+  @@index([journalId])
+  @@index([transactionId])
+  @@index([settlementId])
+  @@map("ledger_entries")
+}
+
+model RegulatoryReport {
+  id             String               @id @default(cuid())
+  reportType     RegulatoryReportType
+  jurisdiction   String
+  status         ReportStatus         @default(DRAFT)
+  reference      String               @unique
+  transactionIds Json?
+  userId         String?
+  filedBy        String
+  filedAt        DateTime?
+  content        Json
+  notes          String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([reportType])
+  @@index([jurisdiction])
+  @@index([status])
+  @@map("regulatory_reports")
+}
+
+model PendingManualEntry {
+  id          String            @id @default(cuid())
+  createdBy   String
+  approvedBy  String?
+  status      ManualEntryStatus @default(PENDING_APPROVAL)
+  entryType   String
+  payload     Json
+  notes       String?
+  createdAt   DateTime          @default(now())
+  approvedAt  DateTime?
+  executedAt  DateTime?
+
+  @@index([status])
+  @@index([createdBy])
+  @@map("pending_manual_entries")
 } 

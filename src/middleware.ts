@@ -1,40 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isProductionBlockedPath, productionBlockedResponse } from '@/lib/regulatory/production-guard';
+import { validateProductionSecrets } from '@/lib/regulatory/secrets';
 
 const locales = ['en', 'th', 'fr', 'hi', 'ta', 'zh', 'ja'];
-const defaultLocale = 'en';
 
-// Get the preferred locale from the request
-function getLocale(request: NextRequest): string {
-  // Check for locale in URL path
-  const pathname = request.nextUrl.pathname;
-  const pathnameLocale = locales.find(
-    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
-  
-  if (pathnameLocale) {
-    return pathnameLocale;
-  }
-  
-  // Check for locale in Accept-Language header
-  const acceptLanguage = request.headers.get('accept-language');
-  if (acceptLanguage) {
-    const preferredLocale = acceptLanguage
-      .split(',')
-      .map(lang => lang.split(';')[0].trim())
-      .find(lang => locales.includes(lang.split('-')[0]));
-    
-    if (preferredLocale) {
-      return preferredLocale.split('-')[0];
-    }
-  }
-  
-  return defaultLocale;
+// Warn once at cold start in production
+if (process.env.NODE_ENV === 'production') {
+  const warnings = validateProductionSecrets();
+  warnings.forEach((w) => console.warn(`[REGULATORY] ${w}`));
 }
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  
-  // Skip middleware for API routes and static files
+
+  // Block debug/test/demo routes in production
+  if (isProductionBlockedPath(pathname)) {
+    return productionBlockedResponse();
+  }
+
+  // Skip locale handling for API and static assets
   if (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
@@ -43,24 +27,18 @@ export function middleware(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
-  
-  // Check if the pathname already has a locale
+
   const pathnameHasLocale = locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
-  
+
   if (pathnameHasLocale) {
     return NextResponse.next();
   }
-  
-  // For now, just pass through and let client-side handle locale detection
-  // This prevents 404 errors since we don't have separate locale directories
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    // Skip all internal paths (_next)
-    '/((?!_next|api|static|.*\\..*).*)',
-  ],
-}; 
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+};

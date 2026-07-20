@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import speakeasy from 'speakeasy';
 import { prisma } from '@/lib/prisma';
 import { generateToken } from '@/lib/jwt';
+import { auditUserAction } from '@/lib/regulatory/audit-log';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email, password, totpCode } = await request.json();
 
-    // Validate input
     if (!email || !password) {
       return NextResponse.json(
         { error: 'Email and password are required' },
@@ -15,38 +16,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email },
-      include: {
-        accounts: true
-      }
+      include: { accounts: true },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      await auditUserAction(request, { id: user.id, email }, 'LOGIN_FAILED', 'User', user.id, {
+        reason: 'invalid_password',
+      });
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Check KYC status instead of email verification
     if (user.kycStatus === 'PENDING') {
       return NextResponse.json(
-        { 
+        {
           error: 'KYC verification required',
           requiresKYC: true,
-          message: 'Please complete your KYC verification before logging in'
+          message: 'Please complete your KYC verification before logging in',
         },
         { status: 403 }
       );
@@ -54,24 +46,46 @@ export async function POST(request: NextRequest) {
 
     if (user.kycStatus === 'REJECTED') {
       return NextResponse.json(
-        { 
+        {
           error: 'KYC verification rejected',
           kycRejected: true,
-          message: 'Your KYC verification was rejected. Please contact support.'
+          message: 'Your KYC verification was rejected. Please contact support.',
         },
         { status: 403 }
       );
     }
 
-    // Generate JWT token
+    if (user.twoFactorEnabled) {
+      if (!totpCode) {
+        return NextResponse.json(
+          { requires2FA: true, message: 'Two-factor authentication code required' },
+          { status: 403 }
+        );
+      }
+      if (!user.twoFactorSecret) {
+        return NextResponse.json({ error: '2FA misconfigured' }, { status: 500 });
+      }
+      const verified = speakeasy.totp.verify({
+        secret: user.twoFactorSecret,
+        encoding: 'base32',
+        token: totpCode,
+        window: 2,
+      });
+      if (!verified) {
+        await auditUserAction(request, { id: user.id, email }, 'LOGIN_2FA_FAILED', 'User', user.id);
+        return NextResponse.json({ error: 'Invalid 2FA code' }, { status: 401 });
+      }
+    }
+
     const token = generateToken({
       userId: user.id,
       email: user.email,
       firstName: user.firstName,
-      lastName: user.lastName
+      lastName: user.lastName,
     });
 
-    // Return user data with token (without password)
+    await auditUserAction(request, { id: user.id, email }, 'LOGIN_SUCCESS', 'User', user.id);
+
     return NextResponse.json({
       token,
       user: {
@@ -81,20 +95,18 @@ export async function POST(request: NextRequest) {
         lastName: user.lastName,
         kycStatus: user.kycStatus,
         emailVerified: user.emailVerified,
-        accounts: user.accounts.map(account => ({
+        twoFactorEnabled: user.twoFactorEnabled,
+        accounts: user.accounts.map((account) => ({
           id: account.id,
           accountNumber: account.accountNumber,
           accountType: account.accountType,
           balance: account.balance,
-          currency: account.currency
-        }))
-      }
+          currency: account.currency,
+        })),
+      },
     });
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

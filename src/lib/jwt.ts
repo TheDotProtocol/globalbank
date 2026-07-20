@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
+import { getRequiredJwtSecret } from '@/lib/regulatory/secrets';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
-const JWT_EXPIRES_IN = '7d'; // 7 days
+const JWT_EXPIRES_IN = '7d';
 
 export interface JWTPayload {
   userId: string;
@@ -11,35 +11,18 @@ export interface JWTPayload {
 }
 
 export function generateToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign(payload, getRequiredJwtSecret(), { expiresIn: JWT_EXPIRES_IN });
 }
 
 export function verifyToken(token: string): JWTPayload | null {
   try {
-    console.log('🔍 Verifying JWT token...');
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
-    console.log('✅ JWT token verified successfully');
-    return decoded;
-  } catch (error) {
-    console.error('❌ JWT token verification failed:', error);
+    return jwt.verify(token, getRequiredJwtSecret()) as JWTPayload;
+  } catch {
     return null;
   }
 }
 
 export function extractTokenFromHeader(authHeader: string | null): string | null {
-  console.log('🔍 Extracting token from header:', authHeader ? 'Header present' : 'Header missing');
-  
-  if (!authHeader) {
-    console.log('❌ No authorization header');
-    return null;
-  }
-  
-  if (!authHeader.startsWith('Bearer ')) {
-    console.log('❌ Authorization header does not start with "Bearer "');
-    return null;
-  }
-  
-  const token = authHeader.substring(7);
-  console.log('✅ Token extracted successfully');
-  return token;
-} 
+  if (!authHeader?.startsWith('Bearer ')) return null;
+  return authHeader.substring(7);
+}

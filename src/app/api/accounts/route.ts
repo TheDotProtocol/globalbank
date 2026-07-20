@@ -1,71 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
 import { generateAccountNumber } from '@/lib/account-number';
 
-// GET - Get user accounts
-export async function GET(request: NextRequest) {
+export const GET = requireAuth(async (request: NextRequest) => {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
+    const user = (request as any).user;
 
     const accounts = await prisma.account.findMany({
-      where: { userId },
+      where: { userId: user.id },
       include: {
         transactions: {
           orderBy: { createdAt: 'desc' },
-          take: 5
-        }
-      }
+          take: 5,
+        },
+      },
     });
 
     return NextResponse.json({ accounts });
   } catch (error) {
     console.error('Get accounts error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-// POST - Create new account
-export async function POST(request: NextRequest) {
+export const POST = requireAuth(async (request: NextRequest) => {
   try {
-    const { userId, accountType, initialBalance = 0 } = await request.json();
+    const user = (request as any).user;
+    const { accountType, initialBalance = 0 } = await request.json();
 
-    if (!userId || !accountType) {
+    if (!accountType) {
+      return NextResponse.json({ error: 'Account type is required' }, { status: 400 });
+    }
+
+    if (user.kycStatus !== 'VERIFIED') {
       return NextResponse.json(
-        { error: 'User ID and account type are required' },
-        { status: 400 }
+        { error: 'KYC verification required before opening accounts' },
+        { status: 403 }
       );
     }
 
-    // Generate unique account number
     const accountNumber = generateAccountNumber();
 
     const account = await prisma.account.create({
       data: {
-        userId,
+        userId: user.id,
         accountNumber,
         accountType,
         balance: initialBalance,
-        currency: 'USD'
-      }
+        currency: 'USD',
+      },
     });
 
     return NextResponse.json({ account }, { status: 201 });
   } catch (error) {
     console.error('Create account error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-} 
+});

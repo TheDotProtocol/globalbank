@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Shield, Building2, FileCheck, LogOut, Sun, Moon, Menu, X, Users,
+  ScrollText, Landmark, FileWarning,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 import '@/app/dashboard.css';
@@ -14,6 +15,9 @@ const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/compliance', label: 'Compliance', icon: Shield },
+  { href: '/admin/regulatory', label: 'Regulatory', icon: FileWarning },
+  { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },
+  { href: '/admin/settlements', label: 'Settlements', icon: Landmark },
   { href: '/admin/branches', label: 'Branches', icon: Building2 },
   { href: '/admin/kyc', label: 'KYC Review', icon: FileCheck },
 ];

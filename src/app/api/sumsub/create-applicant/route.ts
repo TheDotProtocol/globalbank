@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-server';
 
-export async function POST(request: NextRequest) {
+export const POST = requireAuth(async (request: NextRequest) => {
   try {
+    const authUser = (request as any).user;
     const { userId, levelName = 'basic' } = await request.json();
 
-    // Get user from database
+    if (userId && userId !== authUser.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const targetUserId = userId || authUser.id;
+
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: targetUserId },
       select: {
         id: true,
         email: true,
@@ -58,23 +65,20 @@ export async function POST(request: NextRequest) {
 
     // Update user with Sumsub applicant ID
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: targetUserId },
       data: {
         kycStatus: 'PENDING',
         sumsubApplicantId: applicant.id,
-      }
+      },
     });
 
     return NextResponse.json({
       success: true,
       applicantId: applicant.id,
-      applicant: applicant
+      applicant: applicant,
     });
-
   } catch (error) {
     console.error('Error creating Sumsub applicant:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error' 
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-} 
+});

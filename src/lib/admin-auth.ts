@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
+import { getRequiredAdminJwtSecret } from '@/lib/regulatory/secrets';
 
 export type AdminRole = 'SUPER_ADMIN' | 'ADMIN' | 'COMPLIANCE';
 
@@ -10,23 +11,46 @@ export interface AdminUser {
   role: AdminRole;
 }
 
-const ADMIN_USERS: AdminUser[] = [
-  {
-    username: process.env.ADMIN_USERNAME || 'admingdb',
-    password: process.env.ADMIN_PASSWORD || 'GdbAdmin2024!Secure#Portal',
-    email: 'admin@globaldotbank.org',
-    role: 'SUPER_ADMIN',
-  },
-  {
-    username: process.env.COMPLIANCE_USERNAME || 'compliancegdb',
-    password: process.env.COMPLIANCE_PASSWORD || 'GdbCompliance2024!Secure#',
-    email: 'compliance@globaldotbank.org',
-    role: 'COMPLIANCE',
-  },
-];
+function loadAdminUsers(): AdminUser[] {
+  const users: AdminUser[] = [];
 
-function getAdminJwtSecret(): string {
-  return process.env.ADMIN_JWT_SECRET || process.env.JWT_SECRET || 'change-admin-jwt-secret-in-production';
+  const adminUser = process.env.ADMIN_USERNAME;
+  const adminPass = process.env.ADMIN_PASSWORD;
+  if (adminUser && adminPass) {
+    users.push({
+      username: adminUser,
+      password: adminPass,
+      email: process.env.ADMIN_EMAIL || 'admin@globaldotbank.com',
+      role: 'SUPER_ADMIN',
+    });
+  } else if (process.env.NODE_ENV !== 'production') {
+    users.push({
+      username: 'admingdb',
+      password: 'GdbAdmin2024!Secure#Portal',
+      email: 'admin@globaldotbank.com',
+      role: 'SUPER_ADMIN',
+    });
+  }
+
+  const complianceUser = process.env.COMPLIANCE_USERNAME;
+  const compliancePass = process.env.COMPLIANCE_PASSWORD;
+  if (complianceUser && compliancePass) {
+    users.push({
+      username: complianceUser,
+      password: compliancePass,
+      email: process.env.COMPLIANCE_EMAIL || 'compliance@globaldotbank.com',
+      role: 'COMPLIANCE',
+    });
+  } else if (process.env.NODE_ENV !== 'production') {
+    users.push({
+      username: 'compliancegdb',
+      password: 'GdbCompliance2024!Secure#',
+      email: 'compliance@globaldotbank.com',
+      role: 'COMPLIANCE',
+    });
+  }
+
+  return users;
 }
 
 interface AdminTokenPayload {
@@ -42,6 +66,11 @@ export class AdminAuth {
     sessionToken?: string;
     role?: AdminRole;
   }> {
+    const ADMIN_USERS = loadAdminUsers();
+    if (ADMIN_USERS.length === 0) {
+      return { success: false, message: 'Admin authentication not configured' };
+    }
+
     const admin = ADMIN_USERS.find((u) => u.username === username);
     if (!admin || admin.password !== password) {
       return { success: false, message: 'Invalid credentials' };
@@ -49,8 +78,8 @@ export class AdminAuth {
 
     const sessionToken = jwt.sign(
       { username: admin.username, role: admin.role, type: 'admin' } satisfies AdminTokenPayload,
-      getAdminJwtSecret(),
-      { expiresIn: '24h' }
+      getRequiredAdminJwtSecret(),
+      { expiresIn: '8h' }
     );
 
     return { success: true, message: 'Login successful', sessionToken, role: admin.role };
@@ -58,7 +87,7 @@ export class AdminAuth {
 
   static verifySession(sessionToken: string): { valid: boolean; role?: AdminRole; username?: string } {
     try {
-      const decoded = jwt.verify(sessionToken, getAdminJwtSecret()) as AdminTokenPayload;
+      const decoded = jwt.verify(sessionToken, getRequiredAdminJwtSecret()) as AdminTokenPayload;
       if (decoded.type !== 'admin') return { valid: false };
       return { valid: true, role: decoded.role, username: decoded.username };
     } catch {
@@ -67,18 +96,24 @@ export class AdminAuth {
   }
 
   static getAdminInfo(sessionToken?: string): { username: string; email: string; role: AdminRole } {
+    const ADMIN_USERS = loadAdminUsers();
     if (sessionToken) {
       const session = this.verifySession(sessionToken);
       if (session.valid && session.username) {
         const user = ADMIN_USERS.find((u) => u.username === session.username);
         return {
           username: session.username,
-          email: user?.email || 'admin@globaldotbank.org',
+          email: user?.email || 'admin@globaldotbank.com',
           role: session.role || 'SUPER_ADMIN',
         };
       }
     }
-    return { username: ADMIN_USERS[0].username, email: ADMIN_USERS[0].email, role: 'SUPER_ADMIN' };
+    const fallback = ADMIN_USERS[0];
+    return {
+      username: fallback?.username || 'admin',
+      email: fallback?.email || 'admin@globaldotbank.com',
+      role: fallback?.role || 'SUPER_ADMIN',
+    };
   }
 
   static logout(_sessionToken: string): boolean {
@@ -129,4 +164,9 @@ export function blockDemoInProduction() {
     return NextResponse.json({ error: 'Route disabled in production' }, { status: 403 });
   }
   return null;
+}
+
+/** Maker-checker: creator cannot approve their own manual entry */
+export function assertMakerChecker(createdBy: string, approverUsername: string): boolean {
+  return createdBy !== approverUsername;
 }

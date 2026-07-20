@@ -3,6 +3,9 @@ import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
 import { generateInternationalReference, generateUTR } from '@/lib/reference-generator';
 import { applyComplianceFlags } from '@/lib/compliance-detector';
+import { preTransferComplianceCheck } from '@/lib/regulatory/compliance-guard';
+import { settleInternationalOutbound } from '@/lib/regulatory/settlement-ledger';
+import { auditUserAction } from '@/lib/regulatory/audit-log';
 
 const EXCHANGE_RATES: Record<string, number> = {
   USD: 1,
@@ -67,6 +70,31 @@ export const POST = requireAuth(async (request: NextRequest) => {
       );
     }
 
+    const compliance = await preTransferComplianceCheck({
+      userId: user.id,
+      amount: Number(amount),
+      type: 'DEBIT',
+      transferMode: 'INTERNATIONAL_TRANSFER',
+      destinationCountry: beneficiary.country,
+      description,
+    });
+
+    if (compliance.blockTransfer) {
+      await auditUserAction(request, user, 'INTL_TRANSFER_BLOCKED', 'Transaction', null, {
+        reason: compliance.reason,
+        amount,
+        beneficiaryCountry: beneficiary.country,
+      });
+      return NextResponse.json(
+        {
+          error: 'International transfer blocked by compliance controls',
+          code: 'COMPLIANCE_BLOCK',
+          reason: compliance.reason,
+        },
+        { status: 403 }
+      );
+    }
+
     const transactionRef = generateInternationalReference();
     const utr = generateUTR();
     const exchangeRate = getExchangeRate(currency, targetCurrency);
@@ -91,7 +119,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
           description: `International transfer to ${beneficiary.name} - ${description || 'International Transfer'}`,
           reference: transactionRef,
           utr,
-          status: 'COMPLETED',
+          status: markCompleted ? 'COMPLETED' : 'PENDING',
           transferMode: 'INTERNATIONAL_TRANSFER',
           sourceAccountId,
           sourceAccountNumber: sourceAccount.accountNumber,
@@ -101,6 +129,12 @@ export const POST = requireAuth(async (request: NextRequest) => {
           transferFee,
           netAmount: amount,
           branchId: dbUser?.branchId,
+          complianceStatus: compliance.shouldFlag ? 'FLAGGED' : 'CLEAR',
+          complianceFlag: compliance.shouldFlag ? (compliance.flag as any) : null,
+          flagReason: compliance.reason ?? null,
+          flaggedAt: compliance.shouldFlag ? new Date() : null,
+          flaggedBy: compliance.shouldFlag ? 'SYSTEM' : null,
+          riskScore: compliance.riskScore,
         },
       });
 
@@ -151,6 +185,23 @@ export const POST = requireAuth(async (request: NextRequest) => {
     });
 
     await applyComplianceFlags(result.debitTransaction.id);
+
+    await settleInternationalOutbound({
+      amount: Number(amount),
+      fee: Number(transferFee),
+      currency,
+      transactionId: result.debitTransaction.id,
+      reference: transactionRef,
+      utr,
+      createdBy: user.id,
+    });
+
+    await auditUserAction(request, user, 'INTERNATIONAL_TRANSFER', 'Transaction', result.debitTransaction.id, {
+      amount,
+      utr,
+      beneficiaryCountry: beneficiary.country,
+      complianceFlagged: compliance.shouldFlag,
+    });
 
     const receiptData = {
       transactionId: result.debitTransaction.id,

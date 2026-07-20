@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
 import QRCode from 'qrcode';
-import { THAILAND_CORPORATE, isDemoPaymentRail } from '@/lib/payment-rails/config';
+import { INDIA_CORPORATE, isDemoPaymentRail } from '@/lib/payment-rails/config';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
@@ -24,15 +24,17 @@ export const POST = requireAuth(async (request: NextRequest) => {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    const thBank = await prisma.corporateBank.findFirst({
-      where: { currency: 'THB', isActive: true },
+    const indiaBank = await prisma.corporateBank.findFirst({
+      where: { currency: 'INR', isActive: true },
     });
 
-    const bankName = thBank?.bankName || THAILAND_CORPORATE.bankName;
-    const accountNumber = thBank?.accountNumber || THAILAND_CORPORATE.accountNumber;
-    const accountName = thBank?.accountHolderName || THAILAND_CORPORATE.accountName;
+    const bankName = indiaBank?.bankName || INDIA_CORPORATE.bankName;
+    const accountNumber = indiaBank?.accountNumber || INDIA_CORPORATE.accountNumber;
+    const accountName = indiaBank?.accountHolderName || INDIA_CORPORATE.accountName;
+    const ifsc = indiaBank?.routingNumber || INDIA_CORPORATE.ifsc;
+    const upiVpa = INDIA_CORPORATE.upiVpa;
 
-    const reference = `THAIQR-${Date.now()}-${Math.random().toString(36).slice(2, 9).toUpperCase()}`;
+    const reference = `INDIAUPI-${Date.now()}-${Math.random().toString(36).slice(2, 9).toUpperCase()}`;
     const numAmount = parseFloat(String(amount));
 
     const paymentRecord = await prisma.payment.create({
@@ -40,39 +42,59 @@ export const POST = requireAuth(async (request: NextRequest) => {
         userId: user.id,
         accountId,
         amount: numAmount,
-        currency: 'THB',
-        paymentMethod: 'THAI_QR',
+        currency: 'INR',
+        paymentMethod: 'INDIA_UPI',
         status: 'PENDING',
         reference,
-        description: `Thai QR Payment - ${account.accountNumber}`,
+        description: `India UPI Payment - ${account.accountNumber}`,
         metadata: {
-          corridor: 'TH',
+          corridor: 'IN',
           demoMode: isDemoPaymentRail(),
           bankName,
           accountNumber,
+          ifsc,
+          upiVpa: upiVpa || null,
         },
       },
     });
 
-    const qrString = `00020101021229370016A0000006770101120113Global Dot Bank5204599953037645406${numAmount.toFixed(2)}5802TH6304${reference}${reference.length.toString().padStart(2, '0')}`;
+    let qrCodeUrl = '';
+    let upiDeepLink = '';
 
-    const qrCodeUrl = await QRCode.toDataURL(qrString, {
-      width: 300,
-      margin: 2,
-      color: { dark: '#000000', light: '#FFFFFF' },
-      errorCorrectionLevel: 'M',
-    });
+    if (upiVpa) {
+      upiDeepLink = `upi://pay?pa=${encodeURIComponent(upiVpa)}&pn=${encodeURIComponent(accountName)}&am=${numAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(reference)}`;
+      qrCodeUrl = await QRCode.toDataURL(upiDeepLink, {
+        width: 300,
+        margin: 2,
+        errorCorrectionLevel: 'M',
+      });
+    } else {
+      const placeholderPayload = [
+        'Global Dot Bank — India UPI',
+        `Pay ₹${numAmount.toFixed(2)}`,
+        accountName,
+        accountNumber ? `A/C: ${accountNumber}` : 'Account pending from bank',
+        ifsc ? `IFSC: ${ifsc}` : '',
+        `Ref: ${reference}`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+      qrCodeUrl = await QRCode.toDataURL(placeholderPayload, { width: 300, margin: 2 });
+    }
 
     const transferDetails = {
-      corridor: 'TH',
-      bankName: `${bankName} (K Bank)`,
-      accountNumber,
+      corridor: 'IN',
+      bankName,
+      accountNumber: accountNumber || 'Pending from bank',
       accountName,
+      ifsc: ifsc || 'Pending from bank',
+      upiVpa: upiVpa || 'Pending from bank',
       amount: numAmount,
-      currency: 'THB',
+      currency: 'INR',
       reference,
       description: `Global Dot Bank - ${account.user.firstName} ${account.user.lastName}`,
       qrCode: qrCodeUrl,
+      upiDeepLink: upiDeepLink || null,
       paymentId: paymentRecord.id,
       status: 'PENDING',
       demoMode: isDemoPaymentRail(),
@@ -82,16 +104,16 @@ export const POST = requireAuth(async (request: NextRequest) => {
     return NextResponse.json({
       success: true,
       message: isDemoPaymentRail()
-        ? 'Thai QR payment generated (demo mode — auto-completes after ~2 minutes)'
-        : 'Thai QR payment generated',
+        ? 'India UPI payment generated (demo mode — auto-completes after ~2 minutes)'
+        : 'India UPI payment generated — complete payment via your UPI app',
       qrCode: qrCodeUrl,
       transferDetails,
       paymentId: paymentRecord.id,
     });
   } catch (error: unknown) {
-    console.error('Thai QR payment error:', error);
+    console.error('India UPI payment error:', error);
     return NextResponse.json(
-      { error: 'Failed to create Thai QR payment', details: error instanceof Error ? error.message : 'Unknown' },
+      { error: 'Failed to create India UPI payment', details: error instanceof Error ? error.message : 'Unknown' },
       { status: 500 }
     );
   }
@@ -106,7 +128,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
     }
 
     const payment = await prisma.payment.findFirst({
-      where: { reference, paymentMethod: 'THAI_QR' },
+      where: { reference, paymentMethod: 'INDIA_UPI' },
     });
 
     if (!payment) {
