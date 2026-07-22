@@ -1,28 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
-import { registerSumsubApplicant } from '@/lib/sumsub-sync';
-import { getDefaultLevelName, mapSumsubToKycStatus } from '@/lib/sumsub-client';
+import { createAccessToken, getDefaultLevelName } from '@/lib/sumsub-client';
+import { prepareSumsubApplicant } from '@/lib/sumsub-sync';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
     const authUser = (request as any).user;
-    const { userId, levelName = getDefaultLevelName() } = await request.json().catch(() => ({}));
-
-    if (userId && userId !== authUser.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const targetUserId = userId || authUser.id;
+    const body = await request.json().catch(() => ({}));
+    const levelName = body.levelName || getDefaultLevelName();
 
     const user = await prisma.user.findUnique({
-      where: { id: targetUserId },
+      where: { id: authUser.id },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
         phone: true,
+        kycStatus: true,
       },
     });
 
@@ -30,7 +26,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const applicant = await registerSumsubApplicant({
+    await prepareSumsubApplicant({
       externalUserId: user.id,
       email: user.email,
       phone: user.phone,
@@ -39,18 +35,20 @@ export const POST = requireAuth(async (request: NextRequest) => {
       levelName,
     });
 
+    const { token, userId } = await createAccessToken(user.id, levelName);
+
     return NextResponse.json({
       success: true,
-      applicantId: applicant.id,
-      kycStatus: mapSumsubToKycStatus(applicant),
-      applicant,
+      token,
+      userId,
+      levelName,
     });
   } catch (error: unknown) {
-    console.error('Error creating Sumsub applicant:', error);
+    console.error('Sumsub access token error:', error);
     const err = error as Error & { details?: unknown };
     return NextResponse.json(
       {
-        error: 'Failed to create applicant in Sumsub',
+        error: 'Failed to create Sumsub access token',
         details: err.message,
         sumsub: err.details,
       },

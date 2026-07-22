@@ -1,7 +1,9 @@
-"use client";
+'use client';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardPageShell from '@/components/layout/DashboardPageShell';
+import SumsubWebSdkPanel from '@/components/SumsubWebSdkPanel';
 import {
   Upload, 
   Camera, 
@@ -42,6 +44,7 @@ export default function KYCVerificationPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [verificationMode, setVerificationMode] = useState<'sumsub' | 'manual'>('sumsub');
 
   useEffect(() => {
     checkAuthAndKYCStatus();
@@ -230,23 +233,6 @@ export default function KYCVerificationPage() {
 
       console.log('📤 Submitting KYC documents to API...');
 
-      // First, test with debug endpoint
-      console.log('🔍 Testing with debug endpoint first...');
-      const testResponse = await fetch('/api/test-kyc-upload', {
-        method: 'POST',
-        body: formDataToSend
-      });
-
-      console.log('🔍 Test response status:', testResponse.status);
-      if (testResponse.ok) {
-        const testResult = await testResponse.json();
-        console.log('✅ Test successful:', testResult);
-      } else {
-        const testError = await testResponse.json();
-        console.error('❌ Test failed:', testError);
-      }
-
-      // Now try the real KYC upload
       const response = await fetch('/api/kyc/upload', {
         method: 'POST',
         headers: {
@@ -317,6 +303,27 @@ export default function KYCVerificationPage() {
         </div>
       )}
 
+      <div className="flex flex-wrap gap-2 mb-6">
+        <button
+          type="button"
+          onClick={() => setVerificationMode('sumsub')}
+          className={verificationMode === 'sumsub' ? 'btn-primary' : 'btn-secondary'}
+        >
+          Verify with Sumsub
+        </button>
+        <button
+          type="button"
+          onClick={() => setVerificationMode('manual')}
+          className={verificationMode === 'manual' ? 'btn-primary' : 'btn-secondary'}
+        >
+          Manual document upload
+        </button>
+      </div>
+
+      {verificationMode === 'sumsub' ? (
+        <SumsubWebSdkPanel onComplete={() => router.push('/dashboard')} />
+      ) : (
+        <>
       <div className="dashboard-kyc-steps">
         <div className="dashboard-kyc-step-bar">
           {[1, 2, 3, 4].map((step) => (
@@ -684,6 +691,8 @@ export default function KYCVerificationPage() {
             )}
           </div>
       </div>
+        </>
+      )}
     </DashboardPageShell>
   );
 } 

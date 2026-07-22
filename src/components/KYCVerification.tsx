@@ -1,62 +1,76 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CheckCircle, Clock, AlertCircle, ExternalLink, Shield, UserCheck } from 'lucide-react';
+import SumsubWebSdkPanel from '@/components/SumsubWebSdkPanel';
 
 interface KYCVerificationProps {
   userId: string;
   onStatusChange?: (status: string) => void;
+  onComplete?: () => void;
 }
 
 interface KYCStatus {
   status: string;
   message?: string;
-  reviewResult?: any;
+  reviewResult?: unknown;
 }
 
-export default function KYCVerification({ userId, onStatusChange }: KYCVerificationProps) {
+function authHeaders(): HeadersInit {
+  const token = localStorage.getItem('token');
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    'Content-Type': 'application/json',
+  };
+}
+
+export default function KYCVerification({ userId, onStatusChange, onComplete }: KYCVerificationProps) {
   const [kycStatus, setKycStatus] = useState<KYCStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [initiating, setInitiating] = useState(false);
+  const [showWebSdk, setShowWebSdk] = useState(false);
 
-  useEffect(() => {
-    fetchKYCStatus();
-  }, [userId]);
-
-  const fetchKYCStatus = async () => {
+  const fetchKYCStatus = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/sumsub/applicant-status/${userId}`);
+      const response = await fetch(`/api/sumsub/applicant-status/${userId}`, {
+        headers: authHeaders(),
+      });
       if (response.ok) {
         const data = await response.json();
         setKycStatus(data);
         onStatusChange?.(data.status);
+        if (data.status === 'VERIFIED') {
+          onComplete?.();
+        }
       }
     } catch (error) {
       console.error('Failed to fetch KYC status:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, onStatusChange, onComplete]);
+
+  useEffect(() => {
+    fetchKYCStatus();
+  }, [fetchKYCStatus]);
 
   const initiateKYC = async () => {
     setInitiating(true);
     try {
       const response = await fetch('/api/sumsub/create-applicant', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders(),
         body: JSON.stringify({ userId }),
       });
 
       if (response.ok) {
-        const data = await response.json();
         setKycStatus({
           status: 'PENDING',
-          message: 'KYC application submitted successfully. You will be contacted by our verification team.'
+          message: 'KYC application created. Complete verification below.',
         });
         onStatusChange?.('PENDING');
+        setShowWebSdk(true);
       } else {
         const error = await response.json();
         console.error('Failed to initiate KYC:', error);
@@ -70,6 +84,7 @@ export default function KYCVerification({ userId, onStatusChange }: KYCVerificat
 
   const getStatusIcon = (status: string) => {
     switch (status) {
+      case 'VERIFIED':
       case 'APPROVED':
         return <CheckCircle className="w-6 h-6 text-green-500" />;
       case 'PENDING':
@@ -83,6 +98,7 @@ export default function KYCVerification({ userId, onStatusChange }: KYCVerificat
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'VERIFIED':
       case 'APPROVED':
         return 'text-green-600 bg-green-50 border-green-200';
       case 'PENDING':
@@ -96,6 +112,7 @@ export default function KYCVerification({ userId, onStatusChange }: KYCVerificat
 
   const getStatusMessage = (status: string) => {
     switch (status) {
+      case 'VERIFIED':
       case 'APPROVED':
         return 'Your KYC verification has been approved. You can now access all features.';
       case 'PENDING':
@@ -118,9 +135,20 @@ export default function KYCVerification({ userId, onStatusChange }: KYCVerificat
     );
   }
 
+  if (showWebSdk && kycStatus?.status !== 'VERIFIED' && kycStatus?.status !== 'REJECTED') {
+    return (
+      <SumsubWebSdkPanel
+        onStatusChange={onStatusChange}
+        onComplete={() => {
+          fetchKYCStatus();
+          onComplete?.();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      {/* Header */}
       <div className="flex items-center space-x-3 mb-6">
         <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg">
           <Shield className="w-6 h-6 text-blue-600" />
@@ -131,7 +159,6 @@ export default function KYCVerification({ userId, onStatusChange }: KYCVerificat
         </div>
       </div>
 
-      {/* Status Display */}
       {kycStatus && (
         <div className={`mb-6 p-4 rounded-lg border ${getStatusColor(kycStatus.status)}`}>
           <div className="flex items-center space-x-3">
@@ -148,7 +175,6 @@ export default function KYCVerification({ userId, onStatusChange }: KYCVerificat
         </div>
       )}
 
-      {/* Action Buttons */}
       <div className="space-y-3">
         {(!kycStatus || kycStatus.status === 'PENDING') && (
           <button
@@ -191,7 +217,6 @@ export default function KYCVerification({ userId, onStatusChange }: KYCVerificat
         )}
       </div>
 
-      {/* Information */}
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
         <h4 className="font-medium text-gray-900 mb-2">About KYC Verification</h4>
         <ul className="text-sm text-gray-600 space-y-1">
@@ -203,7 +228,6 @@ export default function KYCVerification({ userId, onStatusChange }: KYCVerificat
         </ul>
       </div>
 
-      {/* Support */}
       <div className="mt-4 text-center">
         <p className="text-xs text-gray-500">
           Need help? Contact our support team for assistance with KYC verification.
@@ -211,4 +235,4 @@ export default function KYCVerification({ userId, onStatusChange }: KYCVerificat
       </div>
     </div>
   );
-} 
+}

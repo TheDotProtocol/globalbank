@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
+import { mapSumsubToKycStatus } from '@/lib/sumsub-client';
 
-function mapSumsubStatus(reviewAnswer: string): 'PENDING' | 'VERIFIED' | 'REJECTED' {
-  const answer = (reviewAnswer || '').toUpperCase();
-  if (answer === 'GREEN' || answer === 'VERIFIED' || answer === 'APPROVED') return 'VERIFIED';
-  if (answer === 'RED' || answer === 'REJECTED' || answer === 'DECLINED') return 'REJECTED';
-  return 'PENDING';
+function mapReviewAnswer(reviewAnswer: string): 'PENDING' | 'VERIFIED' | 'REJECTED' {
+  return mapSumsubToKycStatus({ id: '', review: { reviewResult: { reviewAnswer } } });
 }
 
 async function findUserByApplicant(data: Record<string, unknown>) {
@@ -77,11 +75,16 @@ async function handleApplicantReviewed(data: Record<string, unknown>) {
 
   const reviewResult = data.reviewResult as Record<string, unknown> | undefined;
   const reviewAnswer = (reviewResult?.reviewAnswer || reviewResult?.reviewStatus || 'PENDING') as string;
-  const kycStatus = mapSumsubStatus(reviewAnswer);
+  const kycStatus = mapReviewAnswer(reviewAnswer);
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { kycStatus },
+    data: {
+      kycStatus,
+      ...(kycStatus === 'VERIFIED'
+        ? { emailVerified: true, emailVerifiedAt: new Date() }
+        : {}),
+    },
   });
 
   await prisma.kycDocument.updateMany({
@@ -89,6 +92,7 @@ async function handleApplicantReviewed(data: Record<string, unknown>) {
     data: {
       status: kycStatus === 'VERIFIED' ? 'VERIFIED' : kycStatus === 'REJECTED' ? 'REJECTED' : 'PENDING',
       verifiedAt: kycStatus === 'VERIFIED' ? new Date() : null,
+      verifiedBy: kycStatus === 'VERIFIED' || kycStatus === 'REJECTED' ? 'SUMSUB' : undefined,
     },
   });
 }

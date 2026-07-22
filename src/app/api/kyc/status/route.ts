@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
+import { syncUserKycFromSumsub } from '@/lib/sumsub-sync';
 
 export const GET = requireAuth(async (request: NextRequest) => {
   try {
@@ -17,6 +18,7 @@ export const GET = requireAuth(async (request: NextRequest) => {
         firstName: true,
         lastName: true,
         kycStatus: true,
+        sumsubApplicantId: true,
         kycDocuments: {
           orderBy: { createdAt: 'desc' },
           select: {
@@ -46,6 +48,16 @@ export const GET = requireAuth(async (request: NextRequest) => {
       );
     }
 
+    // Sync live status from Sumsub when an applicant exists
+    if (userWithKYC.sumsubApplicantId && process.env.SUMSUB_APP_TOKEN) {
+      try {
+        const { kycStatus } = await syncUserKycFromSumsub(user.id);
+        userWithKYC.kycStatus = kycStatus;
+      } catch (syncError) {
+        console.error('Sumsub KYC sync failed:', syncError);
+      }
+    }
+
     // Calculate overall KYC status based on documents
     let overallStatus = userWithKYC.kycStatus;
     const requiredDocuments = ['ID_PROOF', 'ADDRESS_PROOF', 'SELFIE_PHOTO'];
@@ -66,6 +78,8 @@ export const GET = requireAuth(async (request: NextRequest) => {
 
     if (allVerified) {
       overallStatus = 'VERIFIED';
+    } else if (userWithKYC.kycStatus === 'VERIFIED' || userWithKYC.kycStatus === 'REJECTED') {
+      overallStatus = userWithKYC.kycStatus;
     } else if (allSubmitted) {
       overallStatus = 'PENDING';
     } else {

@@ -40,6 +40,9 @@ function LoginPageContent() {
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        if (data.user?.id) {
+          localStorage.setItem('userId', data.user.id);
+        }
         router.push('/dashboard');
       } else if (data.requiresVerification) {
         localStorage.setItem('pendingEmail', formData.email);
