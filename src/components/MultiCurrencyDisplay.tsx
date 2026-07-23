@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Globe, Settings } from 'lucide-react';
+import { detectLocalCurrency } from '@/lib/local-currency';
 
 interface MultiCurrencyDisplayProps {
   usdAmount: number;
@@ -156,11 +157,9 @@ export default function MultiCurrencyDisplay({
   const [allRates, setAllRates] = useState<{[key: string]: number}>({});
 
   useEffect(() => {
-    // Detect user's preferred currency on component mount
-    const userCurrency = detectUserCurrency();
-    if (userCurrency !== 'USD') {
-      setSelectedCurrency(userCurrency);
-    }
+    detectLocalCurrency().then(({ currency }) => {
+      if (currency !== 'USD') setSelectedCurrency(currency);
+    });
     fetchAllExchangeRates();
   }, []);
 

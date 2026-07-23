@@ -1,5 +1,6 @@
 /**
  * Reset password for a user by email.
+ * Uses raw SQL so it works even when Prisma schema is ahead of the DB.
  * Usage: node scripts/reset-user-password.js <email> <newPassword>
  */
 
@@ -38,13 +39,19 @@ async function main() {
     process.exit(1);
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email },
-    include: {
-      accounts: { select: { accountNumber: true } },
-    },
-  });
+  const rows = await prisma.$queryRaw`
+    SELECT u.id, u.email, u."firstName", u."lastName",
+      COALESCE(
+        (SELECT string_agg(a."accountNumber", ', ' ORDER BY a."accountNumber")
+         FROM accounts a WHERE a."userId" = u.id),
+        ''
+      ) AS accounts
+    FROM users u
+    WHERE u.email = ${email}
+    LIMIT 1
+  `;
 
+  const user = rows[0];
   if (!user) {
     console.error(`❌ User not found: ${email}`);
     process.exit(1);
@@ -52,15 +59,15 @@ async function main() {
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-  await prisma.user.update({
-    where: { email },
-    data: { password: hashedPassword },
-  });
+  await prisma.$executeRaw`
+    UPDATE users SET password = ${hashedPassword}, "updatedAt" = NOW()
+    WHERE email = ${email}
+  `;
 
   console.log('✅ Password reset successfully');
   console.log(`   Name: ${user.firstName} ${user.lastName}`);
   console.log(`   Email: ${email}`);
-  console.log(`   Accounts: ${user.accounts.map((a) => a.accountNumber).join(', ')}`);
+  if (user.accounts) console.log(`   Accounts: ${user.accounts}`);
 }
 
 main()

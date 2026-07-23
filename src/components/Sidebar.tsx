@@ -9,7 +9,8 @@ import {
   TrendingUp, 
   UserCheck, 
   Settings, 
-  X 
+  X,
+  Landmark,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -38,6 +39,7 @@ export default function Sidebar({
     { id: 'cards', label: 'Cards', icon: CreditCard, href: '/dashboard/cards' },
     { id: 'transactions', label: 'Transactions', icon: FileText, href: '/dashboard/transactions' },
     { id: 'fixed-deposits', label: 'Fixed Deposits', icon: TrendingUp, href: '/dashboard/fixed-deposits' },
+    { id: 'loans', label: 'Loans', icon: Landmark, href: '/dashboard/loans' },
     { id: 'e-checks', label: 'E-Checks', icon: FileText, href: '/dashboard/e-checks' },
     { id: 'kyc', label: 'KYC Verification', icon: UserCheck, href: '/kyc/verification' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },

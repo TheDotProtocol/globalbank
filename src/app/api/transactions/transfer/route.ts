@@ -3,9 +3,10 @@ import { requireAuth } from '@/lib/auth-server';
 import { prisma } from '@/lib/prisma';
 import { generateTransferReference, generateUTR } from '@/lib/reference-generator';
 import { preTransferComplianceCheck } from '@/lib/regulatory/compliance-guard';
-import { settleInternalTransfer } from '@/lib/regulatory/settlement-ledger';
+import { postInternalTransferJournal } from '@/lib/regulatory/post-journal';
 import { auditUserAction } from '@/lib/regulatory/audit-log';
 import { applyComplianceFlags } from '@/lib/compliance-detector';
+import { maybeFileCtr } from '@/lib/aml/ctr';
 
 export const POST = requireAuth(async (request: NextRequest) => {
   try {
@@ -29,11 +30,12 @@ export const POST = requireAuth(async (request: NextRequest) => {
         reason: compliance.reason,
         amount,
         transferMode: 'INTERNAL_TRANSFER',
+        sanctionsHit: compliance.sanctionsHit,
       });
       return NextResponse.json(
         {
           error: 'Transfer blocked by compliance controls',
-          code: 'COMPLIANCE_BLOCK',
+          code: compliance.sanctionsHit ? 'SANCTIONS_BLOCK' : 'COMPLIANCE_BLOCK',
           reason: compliance.reason,
         },
         { status: 403 }
@@ -59,9 +61,10 @@ export const POST = requireAuth(async (request: NextRequest) => {
       return NextResponse.json({ error: 'Destination account not found' }, { status: 404 });
     }
 
-    const sourceBalance = parseFloat(sourceAccount.balance.toString());
-    if (sourceBalance < amount) {
-      return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
+    const available =
+      Number(sourceAccount.balance) - Number(sourceAccount.holdAmount ?? 0);
+    if (available < amount) {
+      return NextResponse.json({ error: 'Insufficient available balance' }, { status: 400 });
     }
 
     const dbUser = await prisma.user.findUnique({
@@ -69,21 +72,11 @@ export const POST = requireAuth(async (request: NextRequest) => {
       select: { branchId: true },
     });
 
+    const transferRef = generateTransferReference();
+    const debitUtr = generateUTR();
+    const creditUtr = generateUTR();
+
     const transferResult = await prisma.$transaction(async (tx) => {
-      const updatedSourceAccount = await tx.account.update({
-        where: { id: fromAccountId },
-        data: { balance: { decrement: amount } },
-      });
-
-      const updatedDestinationAccount = await tx.account.update({
-        where: { id: destinationAccount.id },
-        data: { balance: { increment: amount } },
-      });
-
-      const transferRef = generateTransferReference();
-      const debitUtr = generateUTR();
-      const creditUtr = generateUTR();
-
       const debitTransaction = await tx.transaction.create({
         data: {
           accountId: fromAccountId,
@@ -102,7 +95,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
           netAmount: amount,
           branchId: dbUser?.branchId,
           complianceStatus: compliance.shouldFlag ? 'FLAGGED' : 'CLEAR',
-          complianceFlag: compliance.shouldFlag ? (compliance.flag as any) : null,
+          complianceFlag: compliance.shouldFlag ? ('MANUAL_FLAG' as any) : null,
           flagReason: compliance.reason ?? null,
           flaggedAt: compliance.shouldFlag ? new Date() : null,
           flaggedBy: compliance.shouldFlag ? 'SYSTEM' : null,
@@ -130,23 +123,24 @@ export const POST = requireAuth(async (request: NextRequest) => {
         },
       });
 
-      return {
-        sourceAccount: updatedSourceAccount,
-        destinationAccount: updatedDestinationAccount,
-        debitTransaction,
-        creditTransaction,
-        transferRef,
-      };
+      return { debitTransaction, creditTransaction, transferRef };
     });
 
-    await settleInternalTransfer({
+    await postInternalTransferJournal({
+      fromAccountId,
+      toAccountId: destinationAccount.id,
+      amount: Number(amount),
+      reference: transferResult.transferRef,
+      transactionId: transferResult.debitTransaction.id,
+      createdBy: user.id,
+      currency: sourceAccount.currency,
+    });
+
+    await maybeFileCtr({
+      userId: user.id,
+      transactionId: transferResult.debitTransaction.id,
       amount: Number(amount),
       currency: sourceAccount.currency,
-      transactionId: transferResult.debitTransaction.id,
-      reference: transferResult.transferRef,
-      sourceAccountNumber: sourceAccount.accountNumber,
-      destAccountNumber: destinationAccount.accountNumber,
-      createdBy: user.id,
     });
 
     if (compliance.shouldFlag) {
@@ -164,6 +158,7 @@ export const POST = requireAuth(async (request: NextRequest) => {
         reference: transferResult.transferRef,
         utr: transferResult.debitTransaction.utr,
         complianceFlagged: compliance.shouldFlag,
+        amlCaseId: compliance.amlCaseId,
       }
     );
 

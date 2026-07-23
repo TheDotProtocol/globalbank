@@ -28,6 +28,10 @@ model User {
   twoFactorVerifiedAt   DateTime?
   branchId              String?
   sumsubApplicantId     String?
+  pepStatus             PepStatus           @default(NONE)
+  riskRating            CustomerRiskRating  @default(LOW)
+  lastKycReviewAt       DateTime?
+  primaryJurisdiction   Jurisdiction?
 
   // Relations
   branch                Branch?   @relation(fields: [branchId], references: [id])
@@ -40,6 +44,9 @@ model User {
   eChecks               ECheck[]
   payments              Payment[]
   internationalTransfers InternationalTransfer[]
+  amlCases              AmlCase[]
+  loanApplications      LoanApplication[]
+  loans                 Loan[]
 
   @@map("users")
 }
@@ -50,6 +57,8 @@ model Account {
   accountNumber String      @unique
   accountType   AccountType @default(SAVINGS)
   balance       Decimal     @default(0)
+  holdAmount    Decimal     @default(0)
+  subLedgerCode String?     @unique
   currency      String      @default("USD")
   isActive      Boolean     @default(true)
   createdAt     DateTime    @default(now())
@@ -57,6 +66,8 @@ model Account {
 
   // Relations
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loanApplications LoanApplication[]
+  loans            Loan[]
   transactions  Transaction[]
   cards         Card[]
   eChecks       ECheck[]
@@ -714,4 +725,273 @@ model PendingManualEntry {
   @@index([status])
   @@index([createdBy])
   @@map("pending_manual_entries")
-} 
+}
+
+enum Jurisdiction {
+  BVI
+  LABUAN
+  THAILAND
+  INDIA
+}
+
+enum LicenseStatus {
+  PLANNED
+  APPLICATION_SUBMITTED
+  CONDITIONAL
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum GovernanceRoleType {
+  BOARD_CHAIR
+  CEO
+  CFO
+  CRO
+  MLRO
+  COMPLIANCE_OFFICER
+  COMPANY_SECRETARY
+}
+
+enum PepStatus {
+  NONE
+  PEP
+  RCA
+}
+
+enum CustomerRiskRating {
+  LOW
+  MEDIUM
+  HIGH
+  PROHIBITED
+}
+
+enum AmlCaseStatus {
+  OPEN
+  INVESTIGATING
+  ESCALATED
+  SAR_FILED
+  CLOSED
+}
+
+enum AmlCasePriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum LoanApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum LoanStatus {
+  PENDING_DISBURSEMENT
+  ACTIVE
+  PAID_OFF
+  DEFAULTED
+  WRITTEN_OFF
+}
+
+enum LoanPaymentStatus {
+  SCHEDULED
+  PAID
+  LATE
+  MISSED
+}
+
+enum SafeguardingPurpose {
+  CUSTOMER_FUNDS
+  OPERATIONAL
+  CAPITAL_RESERVE
+}
+
+model BankLicense {
+  id              String          @id @default(cuid())
+  jurisdiction    Jurisdiction
+  licenseType     String
+  status          LicenseStatus   @default(PLANNED)
+  licenseNumber   String?
+  regulatorName   String
+  capitalRequired Decimal         @default(0)
+  capitalHeld     Decimal         @default(0)
+  appliedAt       DateTime?
+  grantedAt       DateTime?
+  expiresAt       DateTime?
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([jurisdiction, licenseType])
+  @@index([status])
+  @@map("bank_licenses")
+}
+
+model GovernanceRole {
+  id            String             @id @default(cuid())
+  jurisdiction  Jurisdiction
+  role          GovernanceRoleType
+  holderName    String
+  holderEmail   String?
+  appointedAt   DateTime?
+  isActive      Boolean            @default(true)
+  notes         String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([jurisdiction])
+  @@index([role])
+  @@map("governance_roles")
+}
+
+model AmlCase {
+  id              String          @id @default(cuid())
+  reference       String          @unique
+  userId          String?
+  transactionId   String?
+  status          AmlCaseStatus   @default(OPEN)
+  priority        AmlCasePriority @default(MEDIUM)
+  title           String
+  description     String?
+  assignee        String?
+  sanctionsHit    Boolean         @default(false)
+  fraudScore      Int             @default(0)
+  resolution      String?
+  openedAt        DateTime        @default(now())
+  closedAt        DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  user            User?           @relation(fields: [userId], references: [id])
+
+  @@index([status])
+  @@index([userId])
+  @@index([priority])
+  @@map("aml_cases")
+}
+
+model SafeguardingAccount {
+  id            String              @id @default(cuid())
+  jurisdiction  Jurisdiction
+  purpose       SafeguardingPurpose @default(CUSTOMER_FUNDS)
+  bankName      String
+  accountNumber String
+  accountName   String
+  currency      String              @default("USD")
+  balance       Decimal             @default(0)
+  isActive      Boolean             @default(true)
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([jurisdiction])
+  @@map("safeguarding_accounts")
+}
+
+model LoanProduct {
+  id              String   @id @default(cuid())
+  name            String
+  jurisdiction    Jurisdiction
+  minAmount       Decimal
+  maxAmount       Decimal
+  minTermMonths   Int
+  maxTermMonths   Int
+  baseApr         Decimal
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  applications    LoanApplication[]
+  loans           Loan[]
+
+  @@map("loan_products")
+}
+
+model LoanApplication {
+  id              String                @id @default(cuid())
+  reference       String                @unique
+  userId          String
+  accountId       String
+  productId       String
+  requestedAmount Decimal
+  termMonths      Int
+  purpose         String?
+  status          LoanApplicationStatus @default(SUBMITTED)
+  reviewedBy      String?
+  reviewNotes     String?
+  submittedAt     DateTime              @default(now())
+  reviewedAt      DateTime?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  user            User                  @relation(fields: [userId], references: [id])
+  account         Account               @relation(fields: [accountId], references: [id])
+  product         LoanProduct           @relation(fields: [productId], references: [id])
+  loan            Loan?
+
+  @@index([status])
+  @@index([userId])
+  @@map("loan_applications")
+}
+
+model Loan {
+  id              String     @id @default(cuid())
+  reference       String     @unique
+  applicationId   String     @unique
+  userId          String
+  accountId       String
+  productId       String
+  principal       Decimal
+  outstanding     Decimal
+  apr             Decimal
+  termMonths      Int
+  status          LoanStatus @default(PENDING_DISBURSEMENT)
+  disbursedAt     DateTime?
+  maturityDate    DateTime?
+  provisionRate   Decimal    @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  application     LoanApplication @relation(fields: [applicationId], references: [id])
+  user            User            @relation(fields: [userId], references: [id])
+  account         Account         @relation(fields: [accountId], references: [id])
+  product         LoanProduct     @relation(fields: [productId], references: [id])
+  schedule        LoanSchedulePayment[]
+
+  @@index([status])
+  @@index([userId])
+  @@map("loans")
+}
+
+model LoanSchedulePayment {
+  id            String            @id @default(cuid())
+  loanId        String
+  installmentNo Int
+  dueDate       DateTime
+  principalDue  Decimal
+  interestDue   Decimal
+  totalDue      Decimal
+  status        LoanPaymentStatus @default(SCHEDULED)
+  paidAt        DateTime?
+  createdAt     DateTime          @default(now())
+  loan          Loan              @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  @@index([loanId])
+  @@map("loan_schedule_payments")
+}
+
+model LedgerReconciliation {
+  id                  String   @id @default(cuid())
+  runDate             DateTime @default(now())
+  customerBalanceSum  Decimal
+  subLedgerBalanceSum Decimal
+  poolBalance         Decimal
+  variance            Decimal
+  status              String   @default("OK")
+  breaks              Json?
+  createdAt           DateTime @default(now())
+
+  @@index([runDate])
+  @@map("ledger_reconciliations")
+}

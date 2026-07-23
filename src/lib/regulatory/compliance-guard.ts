@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { analyzeTransaction, type ComplianceCheckResult } from '@/lib/compliance-detector';
+import { runFullAmlScreen } from '@/lib/aml/screening';
 import type { ComplianceStatus, KycStatus } from '@prisma/client';
 
 const BLOCKING_COMPLIANCE_STATUSES: ComplianceStatus[] = [
@@ -18,11 +18,15 @@ export async function assertUserCanTransact(userId: string): Promise<
 > {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { kycStatus: true, emailVerified: true },
+    select: { kycStatus: true, emailVerified: true, riskRating: true },
   });
 
   if (!user) {
     return { ok: false, code: 'USER_NOT_FOUND', reason: 'User account not found' };
+  }
+
+  if (user.riskRating === 'PROHIBITED') {
+    return { ok: false, code: 'RISK_PROHIBITED', reason: 'Account prohibited — contact compliance' };
   }
 
   if (user.kycStatus !== 'VERIFIED') {
@@ -30,6 +34,17 @@ export async function assertUserCanTransact(userId: string): Promise<
       ok: false,
       code: 'KYC_REQUIRED',
       reason: 'KYC verification must be completed before transacting',
+    };
+  }
+
+  const openSanctionsCase = await prisma.amlCase.count({
+    where: { userId, sanctionsHit: true, status: { in: ['OPEN', 'INVESTIGATING', 'ESCALATED'] } },
+  });
+  if (openSanctionsCase > 0) {
+    return {
+      ok: false,
+      code: 'SANCTIONS_HOLD',
+      reason: 'Account under sanctions review. Contact compliance.',
     };
   }
 
@@ -60,11 +75,18 @@ export interface PreTransferParams {
   transferMode?: string | null;
   destinationCountry?: string | null;
   description?: string;
+  transactionId?: string;
 }
 
-export interface PreTransferResult extends ComplianceCheckResult {
+export interface PreTransferResult {
+  shouldFlag: boolean;
+  flag?: string;
+  reason?: string;
+  riskScore: number;
   blockTransfer: boolean;
   holdForReview: boolean;
+  sanctionsHit: boolean;
+  amlCaseId?: string;
 }
 
 export async function preTransferComplianceCheck(
@@ -79,15 +101,21 @@ export async function preTransferComplianceCheck(
       riskScore: 100,
       blockTransfer: true,
       holdForReview: false,
+      sanctionsHit: eligibility.code === 'SANCTIONS_HOLD',
     };
   }
 
-  const result = await analyzeTransaction(params);
+  const screen = await runFullAmlScreen(params);
 
   return {
-    ...result,
-    blockTransfer: result.shouldFlag && result.riskScore >= 40,
-    holdForReview: result.shouldFlag && result.riskScore < 40,
+    shouldFlag: screen.shouldFlag,
+    flag: screen.shouldFlag ? 'MANUAL_FLAG' : undefined,
+    reason: screen.reason,
+    riskScore: screen.riskScore,
+    blockTransfer: screen.blockTransfer,
+    holdForReview: screen.holdForReview,
+    sanctionsHit: screen.sanctionsHit,
+    amlCaseId: screen.amlCaseId,
   };
 }
 

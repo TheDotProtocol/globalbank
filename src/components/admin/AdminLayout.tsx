@@ -14,7 +14,11 @@ import '@/app/dashboard.css';
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/licensing', label: 'Licensing', icon: Building2 },
   { href: '/admin/compliance', label: 'Compliance', icon: Shield },
+  { href: '/admin/aml-cases', label: 'AML Cases', icon: FileWarning },
+  { href: '/admin/reconciliation', label: 'Reconciliation', icon: Landmark },
+  { href: '/admin/lending', label: 'Lending', icon: FileCheck },
   { href: '/admin/regulatory', label: 'Regulatory', icon: FileWarning },
   { href: '/admin/audit', label: 'Audit Log', icon: ScrollText },
   { href: '/admin/settlements', label: 'Settlements', icon: Landmark },

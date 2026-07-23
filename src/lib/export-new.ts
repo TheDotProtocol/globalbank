@@ -590,6 +590,14 @@ export async function exportStatement(
   transactions: any[], 
   format: 'pdf' | 'csv'
 ) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token) {
+    const { fetchAndExportStatement } = await import('@/lib/statement-export');
+    await fetchAndExportStatement(token, format, 365);
+    return;
+  }
+
+  // Fallback if no token (legacy path)
   if (format === 'pdf') {
     const endDate = new Date();
     const startDate = new Date();

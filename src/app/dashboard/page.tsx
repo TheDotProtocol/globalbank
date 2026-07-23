@@ -29,6 +29,8 @@ import InternationalTransferModal from '@/components/modals/InternationalTransfe
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import InterestRatesDisplay from '@/components/InterestRatesDisplay';
 import TranslationPrompt from "@/components/TranslationPrompt";
+import CurrencyBalanceGrid from '@/components/CurrencyBalanceGrid';
+import StatementExportButtons from '@/components/StatementExportButtons';
 import TransactionDetailModal, { TransactionDetail, InternationalTransferDetail } from '@/components/modals/TransactionDetailModal';
 
 interface User {
@@ -590,24 +592,7 @@ export default function Dashboard() {
 
         <MultiCurrencyDisplay usdAmount={totalBalance} className="text-white" showSettings={true} />
 
-        <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
-          <div style={{ padding: '0.75rem', border: '1px solid rgba(255,255,255,0.2)' }}>
-            <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>USD</div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>${totalBalance.toLocaleString()}</div>
-          </div>
-          <div style={{ padding: '0.75rem', border: '1px solid rgba(255,255,255,0.2)' }}>
-            <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>EUR</div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>€{(totalBalance * 0.85).toLocaleString()}</div>
-          </div>
-          <div style={{ padding: '0.75rem', border: '1px solid rgba(255,255,255,0.2)' }}>
-            <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>GBP</div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>£{(totalBalance * 0.73).toLocaleString()}</div>
-          </div>
-          <div style={{ padding: '0.75rem', border: '1px solid rgba(255,255,255,0.2)' }}>
-            <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>THB</div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>฿{(totalBalance * 35.5).toLocaleString()}</div>
-          </div>
-        </div>
+        <CurrencyBalanceGrid usdAmount={totalBalance} />
 
         <div style={{ marginTop: '1.5rem', padding: '1rem', border: '1px solid rgba(255,255,255,0.2)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -677,9 +662,12 @@ export default function Dashboard() {
           <InterestRatesDisplay userBalance={totalBalance} />
 
           <div className="dashboard-card" style={{ marginTop: '1.5rem' }}>
-            <div className="dashboard-card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className="dashboard-card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
               <h2 className="dashboard-card-title">Recent Transactions</h2>
-              <button type="button" onClick={() => router.push('/dashboard/transactions')} className="dashboard-link-btn">View All</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <StatementExportButtons days={365} />
+                <button type="button" onClick={() => router.push('/dashboard/transactions')} className="dashboard-link-btn">View All</button>
+              </div>
             </div>
             <div>
               {transactions.slice(0, 5).map((transaction) => (

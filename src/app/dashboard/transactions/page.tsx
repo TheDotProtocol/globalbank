@@ -14,6 +14,7 @@ import TransactionDetailModal, {
   TransactionDetail,
   InternationalTransferDetail,
 } from '@/components/modals/TransactionDetailModal';
+import StatementExportButtons from '@/components/StatementExportButtons';
 
 interface Transaction {
   id: string;
@@ -181,16 +182,21 @@ export default function TransactionsPage() {
     URL.revokeObjectURL(url);
   };
 
+  const statementDays = parseInt(dateRange, 10) || 365;
+
   return (
     <DashboardPageShell
       activeTab="transactions"
       title="Transactions"
       subtitle="View and manage your transaction history"
       headerExtra={
-        <button onClick={handleExport} className="btn-secondary dashboard-header-btn">
-          <Download className="h-4 w-4" />
-          Export
-        </button>
+        <div className="flex flex-wrap gap-2 items-center">
+          <StatementExportButtons days={statementDays} />
+          <button onClick={handleExport} className="btn-secondary dashboard-header-btn">
+            <Download className="h-4 w-4" />
+            Quick CSV
+          </button>
+        </div>
       }
     >
       <div className="dashboard-card dashboard-card-spaced">

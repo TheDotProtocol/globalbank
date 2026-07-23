@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
+import { postCustomerCredit } from '@/lib/regulatory/post-journal';
+import { maybeFileCtr } from '@/lib/aml/ctr';
 
 // Initialize Stripe with proper error handling
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -73,18 +75,51 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
   const { userId, accountId, type, paymentMethod } = paymentIntent.metadata;
   const amount = paymentIntent.amount / 100;
 
+  if (type !== 'deposit') {
+    return handlePaymentSuccessLegacy(paymentIntent);
+  }
+
   try {
-    // Update account balance
-    await prisma.account.update({
-      where: { id: accountId },
+    const transaction = await prisma.transaction.create({
       data: {
-        balance: {
-          increment: type === 'deposit' ? amount : -amount
-        }
-      }
+        accountId,
+        userId,
+        type: 'CREDIT',
+        amount,
+        description: `Successful deposit via ${paymentMethod}`,
+        status: 'COMPLETED',
+        reference: paymentIntent.id,
+      },
     });
 
-    // Create transaction record
+    await postCustomerCredit({
+      accountId,
+      amount,
+      reference: paymentIntent.id,
+      transactionId: transaction.id,
+      createdBy: userId,
+      sourceAccountCode: '2200',
+      description: `Stripe deposit ${paymentIntent.id}`,
+    });
+
+    await maybeFileCtr({ userId, transactionId: transaction.id, amount });
+
+    console.log(`Payment succeeded (GL posted): ${paymentIntent.id}`);
+  } catch (error) {
+    console.error('Error processing payment success:', error);
+  }
+}
+
+async function handlePaymentSuccessLegacy(paymentIntent: Stripe.PaymentIntent) {
+  const { userId, accountId, type, paymentMethod } = paymentIntent.metadata;
+  const amount = paymentIntent.amount / 100;
+
+  try {
+    await prisma.account.update({
+      where: { id: accountId },
+      data: { balance: { increment: type === 'deposit' ? amount : -amount } },
+    });
+
     await prisma.transaction.create({
       data: {
         accountId,
@@ -93,13 +128,11 @@ async function handlePaymentSuccess(paymentIntent: Stripe.PaymentIntent) {
         amount,
         description: `Successful ${type} via ${paymentMethod}`,
         status: 'COMPLETED',
-        reference: paymentIntent.id
-      }
+        reference: paymentIntent.id,
+      },
     });
-
-    console.log(`Payment succeeded: ${paymentIntent.id} via ${paymentMethod}`);
   } catch (error) {
-    console.error('Error processing payment success:', error);
+    console.error('Error processing legacy payment success:', error);
   }
 }
 
